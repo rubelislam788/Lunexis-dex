@@ -1,0 +1,130 @@
+// src/components/layout/Sidebar.tsx
+"use client";
+
+import type { Page } from "@/types";
+
+interface SidebarProps {
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
+  show: boolean;
+}
+
+const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
+  { label: "All Quests", page: "missions", icon: "grid_view" },
+  { label: "Active", page: "quest-detail", icon: "rocket_launch" },
+  { label: "Completed", page: "stats", icon: "verified" },
+];
+
+export default function Sidebar({ currentPage, onNavigate, show }: SidebarProps) {
+  if (!show) return null;
+
+  return (
+    <aside
+      className="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex flex-col pt-8 border-r z-40"
+      style={{
+        background: "rgba(0,0,0,0.65)",
+        backdropFilter: "blur(20px)",
+        borderColor: "rgba(0,220,229,0.12)",
+      }}
+    >
+      {/* User profile */}
+      <div className="px-6 mb-8">
+        <div className="glass-panel p-3 rounded-lg flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#00dce5,#b600f8)" }}
+          >
+            <span className="material-symbols-outlined text-white" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
+              military_tech
+            </span>
+          </div>
+          <div>
+            <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#00dce5" }}>
+              OPERATOR_01
+            </div>
+            <div style={{ fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "#555" }}>
+              Tier: Orbital Elite
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav links */}
+      <nav className="flex-1 flex flex-col gap-1">
+        {SIDE_LINKS.map(({ label, page, icon }) => (
+          <button
+            key={page}
+            onClick={() => onNavigate(page)}
+            className="flex items-center gap-3 px-6 py-4 cursor-pointer transition-all text-left"
+            style={{
+              fontFamily: "'Space Grotesk'",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: currentPage === page ? "#00dce5" : "#555",
+              background: currentPage === page ? "rgba(0,220,229,0.1)" : "transparent",
+              borderRight: currentPage === page ? "4px solid #00dce5" : "4px solid transparent",
+              border: "none",
+              borderRightWidth: 4,
+              borderRightStyle: "solid",
+              borderRightColor: currentPage === page ? "#00dce5" : "transparent",
+              cursor: "pointer",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+              {icon}
+            </span>
+            {label}
+          </button>
+        ))}
+
+        {/* Bridge shortcut */}
+        <button
+          onClick={() => onNavigate("bridge")}
+          className="flex items-center gap-3 px-6 py-4 cursor-pointer transition-all text-left"
+          style={{
+            fontFamily: "'Space Grotesk'",
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: currentPage === "bridge" ? "#ebb2ff" : "#555",
+            background: currentPage === "bridge" ? "rgba(182,0,248,0.1)" : "transparent",
+            border: "none",
+            borderRightWidth: 4,
+            borderRightStyle: "solid",
+            borderRightColor: currentPage === "bridge" ? "#b600f8" : "transparent",
+            cursor: "pointer",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>swap_horiz</span>
+          Bridge USDC
+        </button>
+      </nav>
+
+      {/* Sync button */}
+      <div className="p-6">
+        <button
+          className="w-full py-3 flex items-center justify-center gap-2 rounded-sm transition-all"
+          style={{
+            border: "1px solid rgba(0,220,229,0.3)",
+            color: "#00dce5",
+            fontFamily: "'Space Grotesk'",
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            background: "transparent",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,220,229,0.08)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>sync</span>
+          Sync Quests
+        </button>
+      </div>
+    </aside>
+  );
+}
