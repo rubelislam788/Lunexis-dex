@@ -2,14 +2,12 @@
 "use client";
 
 import { useAccount, useConnect, useDisconnect, useBalance } from "wagmi";
-import { InjectedConnector } from "wagmi/connectors/injected";
-import { wagmiChains } from "@/lib/wagmi";
 import { formatAddress } from "@/lib/utils";
 import { useState } from "react";
 
 export default function WalletButton() {
   const { address, isConnected } = useAccount();
-  const { connect, isPending } = useConnect();
+  const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { data: balance } = useBalance({ address });
   const [showMenu, setShowMenu] = useState(false);
@@ -85,8 +83,13 @@ export default function WalletButton() {
     <button
       className="btn-primary px-5 py-2 rounded-lg"
       style={{ fontSize: 11 }}
-      onClick={() => connect({ connector: new InjectedConnector({ chains: wagmiChains }) })}
-      disabled={isPending}
+      onClick={() => {
+        const connector = connectors.find((item) => item.id === "injected") ?? connectors[0];
+        if (connector) {
+          connect({ connector });
+        }
+      }}
+      disabled={isPending || connectors.length === 0}
     >
       {isPending ? "Connecting..." : "Connect Wallet"}
     </button>
