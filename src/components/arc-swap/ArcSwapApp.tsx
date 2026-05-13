@@ -3,7 +3,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { MaxUint256, parseUnits, zeroAddress } from "viem";
+import { maxUint256, parseUnits, zeroAddress } from "viem";
 import { useAccount, usePublicClient, useReadContract, useWriteContract } from "wagmi";
 import { useToast } from "@/components/ui/Toast";
 import ArcLogo from "@/components/ui/ArcLogo";
@@ -418,7 +418,7 @@ function SwapView({
         address: tokenIn.address,
         abi: ERC20_ABI,
         functionName: "approve",
-        args: [router, MaxUint256] as const,
+        args: [router, maxUint256] as const,
       });
       await publicClient.waitForTransactionReceipt({ hash });
       addTransaction(createTransaction("approve", `Approved ${tokenIn.symbol}`, `Approval granted to ARC Swap router for ${tokenIn.symbol}.`, hash));
