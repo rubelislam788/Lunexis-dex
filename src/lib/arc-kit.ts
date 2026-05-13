@@ -39,12 +39,17 @@ export async function getAppKit(): Promise<any> {
 
 export async function getViemAdapter(walletClient: WalletClient, publicClient: PublicClient): Promise<any> {
   const { ViemAdapter } = await import("@circle-fin/adapter-viem-v2");
-  const Adapter = ViemAdapter as unknown as new (...args: any[]) => any;
 
-  return new Adapter({
-    publicClient,
-    walletClient,
-  });
+  return new ViemAdapter(
+    {
+      getPublicClient: () => publicClient,
+      getWalletClient: () => walletClient,
+    } as any,
+    {
+      addressContext: "user-controlled",
+      supportedChains: [],
+    } as any
+  );
 }
 
 export async function getBrowserViemAdapter(): Promise<any> {
@@ -55,6 +60,10 @@ export async function getBrowserViemAdapter(): Promise<any> {
   const { createViemAdapterFromProvider } = await import("@circle-fin/adapter-viem-v2");
   return createViemAdapterFromProvider({
     provider: (window as any).ethereum,
+    capabilities: {
+      addressContext: "user-controlled",
+      supportedChains: [],
+    },
   });
 }
 
