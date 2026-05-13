@@ -3,7 +3,7 @@
 
 import type { Page, Quest } from "@/types";
 
-const QUESTS: Quest[] = [
+export const QUESTS: Quest[] = [
   { id: "q1", title: "First Swap on Arc", description: "Complete your first token swap using Circle Arc App Kit on Arc Testnet.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 1, tags: ["Swap", "Arc Kit"], featured: true },
   { id: "q2", title: "Bridge to Arc", description: "Bridge 1 USDC from Ethereum Sepolia to Arc Testnet via CCTP v2.", reward: "800 ARCQ + NFT", rewardAmt: 800, xp: 400, difficulty: "Medium", category: "Bridge", progress: 0, totalSteps: 4, tags: ["Bridge", "CCTP", "USDC"], featured: true },
   { id: "q3", title: "Liquidity Provider", description: "Add liquidity to an Arc Testnet pool and hold for 24 hours.", reward: "1,200 ARCQ", rewardAmt: 1200, xp: 600, difficulty: "Medium", category: "DeFi", progress: 1, totalSteps: 3, tags: ["LP", "DeFi"] },
@@ -21,9 +21,10 @@ const DIFF_COLORS: Record<string, string> = {
 
 interface MissionsPageProps {
   onNavigate: (page: Page) => void;
+  onSelectQuest: (questId: string) => void;
 }
 
-export default function MissionsPage({ onNavigate }: MissionsPageProps) {
+export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
   return (
     <div className="min-h-screen pt-16 pl-64" style={{ background: "#131314" }}>
       <div className="max-w-5xl mx-auto px-8 py-10">
@@ -71,7 +72,7 @@ export default function MissionsPage({ onNavigate }: MissionsPageProps) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {QUESTS.filter((q) => q.featured).map((quest) => (
-              <QuestCard key={quest.id} quest={quest} onNavigate={onNavigate} featured />
+              <QuestCard key={quest.id} quest={quest} onSelectQuest={onSelectQuest} featured />
             ))}
           </div>
         </div>
@@ -83,7 +84,7 @@ export default function MissionsPage({ onNavigate }: MissionsPageProps) {
           </div>
           <div className="flex flex-col gap-3">
             {QUESTS.filter((q) => !q.featured).map((quest) => (
-              <QuestCard key={quest.id} quest={quest} onNavigate={onNavigate} />
+              <QuestCard key={quest.id} quest={quest} onSelectQuest={onSelectQuest} />
             ))}
           </div>
         </div>
@@ -92,7 +93,7 @@ export default function MissionsPage({ onNavigate }: MissionsPageProps) {
   );
 }
 
-function QuestCard({ quest, onNavigate, featured }: { quest: Quest; onNavigate: (p: Page) => void; featured?: boolean }) {
+function QuestCard({ quest, onSelectQuest, featured }: { quest: Quest; onSelectQuest: (questId: string) => void; featured?: boolean }) {
   const progressPct = quest.totalSteps > 0 ? (quest.progress / quest.totalSteps) * 100 : 0;
   return (
     <div
@@ -102,7 +103,7 @@ function QuestCard({ quest, onNavigate, featured }: { quest: Quest; onNavigate: 
         border: `1px solid ${featured ? "rgba(0,220,229,0.2)" : "rgba(255,255,255,0.06)"}`,
         boxShadow: featured ? "0 0 20px rgba(0,220,229,0.06)" : "none",
       }}
-      onClick={() => onNavigate("quest-detail")}
+      onClick={() => onSelectQuest(quest.id)}
       onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "rgba(0,220,229,0.35)")}
       onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.borderColor = featured ? "rgba(0,220,229,0.2)" : "rgba(255,255,255,0.06)")}
     >

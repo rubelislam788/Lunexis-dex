@@ -6,7 +6,8 @@ import type { Page } from "@/types";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import LandingPage from "@/components/LandingPage";
-import MissionsPage from "@/components/MissionsPage";
+import MissionsPage, { QUESTS } from "@/components/MissionsPage";
+import QuestDetailPage from "@/components/QuestDetailPage";
 import SwapPage from "@/components/swap/SwapPage";
 import BridgePage from "@/components/bridge/BridgePage";
 
@@ -34,9 +35,15 @@ function PlaceholderPage({ title, onNavigate }: { title: string; onNavigate: (p:
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
+  const [selectedQuestId, setSelectedQuestId] = useState<string>("q2");
 
   const navigate = (page: Page) => setCurrentPage(page);
+  const selectQuest = (questId: string) => {
+    setSelectedQuestId(questId);
+    setCurrentPage("quest-detail");
+  };
   const showSidebar = PAGES_WITH_SIDEBAR.includes(currentPage);
+  const selectedQuest = QUESTS.find((quest) => quest.id === selectedQuestId);
 
   return (
     <>
@@ -45,13 +52,13 @@ export default function Home() {
 
       <div>
         {currentPage === "landing" && <LandingPage onNavigate={navigate} />}
-        {currentPage === "missions" && <MissionsPage onNavigate={navigate} />}
+        {currentPage === "missions" && <MissionsPage onNavigate={navigate} onSelectQuest={selectQuest} />}
         {currentPage === "swap" && <SwapPage />}
         {currentPage === "bridge" && <BridgePage />}
         {currentPage === "leaderboard" && <PlaceholderPage title="Leaderboard" onNavigate={navigate} />}
         {currentPage === "rewards" && <PlaceholderPage title="Rewards" onNavigate={navigate} />}
         {currentPage === "stats" && <PlaceholderPage title="Stats" onNavigate={navigate} />}
-        {currentPage === "quest-detail" && <PlaceholderPage title="Quest Detail" onNavigate={navigate} />}
+        {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
 
       {/* Footer */}
