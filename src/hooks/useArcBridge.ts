@@ -49,7 +49,7 @@ export function useArcBridge() {
       if (recipient && !isAddress(recipient)) {
         throw new Error("Enter a valid recipient wallet address.");
       }
-      const toAddress: Address = recipient ? recipient : account.address;
+      const toAddress: Address = recipient ? (recipient as Address) : account.address;
 
       const hash = await walletClient.sendTransaction({
         account,
