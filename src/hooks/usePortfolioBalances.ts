@@ -1,10 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { erc20Abi, formatUnits, isAddressEqual, zeroAddress, type Address } from "viem";
-import { useAccount, usePublicClient } from "wagmi";
+import { createPublicClient, erc20Abi, formatUnits, http, isAddressEqual, zeroAddress, type Address, type PublicClient } from "viem";
+import { sepolia } from "viem/chains";
+import { useAccount } from "wagmi";
 import type { PortfolioBalance, TokenSymbol } from "@/types";
+import { arcChain } from "@/lib/wagmi";
 import { PORTFOLIO_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS, TOKEN_META } from "@/lib/tokens";
+
+const ARC_CHAIN_ID = 1723;
+const SEPOLIA_CHAIN_ID = 11155111;
+
+const chainClients: Record<number, PublicClient> = {
+  [ARC_CHAIN_ID]: createPublicClient({
+    chain: arcChain,
+    transport: http(process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.arc.io"),
+  }),
+  [SEPOLIA_CHAIN_ID]: createPublicClient({
+    chain: sepolia,
+    transport: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"),
+  }),
+};
+
+const tokenChains: Record<TokenSymbol, number> = {
+  ETH: SEPOLIA_CHAIN_ID,
+  ARC: ARC_CHAIN_ID,
+  USDC: ARC_CHAIN_ID,
+  EURC: ARC_CHAIN_ID,
+  WETH: ARC_CHAIN_ID,
+};
 
 function emptyBalances(isLoading = false): PortfolioBalance[] {
   return PORTFOLIO_TOKENS.map((token) => ({
@@ -30,16 +54,38 @@ function valueFor(token: TokenSymbol, amount: string) {
   return "Live";
 }
 
+async function readTokenBalance(address: Address, token: TokenSymbol) {
+  const chainId = tokenChains[token];
+  const client = chainClients[chainId];
+
+  if (!client) return BigInt(0);
+
+  if (token === "ETH") {
+    return client.getBalance({ address });
+  }
+
+  const tokenAddress = TOKEN_CONTRACTS[token]?.[chainId];
+  if (!tokenAddress || isAddressEqual(tokenAddress, zeroAddress)) {
+    return BigInt(0);
+  }
+
+  return client.readContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [address],
+  }) as Promise<bigint>;
+}
+
 export function usePortfolioBalances(refreshMs = 12000) {
-  const { address, isConnected, chain } = useAccount();
-  const publicClient = usePublicClient();
+  const { address, isConnected } = useAccount();
   const [balances, setBalances] = useState<PortfolioBalance[]>(emptyBalances());
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
   const inFlight = useRef(false);
 
   const refresh = useCallback(async () => {
-    if (!isConnected || !address || !publicClient) {
+    if (!isConnected || !address) {
       setBalances(emptyBalances());
       setLastUpdated("");
       return;
@@ -51,42 +97,36 @@ export function usePortfolioBalances(refreshMs = 12000) {
     setBalances((prev) => prev.length ? prev.map((item) => ({ ...item, isLoading: true })) : emptyBalances(true));
 
     try {
-      const chainId = publicClient.chain?.id ?? chain?.id;
       const next = await Promise.all(PORTFOLIO_TOKENS.map(async (token) => {
-        let raw = BigInt(0);
-        if (token === "ETH") {
-          raw = await publicClient.getBalance({ address });
-        } else {
-          const tokenAddress = TOKEN_CONTRACTS[token]?.[chainId ?? 0];
-          if (tokenAddress && !isAddressEqual(tokenAddress, zeroAddress)) {
-            raw = await publicClient.readContract({
-              address: tokenAddress as Address,
-              abi: erc20Abi,
-              functionName: "balanceOf",
-              args: [address],
-            }) as bigint;
-          }
-        }
+        try {
+          const raw = await readTokenBalance(address, token);
+          const amount = cleanAmount(raw, TOKEN_DECIMALS[token]);
 
-        const amount = cleanAmount(raw, TOKEN_DECIMALS[token]);
-        return {
-          token,
-          amount,
-          value: valueFor(token, amount),
-          chain: chain?.name ?? TOKEN_META[token].chain,
-          isLoading: false,
-        };
+          return {
+            token,
+            amount,
+            value: valueFor(token, amount),
+            chain: TOKEN_META[token].chain,
+            isLoading: false,
+          };
+        } catch {
+          return {
+            token,
+            amount: "0",
+            value: valueFor(token, "0"),
+            chain: TOKEN_META[token].chain,
+            isLoading: false,
+          };
+        }
       }));
 
       setBalances(next);
       setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-    } catch {
-      setBalances((prev) => prev.map((item) => ({ ...item, isLoading: false })));
     } finally {
       inFlight.current = false;
       setIsLoading(false);
     }
-  }, [address, chain?.id, chain?.name, isConnected, publicClient]);
+  }, [address, isConnected]);
 
   useEffect(() => {
     refresh();
