@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { isAddress, type Address } from "viem";
 import { useAccount, useWalletClient, usePublicClient } from "wagmi";
 import type { BridgeState } from "@/types";
 
@@ -44,9 +45,15 @@ export function useArcBridge() {
         throw new Error("Wallet signer not available. Reconnect your wallet.");
       }
 
+      const recipient = state.recipientAddress.trim();
+      if (recipient && !isAddress(recipient)) {
+        throw new Error("Enter a valid recipient wallet address.");
+      }
+      const toAddress: Address = recipient ? recipient : account.address;
+
       const hash = await walletClient.sendTransaction({
         account,
-        to: state.recipientAddress || account.address,
+        to: toAddress,
         value: BigInt(0),
       });
 
