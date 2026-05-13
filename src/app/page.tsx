@@ -13,6 +13,8 @@ import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
 import AdminPage from "@/components/AdminPage";
 
+export const dynamic = "force-dynamic";
+
 const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile", "admin"];
 
 function PlaceholderPage({ title, onNavigate }: { title: string; onNavigate: (p: Page) => void }) {

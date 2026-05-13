@@ -16,7 +16,7 @@ import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
-  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, currentChainId, estimatedOut, reset } = useArcSwap();
+  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, appKitSupported, appKitReady, swapReady, routeMode, currentChainId, estimatedOut, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
@@ -65,6 +65,19 @@ export default function SwapPage() {
   };
 
   const isLoading = state.status === "approving" || state.status === "swapping";
+  const actionDisabled = isLoading || !state.amountIn || needsApproval || !swapReady;
+  const routeLabel =
+    routeMode === "router"
+      ? "Router Contract"
+      : routeMode === "appkit"
+        ? "Arc App Kit"
+        : routeMode === "appkit-missing-key"
+          ? "Kit Key Required"
+          : "Not Configured";
+  const routeColor =
+    routeMode === "router" || routeMode === "appkit"
+      ? "#22c55e"
+      : "#ffb7eb";
 
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
@@ -119,19 +132,41 @@ export default function SwapPage() {
                 </span>
               </div>
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ color: "#849495" }}>Router</span>
-                <span style={{ color: routerConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {routerConfigured ? "Configured" : "Missing Address"}
+                <span style={{ color: "#849495" }}>Route Engine</span>
+                <span style={{ color: routeColor, fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {routeLabel}
                 </span>
               </div>
             </div>
+
+            {routeMode === "appkit-missing-key" && (
+              <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
+                <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Swap Setup Needed
+                </div>
+                <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                  USDC and EURO can use Arc App Kit, but `NEXT_PUBLIC_ARC_KIT_KEY` is missing. Add the key to enable the default ARC Chain swap flow.
+                </p>
+              </div>
+            )}
+
+            {routeMode === "unavailable" && (
+              <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
+                <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Contract Setup Needed
+                </div>
+                <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                  This token pair needs a real router contract and token addresses on ARC Chain before swap execution can start.
+                </p>
+              </div>
+            )}
 
             {needsApproval && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
                 {state.status === "approving" ? `Approving ${state.fromToken}...` : `Approve ${state.fromToken}`}
               </button>
             )}
-            <button onClick={handleSwap} disabled={isLoading || !state.amountIn || needsApproval} className="btn-primary w-full py-4 rounded-2xl">
+            <button onClick={handleSwap} disabled={actionDisabled} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Swapping..." : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
             </button>
             {!isConnected && (
@@ -170,7 +205,12 @@ export default function SwapPage() {
             </div>
             <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Swap Route</h3>
-              <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>Wallet approvals, real transaction hashes, live ARC balances, and router-backed execution through your configured contract.</p>
+              <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>
+                {routeMode === "router" && "Wallet approvals, real transaction hashes, live ARC balances, and router-backed execution through your configured contract."}
+                {routeMode === "appkit" && "USDC and EURO are using Arc App Kit fallback on ARC Chain, with wallet confirmations and live balance refresh."}
+                {routeMode === "appkit-missing-key" && "The default USDC/EURO route is available through Arc App Kit, but the public kit key still needs to be configured."}
+                {routeMode === "unavailable" && "This pair needs a router contract deployment or supported App Kit route before execution can begin."}
+              </p>
             </div>
           </aside>
         </div>
@@ -223,7 +263,7 @@ function TokenAmountPanel({ label, token, amount, readOnly, onAmount, onToken }:
           onChange={(event) => onAmount?.(event.target.value)}
           placeholder="0.00"
           className="flex-1 bg-transparent border-none outline-none"
-          style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#f8fbff" }}
+          style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#f8fbff", background: "transparent", border: "none", boxShadow: "none" }}
         />
         <button onClick={onToken} className="btn-ghost flex items-center gap-2 px-4 py-3 rounded-2xl" style={{ borderColor: `${TOKEN_META[token].accent}66` }}>
           <TokenIcon symbol={token} size={34} />

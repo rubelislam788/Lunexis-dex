@@ -73,6 +73,22 @@ export function useArcSwap() {
   const toTokenAddress = TOKEN_CONTRACTS[toToken]?.[currentChainId];
   const amountIn = parseTokenAmount(state.amountIn, TOKEN_DECIMALS[fromToken]);
   const canUseAppKitSwap = currentChainId === ARC_CHAIN_ID && ((fromToken === "USDC" && toToken === "EURC") || (fromToken === "EURC" && toToken === "USDC"));
+  const appKitKey = getArcKitKey();
+  const appKitReady = Boolean(appKitKey);
+  const routerReady = Boolean(
+    router &&
+    fromTokenAddress &&
+    toTokenAddress &&
+    !isAddressEqual(fromTokenAddress, zeroAddress) &&
+    !isAddressEqual(toTokenAddress, zeroAddress)
+  );
+  const routeMode: "router" | "appkit" | "appkit-missing-key" | "unavailable" = routerReady
+    ? "router"
+    : canUseAppKitSwap
+      ? appKitReady
+        ? "appkit"
+        : "appkit-missing-key"
+      : "unavailable";
 
   const estimatedOut = useMemo(() => {
     const numeric = Number(state.amountIn);
@@ -165,8 +181,7 @@ export function useArcSwap() {
           throw new Error("Swap router or token addresses are not configured.");
         }
 
-        const kitKey = getArcKitKey();
-        if (!kitKey) {
+        if (!appKitKey) {
           throw new Error("Set NEXT_PUBLIC_ARC_KIT_KEY to enable App Kit swap fallback for USDC and EURC.");
         }
 
@@ -177,7 +192,7 @@ export function useArcSwap() {
           tokenIn: fromToken,
           tokenOut: toToken,
           amountIn: state.amountIn,
-          config: { kitKey },
+          config: { kitKey: appKitKey },
         });
 
         const hash =
@@ -217,7 +232,7 @@ export function useArcSwap() {
       updateState({ status: "error", error: err?.message || "Swap failed" });
       throw err;
     }
-  }, [address, amountIn, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
+  }, [address, amountIn, appKitKey, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });
@@ -229,7 +244,11 @@ export function useArcSwap() {
     executeSwap,
     approve,
     needsApproval,
-    routerConfigured: Boolean(router) || canUseAppKitSwap,
+    routerConfigured: routerReady,
+    appKitSupported: canUseAppKitSwap,
+    appKitReady,
+    swapReady: routeMode === "router" || routeMode === "appkit",
+    routeMode,
     currentChainId,
     estimatedOut,
     reset,
