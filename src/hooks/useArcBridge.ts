@@ -5,6 +5,7 @@ import { erc20Abi, isAddress, isAddressEqual, maxUint256, parseUnits, zeroAddres
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { BridgeState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, BRIDGE_ABI } from "@/lib/arc-dex";
+import { getAppKit, getBrowserViemAdapter } from "@/lib/arc-kit";
 import { BRIDGE_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = 1723;
@@ -43,6 +44,7 @@ export function useArcBridge() {
   const currentChainId = chainId ?? publicClient?.chain?.id ?? SEPOLIA_CHAIN_ID;
   const tokenAddress = TOKEN_CONTRACTS[token]?.[currentChainId];
   const amount = parseTokenAmount(state.amount, TOKEN_DECIMALS[token]);
+  const canUseAppKitBridge = currentChainId === SEPOLIA_CHAIN_ID && token === "USDC";
 
   useEffect(() => {
     let cancelled = false;
@@ -78,7 +80,8 @@ export function useArcBridge() {
     amount &&
     amount > BigInt(0) &&
     allowance < amount &&
-    !isAddressEqual(tokenAddress, zeroAddress)
+    !isAddressEqual(tokenAddress, zeroAddress) &&
+    !canUseAppKitBridge
   );
 
   const approve = useCallback(async () => {
@@ -115,18 +118,41 @@ export function useArcBridge() {
     if (currentChainId !== SEPOLIA_CHAIN_ID) throw new Error("Switch your wallet to Ethereum Sepolia to bridge into ARC Chain.");
     if (!walletClient || !publicClient) throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     if (!state.amount || parseFloat(state.amount) <= 0 || !amount) throw new Error("Enter a valid amount");
-    if (!bridge || !tokenAddress || isAddressEqual(tokenAddress, zeroAddress)) throw new Error("Bridge contract or token address is not configured.");
-    if (needsApproval) throw new Error(`Approve ${token} before bridging.`);
-    if (state.fromChain === state.toChain) throw new Error("Source and destination chains must differ");
-    const account = walletClient.account;
-    if (!account) throw new Error("Wallet signer account is not available.");
-
     const recipient = state.recipientAddress.trim();
     if (recipient && !isAddress(recipient)) throw new Error("Enter a valid recipient wallet address.");
     const toAddress = (recipient ? recipient : address) as Address;
 
     try {
       updateState({ status: "bridging", error: undefined });
+      if (!bridge || !tokenAddress || isAddressEqual(tokenAddress, zeroAddress)) {
+        if (!canUseAppKitBridge) throw new Error("Bridge contract or token address is not configured.");
+        if (state.fromChain === state.toChain) throw new Error("Source and destination chains must differ");
+
+        const adapter = await getBrowserViemAdapter();
+        const kit = await getAppKit();
+        const result = await kit.bridge({
+          from: { adapter, chain: "Ethereum_Sepolia" },
+          to: { adapter, chain: "Arc_Testnet" },
+          amount: state.amount,
+        });
+        const hash =
+          result?.steps?.find?.((step: any) => step?.hash)?.hash ??
+          result?.steps?.find?.((step: any) => step?.txHash)?.txHash ??
+          result?.hash;
+
+        if (!hash) {
+          throw new Error("Bridge submitted but no transaction hash was returned.");
+        }
+
+        updateState({ status: "success", txHash: hash });
+        return { hash };
+      }
+
+      if (needsApproval) throw new Error(`Approve ${token} before bridging.`);
+      if (state.fromChain === state.toChain) throw new Error("Source and destination chains must differ");
+      const account = walletClient.account;
+      if (!account) throw new Error("Wallet signer account is not available.");
+
       const hash = await walletClient.writeContract({
         address: bridge,
         abi: BRIDGE_ABI,
@@ -153,7 +179,7 @@ export function useArcBridge() {
     executeBridge,
     approve,
     needsApproval,
-    bridgeConfigured: Boolean(bridge),
+    bridgeConfigured: Boolean(bridge) || canUseAppKitBridge,
     currentChainId,
     reset,
   };

@@ -45,6 +45,17 @@ export async function getViemAdapter(walletClient: WalletClient, publicClient: P
   });
 }
 
+export async function getBrowserViemAdapter(): Promise<any> {
+  if (typeof window === "undefined" || !("ethereum" in window) || !(window as any).ethereum) {
+    throw new Error("No wallet provider found in the browser.");
+  }
+
+  const { createViemAdapterFromProvider } = await import("@circle-fin/adapter-viem-v2");
+  return createViemAdapterFromProvider({
+    provider: (window as any).ethereum,
+  });
+}
+
 export function getArcKitKey(): string {
   return process.env.NEXT_PUBLIC_ARC_KIT_KEY ?? "";
 }

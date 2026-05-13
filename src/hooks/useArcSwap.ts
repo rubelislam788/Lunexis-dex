@@ -5,6 +5,7 @@ import { erc20Abi, isAddressEqual, maxUint256, parseUnits, zeroAddress, type Add
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, SWAP_ROUTER_ABI } from "@/lib/arc-dex";
+import { getAppKit, getArcKitKey, getBrowserViemAdapter } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = 1723;
@@ -71,6 +72,7 @@ export function useArcSwap() {
   const fromTokenAddress = TOKEN_CONTRACTS[fromToken]?.[currentChainId];
   const toTokenAddress = TOKEN_CONTRACTS[toToken]?.[currentChainId];
   const amountIn = parseTokenAmount(state.amountIn, TOKEN_DECIMALS[fromToken]);
+  const canUseAppKitSwap = currentChainId === ARC_CHAIN_ID && ((fromToken === "USDC" && toToken === "EURC") || (fromToken === "EURC" && toToken === "USDC"));
 
   const estimatedOut = useMemo(() => {
     const numeric = Number(state.amountIn);
@@ -116,7 +118,8 @@ export function useArcSwap() {
     amountIn &&
     amountIn > BigInt(0) &&
     allowance < amountIn &&
-    !isAddressEqual(fromTokenAddress, zeroAddress)
+    !isAddressEqual(fromTokenAddress, zeroAddress) &&
+    !canUseAppKitSwap
   );
 
   const approve = useCallback(async () => {
@@ -154,16 +157,45 @@ export function useArcSwap() {
     if (!walletClient || !publicClient) throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     if (!state.amountIn || parseFloat(state.amountIn) <= 0 || !amountIn) throw new Error("Enter a valid amount");
     if (fromToken === toToken) throw new Error("Choose two different tokens to swap.");
-    if (!router || !fromTokenAddress || !toTokenAddress) throw new Error("Swap router or token addresses are not configured.");
-    if (isAddressEqual(fromTokenAddress, zeroAddress) || isAddressEqual(toTokenAddress, zeroAddress)) {
-      throw new Error("Swap token contract address is missing for the active network.");
-    }
-    if (needsApproval) throw new Error(`Approve ${fromToken} before swapping.`);
-    const account = walletClient.account;
-    if (!account) throw new Error("Wallet signer account is not available.");
-
     try {
       updateState({ status: "swapping", error: undefined });
+
+      if (!router || !fromTokenAddress || !toTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress) || isAddressEqual(toTokenAddress, zeroAddress)) {
+        if (!canUseAppKitSwap) {
+          throw new Error("Swap router or token addresses are not configured.");
+        }
+
+        const kitKey = getArcKitKey();
+        if (!kitKey) {
+          throw new Error("Set NEXT_PUBLIC_ARC_KIT_KEY to enable App Kit swap fallback for USDC and EURC.");
+        }
+
+        const adapter = await getBrowserViemAdapter();
+        const kit = await getAppKit();
+        const result = await kit.swap({
+          from: { adapter, chain: "Arc_Testnet" },
+          tokenIn: fromToken,
+          tokenOut: toToken,
+          amountIn: state.amountIn,
+          config: { kitKey },
+        });
+
+        const hash =
+          result?.steps?.find?.((step: any) => step?.hash)?.hash ??
+          result?.steps?.find?.((step: any) => step?.txHash)?.txHash ??
+          result?.hash;
+
+        if (!hash) {
+          throw new Error("Swap submitted but no transaction hash was returned.");
+        }
+
+        updateState({ status: "success", txHash: hash });
+        return { hash, amountOut: estimatedOut };
+      }
+
+      if (needsApproval) throw new Error(`Approve ${fromToken} before swapping.`);
+      const account = walletClient.account;
+      if (!account) throw new Error("Wallet signer account is not available.");
 
       const minOut = parseUnits(
         Math.max(0, Number(estimatedOut || "0") * (1 - parseSlippage(state.slippage) / 100)).toFixed(TOKEN_DECIMALS[toToken] === 6 ? 4 : 6),
@@ -197,7 +229,7 @@ export function useArcSwap() {
     executeSwap,
     approve,
     needsApproval,
-    routerConfigured: Boolean(router),
+    routerConfigured: Boolean(router) || canUseAppKitSwap,
     currentChainId,
     estimatedOut,
     reset,
