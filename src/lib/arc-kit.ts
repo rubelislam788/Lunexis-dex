@@ -4,6 +4,8 @@
 
 import type { PublicClient, WalletClient } from "viem";
 
+const ARC_KIT_KEY_STORAGE = "arc-kit-public-key";
+
 export const SUPPORTED_CHAINS = {
   ARC_TESTNET: "Arc_Testnet",
   ETH_SEPOLIA: "Ethereum_Sepolia",
@@ -57,5 +59,26 @@ export async function getBrowserViemAdapter(): Promise<any> {
 }
 
 export function getArcKitKey(): string {
-  return process.env.NEXT_PUBLIC_ARC_KIT_KEY ?? "";
+  if (process.env.NEXT_PUBLIC_ARC_KIT_KEY) {
+    return process.env.NEXT_PUBLIC_ARC_KIT_KEY;
+  }
+
+  if (typeof window !== "undefined") {
+    return window.localStorage.getItem(ARC_KIT_KEY_STORAGE) ?? "";
+  }
+
+  return "";
+}
+
+export function setArcKitKey(value: string) {
+  if (typeof window === "undefined") return;
+
+  const trimmed = value.trim();
+  if (trimmed) {
+    window.localStorage.setItem(ARC_KIT_KEY_STORAGE, trimmed);
+  } else {
+    window.localStorage.removeItem(ARC_KIT_KEY_STORAGE);
+  }
+
+  window.dispatchEvent(new Event("arc-kit-key-updated"));
 }

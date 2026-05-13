@@ -1,12 +1,13 @@
 // src/components/swap/SwapPage.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
+import { getArcKitKey, setArcKitKey } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
 import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
@@ -24,9 +25,17 @@ export default function SwapPage() {
   const [selector, setSelector] = useState<"from" | "to" | null>(null);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
+  const [kitKeyInput, setKitKeyInput] = useState("");
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
+
+  useEffect(() => {
+    const syncKey = () => setKitKeyInput(getArcKitKey());
+    syncKey();
+    window.addEventListener("arc-kit-key-updated", syncKey);
+    return () => window.removeEventListener("arc-kit-key-updated", syncKey);
+  }, []);
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -63,6 +72,11 @@ export default function SwapPage() {
     } catch (err: any) {
       show(err?.message || "Approval failed", "error");
     }
+  };
+
+  const handleSaveKitKey = () => {
+    setArcKitKey(kitKeyInput);
+    show(kitKeyInput.trim() ? "Arc App Kit key saved in this browser" : "Arc App Kit key removed", "success");
   };
 
   const pickToken = (symbol: TokenSymbol) => {
@@ -161,8 +175,21 @@ export default function SwapPage() {
                   Swap Setup Needed
                 </div>
                 <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  USDC and EURO can use Arc App Kit, but `NEXT_PUBLIC_ARC_KIT_KEY` is missing. Add the key to enable the default ARC Chain swap flow.
+                  USDC and EURO can use Arc App Kit, but `NEXT_PUBLIC_ARC_KIT_KEY` is missing. Add the key below or set it in your environment to enable the default ARC Chain swap flow.
                 </p>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <input
+                    type="text"
+                    value={kitKeyInput}
+                    onChange={(event) => setKitKeyInput(event.target.value)}
+                    placeholder="Paste your Arc App Kit public key"
+                    className="flex-1 px-4 py-3 rounded-2xl"
+                    style={{ background: "rgba(0,0,0,0.28)" }}
+                  />
+                  <button onClick={handleSaveKitKey} className="btn-outline-cyan px-5 py-3 rounded-2xl">
+                    Save Key
+                  </button>
+                </div>
               </div>
             )}
 
