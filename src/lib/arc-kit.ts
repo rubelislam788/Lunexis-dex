@@ -36,7 +36,10 @@ export async function getAppKit() {
 
 export async function getViemAdapter(walletClient: WalletClient, publicClient: PublicClient) {
   const { ViemAdapter } = await import("@circle-fin/adapter-viem-v2");
-  return new ViemAdapter(walletClient, { publicClient });
+  return new ViemAdapter({
+    getPublicClient: () => publicClient,
+    getWalletClient: () => walletClient,
+  });
 }
 
 export function getArcKitKey(): string {
