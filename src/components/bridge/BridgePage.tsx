@@ -55,7 +55,7 @@ export default function BridgePage() {
   const isLoading = state.status === "approving" || state.status === "bridging";
 
   return (
-    <div className="min-h-screen pt-16 arc-page-shell">
+    <div className="arc-with-sidebar-page arc-page-shell">
       <ToastContainer />
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
         <div className="flex items-start justify-between gap-6 mb-8">

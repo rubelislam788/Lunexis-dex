@@ -54,7 +54,7 @@ interface QuestDetailPageProps {
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
   if (!quest) {
     return (
-      <div className="min-h-screen pt-16 pl-64 flex items-center justify-center arc-page-shell">
+      <div className="arc-with-sidebar-page flex items-center justify-center arc-page-shell">
         <div className="text-center">
           <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, color: "#e9feff", marginBottom: 12 }}>
             Quest Not Found
@@ -72,7 +72,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
   const progressPct = quest.totalSteps > 0 ? Math.min(100, (quest.progress / quest.totalSteps) * 100) : 0;
 
   return (
-    <div className="min-h-screen pt-16 pl-64 arc-page-shell">
+    <div className="arc-with-sidebar-page arc-page-shell">
       <div className="relative z-10 max-w-6xl mx-auto px-8 py-10">
         <button
           onClick={() => onNavigate("missions")}

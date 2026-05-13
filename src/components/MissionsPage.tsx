@@ -112,7 +112,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   };
 
   return (
-    <div className="min-h-screen pt-16 pl-64 arc-page-shell">
+    <div className="arc-with-sidebar-page arc-page-shell">
       <div className="relative z-10 max-w-6xl mx-auto px-8 py-10">
         <div className="flex justify-between items-center mb-8 arc-fade-up">
           <div>

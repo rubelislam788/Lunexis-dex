@@ -328,6 +328,87 @@ body::after {
   overflow: hidden;
 }
 
+.arc-app-root {
+  min-height: 100vh;
+}
+
+.arc-with-sidebar-page {
+  min-height: 100vh;
+  padding-top: 4rem;
+  padding-left: var(--arc-sidebar-offset, 0rem);
+  transition: padding-left 0.32s ease;
+}
+
+.arc-footer-shell {
+  margin-left: var(--arc-sidebar-offset, 0rem);
+  transition: margin-left 0.32s ease;
+}
+
+.arc-sidebar-backdrop {
+  position: fixed;
+  inset: 4rem 0 0 0;
+  z-index: 38;
+  border: 0;
+  background: rgba(2, 8, 18, 0.64);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.arc-sidebar-shell {
+  position: fixed;
+  left: 0;
+  top: 4rem;
+  z-index: 40;
+  width: 16rem;
+  height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(3,7,18,0.82), rgba(8,17,34,0.74));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(148,217,255,0.16);
+  box-shadow: 18px 0 54px rgba(0,0,0,0.3);
+  transition: width 0.28s ease, transform 0.28s ease, opacity 0.28s ease;
+}
+
+.arc-sidebar-shell.is-collapsed {
+  width: 5.75rem;
+}
+
+.arc-sidebar-shell.arc-sidebar-overlay {
+  transform: translateX(-100%);
+  opacity: 0;
+  width: min(18rem, calc(100vw - 1rem));
+  border-right: 1px solid rgba(148,217,255,0.18);
+}
+
+.arc-sidebar-shell.arc-sidebar-overlay.is-open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.arc-wallet-modal-backdrop {
+  background: rgba(0,0,0,0.74);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.arc-wallet-modal-panel {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(13, 25, 48, 0.92), rgba(3, 7, 18, 0.9));
+  border: 1px solid rgba(148, 217, 255, 0.2);
+  box-shadow: 0 34px 120px rgba(0,0,0,0.58), 0 0 54px rgba(56,189,248,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.arc-wallet-modal-panel::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: radial-gradient(circle at 16% 10%, rgba(56,189,248,0.18), transparent 26%), radial-gradient(circle at 86% 14%, rgba(255,45,178,0.14), transparent 30%);
+  pointer-events: none;
+}
+
 .arc-page-shell::before {
   content: "";
   position: absolute;
@@ -504,6 +585,14 @@ body::after {
   .arc-token-grid,
   .arc-token-grid.compact {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1023px) {
+  .arc-with-sidebar-page,
+  .arc-footer-shell {
+    padding-left: 0;
+    margin-left: 0;
   }
 }
 

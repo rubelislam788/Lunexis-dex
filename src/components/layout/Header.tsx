@@ -3,11 +3,17 @@
 
 import WalletButton from "@/components/ui/WalletButton";
 import FaucetButton from "@/components/ui/FaucetButton";
+import ArcLogo from "@/components/ui/ArcLogo";
 import type { Page } from "@/types";
 
 interface HeaderProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
+  showSidebar: boolean;
+  isOverlaySidebar: boolean;
+  sidebarOpen: boolean;
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
 }
 
 const NAV_LINKS: Array<{ label: string; page: Page }> = [
@@ -17,10 +23,10 @@ const NAV_LINKS: Array<{ label: string; page: Page }> = [
   { label: "Stats", page: "stats" },
 ];
 
-export default function Header({ currentPage, onNavigate }: HeaderProps) {
+export default function Header({ currentPage, onNavigate, showSidebar, isOverlaySidebar, sidebarOpen, sidebarCollapsed, onToggleSidebar }: HeaderProps) {
   return (
     <header
-      className="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 border-b"
+      className="fixed top-0 w-full z-50 flex justify-between items-center px-3 sm:px-6 h-16 border-b"
       style={{
         background: "linear-gradient(90deg, rgba(2,4,10,0.88), rgba(6,20,40,0.76), rgba(2,4,10,0.88))",
         backdropFilter: "blur(22px)",
@@ -28,30 +34,25 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
         boxShadow: "0 14px 44px rgba(0,0,0,0.32)",
       }}
     >
-      {/* Logo + Nav */}
-      <div className="flex items-center gap-8">
-        <button
-          onClick={() => onNavigate("landing")}
-          className="flex items-center gap-3"
-          style={{
-            fontFamily: "'Space Grotesk'",
-            fontWeight: 900,
-            fontSize: 22,
-            letterSpacing: -1,
-            color: "#00dce5",
-            textShadow: "0 0 10px rgba(0,220,229,0.4)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          <span className="grid place-items-center rounded-full" style={{ width: 36, height: 36, background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 22px rgba(56,189,248,0.24)", color: "white", fontSize: 13 }}>
-            AQ
-          </span>
-          ARC QUEST
+      <div className="flex items-center gap-3 lg:gap-8 min-w-0">
+        {showSidebar && (
+          <button onClick={onToggleSidebar} className="arc-icon-action w-10 h-10 rounded-2xl flex-shrink-0" aria-label="Toggle sidebar">
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+              {isOverlaySidebar ? (sidebarOpen ? "close" : "menu") : sidebarCollapsed ? "menu_open" : "dock_to_left"}
+            </span>
+          </button>
+        )}
+
+        <button onClick={() => onNavigate("landing")} className="bg-transparent border-none p-0 cursor-pointer min-w-0">
+          <div className="hidden sm:block">
+            <ArcLogo size={40} />
+          </div>
+          <div className="sm:hidden">
+            <ArcLogo size={38} compact />
+          </div>
         </button>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden xl:flex items-center gap-6">
           {NAV_LINKS.map(({ label, page }) => (
             <button
               key={page}
@@ -78,10 +79,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             </button>
           ))}
 
-          {/* Separator */}
           <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.12)", display: "inline-block" }} />
 
-          {/* Swap CTA */}
           <button
             onClick={() => onNavigate("swap")}
             className="flex items-center gap-2 transition-all"
@@ -107,7 +106,6 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             Swap
           </button>
 
-          {/* Bridge CTA */}
           <button
             onClick={() => onNavigate("bridge")}
             className="flex items-center gap-2 transition-all"
@@ -135,7 +133,6 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
         </nav>
       </div>
 
-      {/* Wallet */}
       <WalletButton onNavigate={onNavigate} />
     </header>
   );

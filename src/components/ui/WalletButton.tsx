@@ -8,6 +8,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { formatAddress } from "@/lib/utils";
 import TokenIcon from "@/components/ui/TokenIcon";
+import ArcLogo from "@/components/ui/ArcLogo";
 
 export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page) => void }) {
   const { address, isConnected } = useAccount();
@@ -47,7 +48,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
       <div className="relative">
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="flex items-center gap-3 px-4 py-2 rounded-xl"
+          className="flex items-center gap-3 px-3 sm:px-4 py-2 rounded-xl max-w-[calc(100vw-1rem)]"
           style={{
             background: "rgba(56,189,248,0.1)",
             border: "1px solid rgba(56,189,248,0.35)",
@@ -55,13 +56,13 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
             boxShadow: "0 0 22px rgba(56,189,248,0.14)",
           }}
         >
-          <div className="flex flex-col items-end">
+          <div className="flex flex-col items-end min-w-0">
             {balance && (
               <span style={{ fontSize: 10, color: "#8fb0c9", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}
               </span>
             )}
-            <span style={{ fontSize: 12, color: "#38bdf8", fontWeight: 800 }}>
+            <span style={{ fontSize: 12, color: "#38bdf8", fontWeight: 800, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {profile?.username ?? formatAddress(address)}
             </span>
           </div>
@@ -73,7 +74,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
         </button>
 
         {showMenu && (
-          <div className="absolute right-0 mt-2 w-80 rounded-2xl glass-panel z-50" style={{ top: "100%" }}>
+          <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1rem))] rounded-2xl glass-panel z-50" style={{ top: "100%" }}>
             <div className="p-4">
               <div className="flex items-center gap-3 mb-4">
                 {profile?.avatarDataUrl ? (
@@ -140,15 +141,21 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
     <>
       <button
         className="btn-primary px-5 py-2 rounded-xl"
-        style={{ fontSize: 11 }}
+        style={{ fontSize: 11, minWidth: 132 }}
         onClick={() => setShowWallets(true)}
         disabled={isPending || connectors.length === 0}
       >
         {isPending ? "Connecting..." : "Connect Wallet"}
       </button>
       {showWallets && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }} onClick={(event) => { event.stopPropagation(); setShowWallets(false); }}>
-          <div className="arc-card rounded-3xl p-6 w-96 text-left" onClick={(event) => event.stopPropagation()}>
+        <div className="arc-wallet-modal-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={() => setShowWallets(false)}>
+          <div className="arc-wallet-modal-panel arc-fade-up rounded-3xl p-5 sm:p-6 w-[min(28rem,100%)] text-left max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <ArcLogo size={46} compact />
+              <button onClick={() => setShowWallets(false)} className="arc-icon-action w-10 h-10 rounded-2xl" aria-label="Close wallet modal">
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+              </button>
+            </div>
             <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 20, fontWeight: 900, color: "#f8fbff", marginBottom: 6 }}>Connect Wallet</h3>
             <p style={{ color: "#849495", fontSize: 13, marginBottom: 18 }}>Choose a wallet adapter for ARC Quest.</p>
             <div className="grid gap-3">
@@ -158,8 +165,8 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
                   type="button"
                   disabled={!wallet.connector || connectingWallet !== null}
                   onClick={() => handleConnect(wallet.id, wallet.connector)}
-                  className="flex items-center justify-between rounded-2xl p-4 transition-all"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#f8fbff" }}
+                  className="flex items-center justify-between rounded-2xl p-4 transition-all btn-ghost"
+                  style={{ color: "#f8fbff", textTransform: "none", letterSpacing: "0" }}
                 >
                   <span>
                     <span style={{ display: "block", fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900 }}>{wallet.label}</span>

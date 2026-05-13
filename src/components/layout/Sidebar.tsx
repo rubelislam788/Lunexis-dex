@@ -3,11 +3,17 @@
 
 import type { Page } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
+import ArcLogo from "@/components/ui/ArcLogo";
 
 interface SidebarProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   show: boolean;
+  isOverlaySidebar: boolean;
+  isOpen: boolean;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  onCloseMobile: () => void;
 }
 
 const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
@@ -16,122 +22,110 @@ const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
   { label: "Profile", page: "profile", icon: "account_circle" },
   { label: "Rewards", page: "rewards", icon: "workspace_premium" },
   { label: "Completed", page: "stats", icon: "verified" },
+  { label: "Swap", page: "swap", icon: "swap_horiz" },
+  { label: "Bridge", page: "bridge", icon: "conversion_path" },
 ];
 
-export default function Sidebar({ currentPage, onNavigate, show }: SidebarProps) {
+export default function Sidebar({
+  currentPage,
+  onNavigate,
+  show,
+  isOverlaySidebar,
+  isOpen,
+  isCollapsed,
+  onToggleCollapse,
+  onCloseMobile,
+}: SidebarProps) {
   const { profile, address } = useProfile();
   if (!show) return null;
 
+  const showLabels = !isCollapsed || isOverlaySidebar;
+
+  const handleNavigate = (page: Page) => {
+    onNavigate(page);
+    if (isOverlaySidebar) onCloseMobile();
+  };
+
   return (
-    <aside
-      className="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex flex-col pt-8 border-r z-40"
-      style={{
-        background: "linear-gradient(180deg, rgba(3,7,18,0.78), rgba(8,17,34,0.72))",
-        backdropFilter: "blur(24px)",
-        borderColor: "rgba(148,217,255,0.16)",
-        boxShadow: "18px 0 54px rgba(0,0,0,0.3)",
-      }}
-    >
-      {/* User profile */}
-      <div className="px-6 mb-8">
-        <div className="glass-panel p-3 rounded-xl flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 22px rgba(56,189,248,0.28)" }}
-          >
-            {profile?.avatarDataUrl ? (
-              <img src={profile.avatarDataUrl} alt="Arc operator" style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover" }} />
-            ) : (
-              <span style={{ color: "white", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900 }}>OP</span>
-            )}
-          </div>
-          <div>
-            <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#00dce5" }}>
-              {profile?.username ?? "OPERATOR_01"}
-            </div>
-            <div style={{ fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "#555" }}>
-              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Tier: Orbital Elite"}
-            </div>
+    <>
+      {isOverlaySidebar && isOpen && <button className="arc-sidebar-backdrop" aria-label="Close sidebar" onClick={onCloseMobile} />}
+      <aside
+        className={`arc-sidebar-shell ${isOverlaySidebar ? "arc-sidebar-overlay" : ""} ${isOpen ? "is-open" : ""} ${isCollapsed && !isOverlaySidebar ? "is-collapsed" : ""}`}
+      >
+        <div className="px-4 pt-5 pb-4 border-b" style={{ borderColor: "rgba(148,217,255,0.12)" }}>
+          <div className="flex items-center justify-between gap-3">
+            <button onClick={() => handleNavigate("landing")} className="text-left bg-transparent border-none p-0 cursor-pointer">
+              <ArcLogo size={44} compact={!showLabels} />
+            </button>
+            <button onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse} className="arc-icon-action w-10 h-10 rounded-2xl" aria-label={isOverlaySidebar ? "Close sidebar" : "Collapse sidebar"}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                {isOverlaySidebar ? "close" : isCollapsed ? "keyboard_double_arrow_right" : "keyboard_double_arrow_left"}
+              </span>
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Nav links */}
-      <nav className="flex-1 flex flex-col gap-1">
-        {SIDE_LINKS.map(({ label, page, icon }) => (
-          <button
-            key={page}
-            onClick={() => onNavigate(page)}
-            className="flex items-center gap-3 px-6 py-4 cursor-pointer transition-all text-left"
-            style={{
-              fontFamily: "'Space Grotesk'",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: currentPage === page ? "#00dce5" : "#555",
-              background: currentPage === page ? "rgba(0,220,229,0.1)" : "transparent",
-              borderRight: currentPage === page ? "4px solid #00dce5" : "4px solid transparent",
-              border: "none",
-              borderRightWidth: 4,
-              borderRightStyle: "solid",
-              borderRightColor: currentPage === page ? "#00dce5" : "transparent",
-              cursor: "pointer",
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-              {icon}
-            </span>
-            {label}
+        <div className="px-4 py-5">
+          <div className="glass-panel rounded-2xl p-3 flex items-center gap-3" style={{ justifyContent: showLabels ? "flex-start" : "center" }}>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
+              style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 22px rgba(56,189,248,0.28)" }}
+            >
+              {profile?.avatarDataUrl ? (
+                <img src={profile.avatarDataUrl} alt="Arc operator" style={{ width: 40, height: 40, objectFit: "cover" }} />
+              ) : (
+                <span style={{ color: "white", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900 }}>OP</span>
+              )}
+            </div>
+            {showLabels && (
+              <div className="min-w-0">
+                <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#00dce5" }}>
+                  {profile?.username ?? "OPERATOR_01"}
+                </div>
+                <div style={{ fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "#555", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Tier: Orbital Elite"}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <nav className="flex-1 flex flex-col gap-2 px-3">
+          {SIDE_LINKS.map(({ label, page, icon }) => {
+            const active = currentPage === page;
+            return (
+              <button
+                key={page}
+                onClick={() => handleNavigate(page)}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all text-left"
+                style={{
+                  fontFamily: "'Space Grotesk'",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: active ? "#DFF9FF" : "#8BA6BB",
+                  background: active ? "linear-gradient(145deg, rgba(56,189,248,0.14), rgba(255,45,178,0.08))" : "transparent",
+                  border: `1px solid ${active ? "rgba(56,189,248,0.32)" : "transparent"}`,
+                  justifyContent: showLabels ? "flex-start" : "center",
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: active ? "#38BDF8" : "#6E8698" }}>
+                  {icon}
+                </span>
+                {showLabels && label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="p-4">
+          <button className="btn-outline-cyan w-full py-3 rounded-2xl flex items-center justify-center gap-2" onClick={() => handleNavigate("missions")}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>sync</span>
+            {showLabels ? "Sync Quests" : ""}
           </button>
-        ))}
-
-        {/* Bridge shortcut */}
-        <button
-          onClick={() => onNavigate("bridge")}
-          className="flex items-center gap-3 px-6 py-4 cursor-pointer transition-all text-left"
-          style={{
-            fontFamily: "'Space Grotesk'",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: currentPage === "bridge" ? "#ebb2ff" : "#555",
-            background: currentPage === "bridge" ? "rgba(182,0,248,0.1)" : "transparent",
-            border: "none",
-            borderRightWidth: 4,
-            borderRightStyle: "solid",
-            borderRightColor: currentPage === "bridge" ? "#b600f8" : "transparent",
-            cursor: "pointer",
-          }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>swap_horiz</span>
-          Bridge USDC
-        </button>
-      </nav>
-
-      {/* Sync button */}
-      <div className="p-6">
-        <button
-          className="w-full py-3 flex items-center justify-center gap-2 rounded-xl transition-all"
-          style={{
-            border: "1px solid rgba(0,220,229,0.3)",
-            color: "#00dce5",
-            fontFamily: "'Space Grotesk'",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            background: "transparent",
-            cursor: "pointer",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,220,229,0.08)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>sync</span>
-          Sync Quests
-        </button>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   );
 }

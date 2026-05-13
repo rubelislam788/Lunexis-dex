@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
   if (!isConnected || !profile) {
     return (
-      <div className="min-h-screen pt-16 pl-64 arc-page-shell">
+      <div className="arc-with-sidebar-page arc-page-shell">
         <div className="relative z-10 max-w-4xl mx-auto px-8 py-16 text-center">
           <div className="arc-card rounded-3xl p-10">
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, color: "#f8fbff" }}>Connect Wallet</h1>
@@ -47,7 +47,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen pt-16 pl-64 arc-page-shell">
+    <div className="arc-with-sidebar-page arc-page-shell">
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="arc-card rounded-3xl p-6">

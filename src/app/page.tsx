@@ -1,7 +1,7 @@
 // src/app/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { Page } from "@/types";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -15,20 +15,16 @@ import RewardsPage from "@/components/RewardsPage";
 
 const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile"];
 
-// Placeholder pages for routes not fully built
 function PlaceholderPage({ title, onNavigate }: { title: string; onNavigate: (p: Page) => void }) {
   return (
-    <div className="min-h-screen pt-16 pl-64 flex items-center justify-center" style={{ background: "#131314" }}>
+    <div className="arc-with-sidebar-page flex items-center justify-center" style={{ background: "#131314" }}>
       <div className="text-center">
         <div style={{ fontFamily: "'Space Grotesk'", fontSize: 48, fontWeight: 900, color: "#00dce5", marginBottom: 16 }}>
           {title}
         </div>
         <p style={{ color: "#849495", marginBottom: 24 }}>This page is under construction.</p>
-        <button
-          onClick={() => onNavigate("missions")}
-          className="btn-outline-cyan px-6 py-3 rounded-lg text-sm"
-        >
-          ← Back to Missions
+        <button onClick={() => onNavigate("missions")} className="btn-outline-cyan px-6 py-3 rounded-lg text-sm">
+          Back to Missions
         </button>
       </div>
     </div>
@@ -38,19 +34,70 @@ function PlaceholderPage({ title, onNavigate }: { title: string; onNavigate: (p:
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
   const [selectedQuestId, setSelectedQuestId] = useState<string>("q2");
+  const [isOverlaySidebar, setIsOverlaySidebar] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const navigate = (page: Page) => setCurrentPage(page);
+  useEffect(() => {
+    const syncLayout = () => {
+      const width = window.innerWidth;
+      const nextOverlay = width < 1024;
+      setIsOverlaySidebar(nextOverlay);
+      setSidebarOpen(!nextOverlay);
+      setSidebarCollapsed(width >= 1024 && width < 1280);
+    };
+
+    syncLayout();
+    window.addEventListener("resize", syncLayout);
+    return () => window.removeEventListener("resize", syncLayout);
+  }, []);
+
+  const navigate = (page: Page) => {
+    setCurrentPage(page);
+    if (isOverlaySidebar) setSidebarOpen(false);
+  };
+
   const selectQuest = (questId: string) => {
     setSelectedQuestId(questId);
     setCurrentPage("quest-detail");
+    if (isOverlaySidebar) setSidebarOpen(false);
   };
+
   const showSidebar = PAGES_WITH_SIDEBAR.includes(currentPage);
   const selectedQuest = QUESTS.find((quest) => quest.id === selectedQuestId);
+  const sidebarOffset = showSidebar && !isOverlaySidebar ? (sidebarCollapsed ? "5.75rem" : "16rem") : "0rem";
+  const appShellStyle = { ["--arc-sidebar-offset" as any]: sidebarOffset } as CSSProperties;
+
+  const toggleSidebar = () => {
+    if (!showSidebar) return;
+    if (isOverlaySidebar) {
+      setSidebarOpen((value) => !value);
+      return;
+    }
+    setSidebarCollapsed((value) => !value);
+  };
 
   return (
-    <>
-      <Header currentPage={currentPage} onNavigate={navigate} />
-      <Sidebar currentPage={currentPage} onNavigate={navigate} show={showSidebar} />
+    <div className="arc-app-root" style={appShellStyle}>
+      <Header
+        currentPage={currentPage}
+        onNavigate={navigate}
+        showSidebar={showSidebar}
+        isOverlaySidebar={isOverlaySidebar}
+        sidebarOpen={sidebarOpen}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={toggleSidebar}
+      />
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={navigate}
+        show={showSidebar}
+        isOverlaySidebar={isOverlaySidebar}
+        isOpen={isOverlaySidebar ? sidebarOpen : true}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebar}
+        onCloseMobile={() => setSidebarOpen(false)}
+      />
 
       <div>
         {currentPage === "landing" && <LandingPage onNavigate={navigate} />}
@@ -64,27 +111,25 @@ export default function Home() {
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
 
-      {/* Footer */}
       {showSidebar && (
         <footer
-          className="py-8 px-12 flex justify-between items-center border-t"
+          className="arc-footer-shell py-8 px-6 md:px-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-center border-t"
           style={{
-            marginLeft: "16rem",
             background: "#000",
             borderColor: "rgba(255,255,255,0.05)",
           }}
         >
           <p style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#444" }}>
-            © 2025 ARC QUEST OPS. ALL SYSTEMS OPERATIONAL.
+            (C) 2025 ARC QUEST OPS. ALL SYSTEMS OPERATIONAL.
           </p>
-          <div className="flex gap-8">
+          <div className="flex gap-5 md:gap-8">
             {["Protocols", "Security", "Terminal"].map((link) => (
               <a
                 key={link}
                 href="#"
                 style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#444" }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#00dce5")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#444")}
+                onMouseEnter={(event) => ((event.currentTarget as HTMLElement).style.color = "#00dce5")}
+                onMouseLeave={(event) => ((event.currentTarget as HTMLElement).style.color = "#444")}
               >
                 {link}
               </a>
@@ -92,6 +137,6 @@ export default function Home() {
           </div>
         </footer>
       )}
-    </>
+    </div>
   );
 }
