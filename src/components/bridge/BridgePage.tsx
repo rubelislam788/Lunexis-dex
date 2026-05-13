@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { useArcBridge } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
@@ -15,18 +15,20 @@ import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
-const CHAIN_LIST = Object.values(SUPPORTED_CHAINS) as SupportedChain[];
+const SOURCE_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ETH_SEPOLIA];
+const DEST_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ARC_TESTNET];
 
 export default function BridgePage() {
   const { isConnected, address } = useAccount();
-  const { state, updateState, executeBridge, approve, needsApproval, bridgeConfigured, currentChainId, reset } = useArcBridge();
+  const { state, updateState, executeBridge, approve, needsApproval, bridgeConfigured, bridgeReady, bridgeMode, currentChainId, requiredChainId, reset } = useArcBridge();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
+  const { switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const [activeStep, setActiveStep] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
-  const [successTx, setSuccessTx] = useState<{ hash?: string; timestamp: string } | null>(null);
+  const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
 
   const handleBridge = async () => {
@@ -42,7 +44,7 @@ export default function BridgePage() {
       setTimeout(() => setActiveStep(4), 4200);
       const result = await executeBridge();
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
-      setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString() });
+      setSuccessTx({ hash: result?.hash, gasFee: result?.gasFee, timestamp: new Date().toISOString() });
       refresh();
       show(`Bridged ${state.amount} ${selectedToken}`, "success");
     } catch (err: any) {
@@ -60,6 +62,15 @@ export default function BridgePage() {
       show(`Approved ${selectedToken} for bridge`, "success");
     } catch (err: any) {
       show(err?.message || "Bridge approval failed", "error");
+    }
+  };
+
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchChainAsync({ chainId: requiredChainId });
+      show("Wallet switched to Ethereum Sepolia", "success");
+    } catch (err: any) {
+      show(err?.message || "Network switch failed", "error");
     }
   };
 
@@ -84,8 +95,8 @@ export default function BridgePage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <section className="lg:col-span-3 arc-card rounded-3xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-              <ChainSelect label="From Chain" value={state.fromChain as SupportedChain} onChange={(fromChain) => updateState({ fromChain })} />
-              <ChainSelect label="To Chain" value={state.toChain as SupportedChain} onChange={(toChain) => updateState({ toChain })} />
+              <ChainSelect label="From Chain" value={state.fromChain as SupportedChain} options={SOURCE_CHAIN_OPTIONS} onChange={(fromChain) => updateState({ fromChain })} />
+              <ChainSelect label="To Chain" value={state.toChain as SupportedChain} options={DEST_CHAIN_OPTIONS} onChange={(toChain) => updateState({ toChain })} />
             </div>
 
             <div className="rounded-3xl p-5 mb-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[selectedToken].accent}44` }}>
@@ -133,23 +144,38 @@ export default function BridgePage() {
             <div className="grid gap-3 mb-3">
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Source Network</span>
-                <span style={{ color: currentChainId === 11155111 ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === 11155111 ? "Ethereum Sepolia" : "Switch to Sepolia"}
+                <span style={{ color: currentChainId === requiredChainId ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {currentChainId === requiredChainId ? "Ethereum Sepolia" : "Switch to Sepolia"}
                 </span>
               </div>
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ color: "#849495" }}>Bridge Contract</span>
+                <span style={{ color: "#849495" }}>Bridge Engine</span>
                 <span style={{ color: bridgeConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {bridgeConfigured ? "Configured" : "Missing Address"}
+                  {bridgeMode === "contract" ? "Bridge Contract" : bridgeMode === "appkit" ? "Arc App Kit" : "Not Configured"}
                 </span>
               </div>
             </div>
-            {needsApproval && (
+            {bridgeMode === "unsupported" && (
+              <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
+                <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Bridge Path Not Available
+                </div>
+                <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                  Live bridging currently supports USDC from Ethereum Sepolia to ARC Chain by default. ARC bridging still needs a Sepolia ARC token address and bridge contract address.
+                </p>
+              </div>
+            )}
+            {currentChainId !== requiredChainId && isConnected && (
+              <button disabled={isSwitchingNetwork} onClick={handleSwitchNetwork} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
+                {isSwitchingNetwork ? "Switching Network..." : "Switch to Ethereum Sepolia"}
+              </button>
+            )}
+            {needsApproval && currentChainId === requiredChainId && (
               <button disabled={state.status === "approving" || !state.amount} onClick={handleApprove} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
                 {state.status === "approving" ? `Approving ${selectedToken}...` : `Approve ${selectedToken}`}
               </button>
             )}
-            <button disabled={isLoading || !state.amount || needsApproval} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
+            <button disabled={isLoading || !state.amount || needsApproval || !bridgeReady || currentChainId !== requiredChainId} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Routing Bridge..." : isConnected ? "Review Bridge" : "Connect Wallet to Bridge"}
             </button>
             {!isConnected && (
@@ -165,7 +191,7 @@ export default function BridgePage() {
               </div>
             )}
             {state.txHash && (
-              <a href={`https://scan.arc.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+              <a href={`https://sepolia.etherscan.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
               </a>
             )}
@@ -216,19 +242,21 @@ export default function BridgePage() {
         toLabel={CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}
         network={`${CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain} -> ${CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}`}
         txHash={successTx?.hash}
+        gasFee={successTx?.gasFee}
         timestamp={successTx?.timestamp}
+        explorerBaseUrl="https://sepolia.etherscan.io/tx/"
         onClose={() => setSuccessTx(null)}
       />
     </div>
   );
 }
 
-function ChainSelect({ label, value, onChange }: { label: string; value: SupportedChain; onChange: (value: SupportedChain) => void }) {
+function ChainSelect({ label, value, options, onChange }: { label: string; value: SupportedChain; options: SupportedChain[]; onChange: (value: SupportedChain) => void }) {
   return (
     <div className="rounded-3xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
       <label style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, color: "#849495", textTransform: "uppercase" }}>{label}</label>
       <select value={value} onChange={(event) => onChange(event.target.value as SupportedChain)} className="mt-2 w-full px-3 py-3 rounded-xl">
-        {CHAIN_LIST.map((chain) => <option key={chain} value={chain}>{CHAIN_META[chain]?.label ?? chain}</option>)}
+        {options.map((chain) => <option key={chain} value={chain}>{CHAIN_META[chain]?.label ?? chain}</option>)}
       </select>
     </div>
   );

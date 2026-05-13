@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { erc20Abi, isAddress, isAddressEqual, maxUint256, parseUnits, zeroAddress, type Address } from "viem";
+import { erc20Abi, formatEther, isAddress, isAddressEqual, maxUint256, parseUnits, zeroAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { BridgeState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, BRIDGE_ABI } from "@/lib/arc-dex";
@@ -42,9 +42,17 @@ export function useArcBridge() {
   const token = state.token as TokenSymbol;
   const bridge = DEX_CONTRACTS.bridge;
   const currentChainId = chainId ?? publicClient?.chain?.id ?? SEPOLIA_CHAIN_ID;
-  const tokenAddress = TOKEN_CONTRACTS[token]?.[currentChainId];
+  const isSupportedPath = state.fromChain === "Ethereum_Sepolia" && state.toChain === "Arc_Testnet";
+  const tokenAddress = TOKEN_CONTRACTS[token]?.[SEPOLIA_CHAIN_ID];
   const amount = parseTokenAmount(state.amount, TOKEN_DECIMALS[token]);
-  const canUseAppKitBridge = currentChainId === SEPOLIA_CHAIN_ID && token === "USDC";
+  const canUseAppKitBridge = isSupportedPath && token === "USDC";
+  const contractBridgeReady = Boolean(
+    isSupportedPath &&
+    bridge &&
+    tokenAddress &&
+    !isAddressEqual(tokenAddress, zeroAddress)
+  );
+  const bridgeMode: "contract" | "appkit" | "unsupported" = contractBridgeReady ? "contract" : canUseAppKitBridge ? "appkit" : "unsupported";
 
   useEffect(() => {
     let cancelled = false;
@@ -81,7 +89,7 @@ export function useArcBridge() {
     amount > BigInt(0) &&
     allowance < amount &&
     !isAddressEqual(tokenAddress, zeroAddress) &&
-    !canUseAppKitBridge
+    bridgeMode === "contract"
   );
 
   const approve = useCallback(async () => {
@@ -96,13 +104,14 @@ export function useArcBridge() {
 
     try {
       updateState({ status: "approving", error: undefined });
-      const hash = await walletClient.writeContract({
+      const { request } = await publicClient.simulateContract({
         address: tokenAddress,
         abi: erc20Abi,
         functionName: "approve",
         args: [bridge, maxUint256],
         account,
       });
+      const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
       setAllowance(maxUint256);
       updateState({ status: "idle", txHash: hash });
@@ -118,14 +127,15 @@ export function useArcBridge() {
     if (currentChainId !== SEPOLIA_CHAIN_ID) throw new Error("Switch your wallet to Ethereum Sepolia to bridge into ARC Chain.");
     if (!walletClient || !publicClient) throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     if (!state.amount || parseFloat(state.amount) <= 0 || !amount) throw new Error("Enter a valid amount");
+    if (!isSupportedPath) throw new Error("Bridge currently supports Ethereum Sepolia to ARC Chain only.");
     const recipient = state.recipientAddress.trim();
     if (recipient && !isAddress(recipient)) throw new Error("Enter a valid recipient wallet address.");
     const toAddress = (recipient ? recipient : address) as Address;
 
     try {
       updateState({ status: "bridging", error: undefined });
-      if (!bridge || !tokenAddress || isAddressEqual(tokenAddress, zeroAddress)) {
-        if (!canUseAppKitBridge) throw new Error("Bridge contract or token address is not configured.");
+      if (!contractBridgeReady) {
+        if (!canUseAppKitBridge) throw new Error("This bridge path is not configured for the selected token.");
         if (state.fromChain === state.toChain) throw new Error("Source and destination chains must differ");
 
         const adapter = await getBrowserViemAdapter();
@@ -152,17 +162,21 @@ export function useArcBridge() {
       if (state.fromChain === state.toChain) throw new Error("Source and destination chains must differ");
       const account = walletClient.account;
       if (!account) throw new Error("Wallet signer account is not available.");
+      const bridgeAddress = bridge as Address;
+      const sourceTokenAddress = tokenAddress as Address;
 
-      const hash = await walletClient.writeContract({
-        address: bridge,
+      const { request } = await publicClient.simulateContract({
+        address: bridgeAddress,
         abi: BRIDGE_ABI,
         functionName: "bridgeToken",
-        args: [tokenAddress, amount, BigInt(ARC_CHAIN_ID), toAddress],
+        args: [sourceTokenAddress, amount, BigInt(ARC_CHAIN_ID), toAddress],
         account,
       });
-      await publicClient.waitForTransactionReceipt({ hash });
+      const hash = await walletClient.writeContract(request);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
       updateState({ status: "success", txHash: hash });
-      return { hash };
+      const gasFee = receipt.effectiveGasPrice ? formatEther(receipt.effectiveGasPrice * receipt.gasUsed) : undefined;
+      return { hash, gasFee };
     } catch (err: any) {
       updateState({ status: "error", error: err?.message || "Bridge failed" });
       throw err;
@@ -179,7 +193,10 @@ export function useArcBridge() {
     executeBridge,
     approve,
     needsApproval,
-    bridgeConfigured: Boolean(bridge) || canUseAppKitBridge,
+    bridgeConfigured: contractBridgeReady || canUseAppKitBridge,
+    bridgeReady: bridgeMode === "contract" || bridgeMode === "appkit",
+    bridgeMode,
+    requiredChainId: SEPOLIA_CHAIN_ID,
     currentChainId,
     reset,
   };

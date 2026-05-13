@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { erc20Abi, isAddressEqual, maxUint256, parseUnits, zeroAddress, type Address } from "viem";
+import { erc20Abi, formatEther, formatUnits, isAddressEqual, maxUint256, parseUnits, zeroAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, SWAP_ROUTER_ABI } from "@/lib/arc-dex";
@@ -9,21 +9,6 @@ import { getAppKit, getArcKitKey, getBrowserViemAdapter } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = 1723;
-
-const RATES: Record<string, number> = {
-  "ARC-USDC": 1.18,
-  "USDC-ARC": 0.8475,
-  "USDC-EURC": 0.92,
-  "EURC-USDC": 1.08,
-  "WETH-USDC": 3110,
-  "USDC-WETH": 0.000321,
-  "ARC-WETH": 0.00039,
-  "WETH-ARC": 2575,
-  "ARC-EURC": 1.09,
-  "EURC-ARC": 0.91,
-  "WETH-EURC": 2860,
-  "EURC-WETH": 0.00035,
-};
 
 function parseTokenAmount(value: string, decimals: number) {
   if (!value.trim()) return BigInt(0);
@@ -34,14 +19,16 @@ function parseTokenAmount(value: string, decimals: number) {
   }
 }
 
-function getRate(fromToken: TokenSymbol, toToken: TokenSymbol) {
-  if (fromToken === toToken) return 1;
-  return RATES[`${fromToken}-${toToken}`] ?? 1;
-}
-
 function parseSlippage(slippage: string) {
   if (slippage === "auto") return 0.5;
   return Number(slippage.replace("%", "")) || 0.5;
+}
+
+function cleanAmount(raw: bigint, decimals: number) {
+  const formatted = formatUnits(raw, decimals);
+  const [whole, fraction = ""] = formatted.split(".");
+  const trimmedFraction = fraction.slice(0, decimals === 6 ? 4 : 6).replace(/0+$/, "");
+  return trimmedFraction ? `${whole}.${trimmedFraction}` : whole;
 }
 
 export function useArcSwap() {
@@ -60,6 +47,7 @@ export function useArcSwap() {
     status: "idle",
   });
   const [allowance, setAllowance] = useState<bigint>(BigInt(0));
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const updateState = useCallback((patch: Partial<SwapState>) => {
     setState((prev) => ({ ...prev, ...patch }));
@@ -69,10 +57,10 @@ export function useArcSwap() {
   const toToken = state.toToken as TokenSymbol;
   const router = DEX_CONTRACTS.swapRouter;
   const currentChainId = chainId ?? publicClient?.chain?.id ?? ARC_CHAIN_ID;
-  const fromTokenAddress = TOKEN_CONTRACTS[fromToken]?.[currentChainId];
-  const toTokenAddress = TOKEN_CONTRACTS[toToken]?.[currentChainId];
+  const fromTokenAddress = TOKEN_CONTRACTS[fromToken]?.[ARC_CHAIN_ID];
+  const toTokenAddress = TOKEN_CONTRACTS[toToken]?.[ARC_CHAIN_ID];
   const amountIn = parseTokenAmount(state.amountIn, TOKEN_DECIMALS[fromToken]);
-  const canUseAppKitSwap = currentChainId === ARC_CHAIN_ID && ((fromToken === "USDC" && toToken === "EURC") || (fromToken === "EURC" && toToken === "USDC"));
+  const canUseAppKitSwap = (fromToken === "USDC" && toToken === "EURC") || (fromToken === "EURC" && toToken === "USDC");
   const appKitKey = getArcKitKey();
   const appKitReady = Boolean(appKitKey);
   const routerReady = Boolean(
@@ -90,15 +78,55 @@ export function useArcSwap() {
         : "appkit-missing-key"
       : "unavailable";
 
-  const estimatedOut = useMemo(() => {
-    const numeric = Number(state.amountIn);
-    if (!state.amountIn || !Number.isFinite(numeric)) return "";
-    return (numeric * getRate(fromToken, toToken)).toFixed(TOKEN_DECIMALS[toToken] === 6 ? 4 : 6);
-  }, [fromToken, state.amountIn, toToken]);
+  const estimatedOut = useMemo(() => state.amountOut, [state.amountOut]);
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, amountOut: estimatedOut }));
-  }, [estimatedOut]);
+    let cancelled = false;
+
+    const syncQuote = async () => {
+      if (!state.amountIn || !amountIn || fromToken === toToken) {
+        if (!cancelled) {
+          setQuoteLoading(false);
+          setState((prev) => ({ ...prev, amountOut: "" }));
+        }
+        return;
+      }
+
+      if (routeMode !== "router" || !router || !publicClient || currentChainId !== ARC_CHAIN_ID || !fromTokenAddress || !toTokenAddress) {
+        if (!cancelled) {
+          setQuoteLoading(false);
+          setState((prev) => ({ ...prev, amountOut: "" }));
+        }
+        return;
+      }
+
+      try {
+        if (!cancelled) setQuoteLoading(true);
+        const { result } = await publicClient.simulateContract({
+          address: router,
+          abi: SWAP_ROUTER_ABI,
+          functionName: "swapExactInput",
+          args: [fromTokenAddress as Address, toTokenAddress as Address, amountIn, BigInt(0), (address ?? zeroAddress) as Address],
+          account: (address ?? zeroAddress) as Address,
+        });
+
+        if (!cancelled) {
+          setState((prev) => ({ ...prev, amountOut: cleanAmount(result as bigint, TOKEN_DECIMALS[toToken]) }));
+        }
+      } catch {
+        if (!cancelled) {
+          setState((prev) => ({ ...prev, amountOut: "" }));
+        }
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
+      }
+    };
+
+    syncQuote();
+    return () => {
+      cancelled = true;
+    };
+  }, [address, amountIn, currentChainId, fromToken, fromTokenAddress, publicClient, routeMode, router, state.amountIn, toToken, toTokenAddress]);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,7 +163,7 @@ export function useArcSwap() {
     amountIn > BigInt(0) &&
     allowance < amountIn &&
     !isAddressEqual(fromTokenAddress, zeroAddress) &&
-    !canUseAppKitSwap
+    routeMode === "router"
   );
 
   const approve = useCallback(async () => {
@@ -150,13 +178,14 @@ export function useArcSwap() {
 
     try {
       updateState({ status: "approving", error: undefined });
-      const hash = await walletClient.writeContract({
+      const { request } = await publicClient.simulateContract({
         address: fromTokenAddress,
         abi: erc20Abi,
         functionName: "approve",
         args: [router, maxUint256],
         account,
       });
+      const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
       setAllowance(maxUint256);
       updateState({ status: "idle", txHash: hash });
@@ -212,22 +241,27 @@ export function useArcSwap() {
       const account = walletClient.account;
       if (!account) throw new Error("Wallet signer account is not available.");
 
-      const minOut = parseUnits(
-        Math.max(0, Number(estimatedOut || "0") * (1 - parseSlippage(state.slippage) / 100)).toFixed(TOKEN_DECIMALS[toToken] === 6 ? 4 : 6),
-        TOKEN_DECIMALS[toToken]
-      );
+      const quotedOut = Number(estimatedOut || "0");
+      const minOut = quotedOut > 0
+        ? parseUnits(
+            Math.max(0, quotedOut * (1 - parseSlippage(state.slippage) / 100)).toFixed(TOKEN_DECIMALS[toToken] === 6 ? 4 : 6),
+            TOKEN_DECIMALS[toToken]
+          )
+        : BigInt(0);
 
-      const hash = await walletClient.writeContract({
+      const { request } = await publicClient.simulateContract({
         address: router,
         abi: SWAP_ROUTER_ABI,
         functionName: "swapExactInput",
         args: [fromTokenAddress as Address, toTokenAddress as Address, amountIn, minOut, address],
         account,
       });
+      const hash = await walletClient.writeContract(request);
 
-      await publicClient.waitForTransactionReceipt({ hash });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
       updateState({ status: "success", txHash: hash });
-      return { hash, amountOut: estimatedOut };
+      const gasFee = receipt.effectiveGasPrice ? formatEther(receipt.effectiveGasPrice * receipt.gasUsed) : undefined;
+      return { hash, amountOut: estimatedOut, gasFee };
     } catch (err: any) {
       updateState({ status: "error", error: err?.message || "Swap failed" });
       throw err;
@@ -249,8 +283,10 @@ export function useArcSwap() {
     appKitReady,
     swapReady: routeMode === "router" || routeMode === "appkit",
     routeMode,
+    requiredChainId: ARC_CHAIN_ID,
     currentChainId,
     estimatedOut,
+    quoteLoading,
     reset,
   };
 }

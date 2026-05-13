@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSwitchChain } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
@@ -16,13 +16,14 @@ import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
-  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, appKitSupported, appKitReady, swapReady, routeMode, currentChainId, estimatedOut, reset } = useArcSwap();
+  const { state, updateState, executeSwap, approve, needsApproval, swapReady, routeMode, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
+  const { switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const [selector, setSelector] = useState<"from" | "to" | null>(null);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
-  const [successTx, setSuccessTx] = useState<{ hash?: string; timestamp: string } | null>(null);
+  const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
@@ -35,13 +36,22 @@ export default function SwapPage() {
     try {
       const result = await executeSwap();
       pushActivity(createActivity("swap", "Swap completed", `Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}.`, state.fromToken as TokenSymbol, "completed", result?.hash));
-      setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString() });
+      setSuccessTx({ hash: result?.hash, gasFee: result?.gasFee, timestamp: new Date().toISOString() });
       refresh();
       show(`Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}`, "success");
     } catch (err: any) {
       const message = err?.message || "Swap failed";
       setShowFaucetHint(/insufficient|funds|balance/i.test(message));
       show(message, "error");
+    }
+  };
+
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchChainAsync({ chainId: requiredChainId });
+      show("Wallet switched to ARC Chain", "success");
+    } catch (err: any) {
+      show(err?.message || "Network switch failed", "error");
     }
   };
 
@@ -65,7 +75,7 @@ export default function SwapPage() {
   };
 
   const isLoading = state.status === "approving" || state.status === "swapping";
-  const actionDisabled = isLoading || !state.amountIn || needsApproval || !swapReady;
+  const actionDisabled = isLoading || !state.amountIn || needsApproval || !swapReady || currentChainId !== requiredChainId;
   const routeLabel =
     routeMode === "router"
       ? "Router Contract"
@@ -109,7 +119,13 @@ export default function SwapPage() {
                 <span className="material-symbols-outlined">swap_vert</span>
               </button>
             </div>
-            <TokenAmountPanel label="You Receive" token={toToken.symbol} amount={estimatedOut ? `~ ${estimatedOut}` : ""} readOnly onToken={() => setSelector("to")} />
+            <TokenAmountPanel
+              label="You Receive"
+              token={toToken.symbol}
+              amount={quoteLoading ? "Loading..." : estimatedOut ? `~ ${estimatedOut}` : ""}
+              readOnly
+              onToken={() => setSelector("to")}
+            />
 
             <div className="grid grid-cols-3 gap-3 my-6">
               {["auto", "0.5%", "1%"].map((slippage) => (
@@ -121,7 +137,7 @@ export default function SwapPage() {
 
             <div className="flex justify-between rounded-2xl p-4 mb-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <span style={{ color: "#849495" }}>Price Impact</span>
-              <span style={{ color: "#22c55e", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{"< 0.1%"}</span>
+              <span style={{ color: estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? "< 0.1%" : "Onchain Quote"}</span>
             </div>
 
             <div className="grid gap-3 mb-6">
@@ -161,7 +177,12 @@ export default function SwapPage() {
               </div>
             )}
 
-            {needsApproval && (
+            {currentChainId !== requiredChainId && isConnected && (
+              <button onClick={handleSwitchNetwork} disabled={isSwitchingNetwork} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
+                {isSwitchingNetwork ? "Switching Network..." : "Switch to ARC Chain"}
+              </button>
+            )}
+            {needsApproval && currentChainId === requiredChainId && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
                 {state.status === "approving" ? `Approving ${state.fromToken}...` : `Approve ${state.fromToken}`}
               </button>
@@ -244,6 +265,7 @@ export default function SwapPage() {
         toLabel={state.toToken}
         network="ARC Chain"
         txHash={successTx?.hash}
+        gasFee={successTx?.gasFee}
         timestamp={successTx?.timestamp}
         onClose={() => setSuccessTx(null)}
       />

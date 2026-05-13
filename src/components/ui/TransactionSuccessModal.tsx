@@ -12,6 +12,7 @@ interface TransactionSuccessModalProps {
   txHash?: string;
   gasFee?: string;
   timestamp?: string;
+  explorerBaseUrl?: string;
   onClose: () => void;
 }
 
@@ -25,13 +26,14 @@ export default function TransactionSuccessModal({
   txHash,
   gasFee = "Calculated by wallet",
   timestamp,
+  explorerBaseUrl = "https://scan.arc.io/tx/",
   onClose,
 }: TransactionSuccessModalProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   if (!open) return null;
 
-  const explorerUrl = txHash ? `https://scan.arc.io/tx/${txHash}` : undefined;
+  const explorerUrl = txHash ? `${explorerBaseUrl}${txHash}` : undefined;
   const completedAt = timestamp ? new Date(timestamp) : new Date();
   const title = kind === "swap" ? "Swap Completed" : "Bridge Successful";
   const route = kind === "swap" ? `${amount || "0"} ${fromLabel} -> ${toLabel}` : `${amount || "0"} ${fromLabel} to ${toLabel}`;
