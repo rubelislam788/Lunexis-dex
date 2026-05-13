@@ -16,9 +16,9 @@ import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
-  const { state, updateState, executeSwap, reset } = useArcSwap();
+  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, currentChainId, estimatedOut, reset } = useArcSwap();
   const { pushActivity } = useProfile();
-  const { balances, isLoading: balancesLoading } = usePortfolioBalances();
+  const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
   const [selector, setSelector] = useState<"from" | "to" | null>(null);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
@@ -36,11 +36,22 @@ export default function SwapPage() {
       const result = await executeSwap();
       pushActivity(createActivity("swap", "Swap completed", `Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}.`, state.fromToken as TokenSymbol, "completed", result?.hash));
       setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString() });
+      refresh();
       show(`Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}`, "success");
     } catch (err: any) {
       const message = err?.message || "Swap failed";
       setShowFaucetHint(/insufficient|funds|balance/i.test(message));
       show(message, "error");
+    }
+  };
+
+  const handleApprove = async () => {
+    try {
+      const result = await approve();
+      pushActivity(createActivity("wallet", `Approved ${state.fromToken}`, `Approval confirmed for ${state.fromToken} swap routing.`, state.fromToken as TokenSymbol, "completed", result?.hash));
+      show(`Approved ${state.fromToken}`, "success");
+    } catch (err: any) {
+      show(err?.message || "Approval failed", "error");
     }
   };
 
@@ -68,7 +79,7 @@ export default function SwapPage() {
               </span>
             </div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Token Swap</h1>
-            <p style={{ color: "#849495", fontSize: 16 }}>Swap USDC, EURC, and WETH with live wallet balance context.</p>
+            <p style={{ color: "#849495", fontSize: 16 }}>Swap ARC, USDC, EURO, and WETH with live wallet balance context.</p>
           </div>
           <FaucetButton label="Need Test USDC?" />
         </div>
@@ -85,7 +96,7 @@ export default function SwapPage() {
                 <span className="material-symbols-outlined">swap_vert</span>
               </button>
             </div>
-            <TokenAmountPanel label="You Receive" token={toToken.symbol} amount={state.amountIn ? `~ ${state.amountIn}` : ""} readOnly onToken={() => setSelector("to")} />
+            <TokenAmountPanel label="You Receive" token={toToken.symbol} amount={estimatedOut ? `~ ${estimatedOut}` : ""} readOnly onToken={() => setSelector("to")} />
 
             <div className="grid grid-cols-3 gap-3 my-6">
               {["auto", "0.5%", "1%"].map((slippage) => (
@@ -100,7 +111,27 @@ export default function SwapPage() {
               <span style={{ color: "#22c55e", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{"< 0.1%"}</span>
             </div>
 
-            <button onClick={handleSwap} disabled={isLoading || !state.amountIn} className="btn-primary w-full py-4 rounded-2xl">
+            <div className="grid gap-3 mb-6">
+              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <span style={{ color: "#849495" }}>Network</span>
+                <span style={{ color: currentChainId === 1723 ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {currentChainId === 1723 ? "ARC Chain" : "Switch to ARC Chain"}
+                </span>
+              </div>
+              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <span style={{ color: "#849495" }}>Router</span>
+                <span style={{ color: routerConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {routerConfigured ? "Configured" : "Missing Address"}
+                </span>
+              </div>
+            </div>
+
+            {needsApproval && (
+              <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
+                {state.status === "approving" ? `Approving ${state.fromToken}...` : `Approve ${state.fromToken}`}
+              </button>
+            )}
+            <button onClick={handleSwap} disabled={isLoading || !state.amountIn || needsApproval} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Swapping..." : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
             </button>
             {!isConnected && (
@@ -139,7 +170,7 @@ export default function SwapPage() {
             </div>
             <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Swap Route</h3>
-              <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>Animated ARC route preview with live balance context, slippage controls, and wallet-confirmed activity tracking.</p>
+              <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>Wallet approvals, real transaction hashes, live ARC balances, and router-backed execution through your configured contract.</p>
             </div>
           </aside>
         </div>
@@ -171,7 +202,7 @@ export default function SwapPage() {
         amount={state.amountIn}
         fromLabel={state.fromToken}
         toLabel={state.toToken}
-        network="Arc Testnet"
+        network="ARC Chain"
         txHash={successTx?.hash}
         timestamp={successTx?.timestamp}
         onClose={() => setSuccessTx(null)}

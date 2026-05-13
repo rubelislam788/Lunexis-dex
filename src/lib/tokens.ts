@@ -18,8 +18,8 @@ export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
   },
   ARC: {
     symbol: "ARC",
-    label: "Arc Chain",
-    chain: "Arc Testnet",
+    label: "ARC",
+    chain: "ARC Chain",
     logoSrc: "/arc-assets/arc.jpg",
     accent: "#38bdf8",
   },
@@ -32,15 +32,15 @@ export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
   },
   EURC: {
     symbol: "EURC",
-    label: "Euro Coin",
-    chain: "Circle",
+    label: "EURO",
+    chain: "ARC Chain",
     logoSrc: "/arc-assets/circle-usdc.jpeg",
     accent: "#2dd4ff",
   },
 };
 
-export const SWAP_TOKENS: TokenSymbol[] = ["USDC", "EURC", "WETH"];
-export const BRIDGE_TOKENS: TokenSymbol[] = ["USDC", "WETH"];
+export const SWAP_TOKENS: TokenSymbol[] = ["ARC", "USDC", "EURC", "WETH"];
+export const BRIDGE_TOKENS: TokenSymbol[] = ["ARC", "USDC"];
 export const PORTFOLIO_TOKENS: TokenSymbol[] = ["ETH", "ARC", "USDC", "EURC", "WETH"];
 
 export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
@@ -53,17 +53,18 @@ export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
 
 export const TOKEN_CONTRACTS: Partial<Record<TokenSymbol, Partial<Record<number, Address>>>> = {
   ARC: {
-    1723: (process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS || "0x0000000000000000000000000000000000000000") as Address,
+    11155111: (process.env.NEXT_PUBLIC_ARC_SEPOLIA_ADDRESS || "0x0000000000000000000000000000000000000000") as Address,
+    1723: (process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS || "0x6a801562296A1Dbc9244ca3764981D21A22974d6") as Address,
   },
   USDC: {
     11155111: (process.env.NEXT_PUBLIC_USDC_SEPOLIA_ADDRESS || "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238") as Address,
-    1723: (process.env.NEXT_PUBLIC_USDC_ARC_ADDRESS || "0x0000000000000000000000000000000000000000") as Address,
+    1723: (process.env.NEXT_PUBLIC_USDC_ARC_ADDRESS || "0xD8fBdB46F9230B952Ad820697ac940373208ea3e") as Address,
   },
   EURC: {
-    1723: (process.env.NEXT_PUBLIC_EURC_ARC_ADDRESS || "0x0000000000000000000000000000000000000000") as Address,
+    1723: (process.env.NEXT_PUBLIC_EURC_ARC_ADDRESS || "0x588c08138f0d079E2B8457ea0Bf30861890875fb") as Address,
   },
   WETH: {
     11155111: (process.env.NEXT_PUBLIC_WETH_SEPOLIA_ADDRESS || "0xfff9976782d46cc05630d1f6ebab18b2324d6b14") as Address,
-    1723: (process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS || "0x0000000000000000000000000000000000000000") as Address,
+    1723: (process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS || "0x7E24AF6B090871ebbD60f57BA0A09F27db898640") as Address,
   },
 };

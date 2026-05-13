@@ -19,9 +19,9 @@ const CHAIN_LIST = Object.values(SUPPORTED_CHAINS) as SupportedChain[];
 
 export default function BridgePage() {
   const { isConnected, address } = useAccount();
-  const { state, updateState, executeBridge, reset } = useArcBridge();
+  const { state, updateState, executeBridge, approve, needsApproval, bridgeConfigured, currentChainId, reset } = useArcBridge();
   const { pushActivity } = useProfile();
-  const { balances, isLoading: balancesLoading } = usePortfolioBalances();
+  const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
   const [activeStep, setActiveStep] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -43,12 +43,23 @@ export default function BridgePage() {
       const result = await executeBridge();
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
       setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString() });
+      refresh();
       show(`Bridged ${state.amount} ${selectedToken}`, "success");
     } catch (err: any) {
       const message = err?.message || "Bridge failed";
       setActiveStep(0);
       setShowFaucetHint(/insufficient|funds|balance/i.test(message));
       show(message, "error");
+    }
+  };
+
+  const handleApprove = async () => {
+    try {
+      const result = await approve();
+      pushActivity(createActivity("wallet", `Approved ${selectedToken}`, `Approval confirmed for bridge execution with ${selectedToken}.`, selectedToken, "completed", result?.hash));
+      show(`Approved ${selectedToken} for bridge`, "success");
+    } catch (err: any) {
+      show(err?.message || "Bridge approval failed", "error");
     }
   };
 
@@ -65,7 +76,7 @@ export default function BridgePage() {
               <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#ffb7eb" }}>ARC BRIDGE ROUTER</span>
             </div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Cross-Chain Bridge</h1>
-            <p style={{ color: "#849495", fontSize: 16 }}>Bridge USDC or WETH through a cinematic ARC transaction flow.</p>
+            <p style={{ color: "#849495", fontSize: 16 }}>Bridge ARC or USDC from Sepolia into ARC Chain with real wallet confirmations.</p>
           </div>
           <FaucetButton label="Open Arc Faucet" />
         </div>
@@ -119,7 +130,26 @@ export default function BridgePage() {
               className="w-full px-4 py-4 rounded-2xl mb-5"
             />
 
-            <button disabled={isLoading || !state.amount} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
+            <div className="grid gap-3 mb-3">
+              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <span style={{ color: "#849495" }}>Source Network</span>
+                <span style={{ color: currentChainId === 11155111 ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {currentChainId === 11155111 ? "Ethereum Sepolia" : "Switch to Sepolia"}
+                </span>
+              </div>
+              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <span style={{ color: "#849495" }}>Bridge Contract</span>
+                <span style={{ color: bridgeConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {bridgeConfigured ? "Configured" : "Missing Address"}
+                </span>
+              </div>
+            </div>
+            {needsApproval && (
+              <button disabled={state.status === "approving" || !state.amount} onClick={handleApprove} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
+                {state.status === "approving" ? `Approving ${selectedToken}...` : `Approve ${selectedToken}`}
+              </button>
+            )}
+            <button disabled={isLoading || !state.amount || needsApproval} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Routing Bridge..." : isConnected ? "Review Bridge" : "Connect Wallet to Bridge"}
             </button>
             {!isConnected && (

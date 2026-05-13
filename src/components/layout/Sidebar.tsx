@@ -24,6 +24,7 @@ const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
   { label: "Completed", page: "stats", icon: "verified" },
   { label: "Swap", page: "swap", icon: "swap_horiz" },
   { label: "Bridge", page: "bridge", icon: "conversion_path" },
+  { label: "Admin", page: "admin", icon: "shield_lock" },
 ];
 
 export default function Sidebar({

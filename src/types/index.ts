@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge" | "profile";
+export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge" | "profile" | "admin";
 
 export interface Quest {
   id: string;

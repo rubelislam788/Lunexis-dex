@@ -14,23 +14,23 @@ const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string 
 
 const QUEST_STEPS: Record<string, string[]> = {
   q1: [
-    "Connect a wallet on Arc Testnet.",
-    "Open the swap tool and select USDC to EURC.",
+    "Connect a wallet on ARC Chain.",
+    "Open the swap tool and select USDC to EURO.",
     "Enter an amount and confirm the transaction.",
   ],
   q2: [
     "Connect your wallet.",
     "Open the bridge tool.",
-    "Set From Chain to Ethereum Sepolia and To Chain to Arc Testnet.",
+    "Set From Chain to Ethereum Sepolia and To Chain to ARC Chain.",
     "Bridge 1 USDC using Circle CCTP v2.",
   ],
   q3: [
     "Prepare testnet liquidity assets.",
-    "Add liquidity to an Arc Testnet pool.",
+    "Add liquidity to an ARC Chain pool.",
     "Hold the position for 24 hours.",
   ],
   q4: [
-    "Complete a swap on Arc Testnet.",
+    "Complete a swap on ARC Chain.",
     "Bridge USDC across supported testnets.",
     "Finish both actions in the same session.",
   ],
@@ -40,7 +40,7 @@ const QUEST_STEPS: Record<string, string[]> = {
     "Keep the stake active for 7 days.",
   ],
   q6: [
-    "Bridge or receive USDC on Arc Testnet.",
+    "Bridge or receive USDC on ARC Chain.",
     "Keep at least 10 USDC in the connected wallet.",
     "Hold the balance for 3 days.",
   ],

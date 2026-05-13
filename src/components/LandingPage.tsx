@@ -32,16 +32,16 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
 
           <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: "clamp(36px,6vw,64px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.025em", color: "#e9feff", marginBottom: 24 }}>
-            ARC Ecosystem <span className="gradient-text">Mission Control.</span>
+            ARC Swap <span className="gradient-text">Operator Control.</span>
           </h1>
 
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "#b9caca", maxWidth: 600, margin: "0 auto 40px" }}>
-            A cinematic Web3 dashboard for swaps, CCTP bridges, token quests, and operator progress across Arc, Ethereum, USDC, Circle USDC, and WETH.
+            A cleaner ARC Chain operator surface for live token swaps, Sepolia bridge routing, mission verification, and wallet-based portfolio tracking.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button className="btn-primary px-10 py-4 rounded-lg glow-cyan" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
-              Connect Wallet to Start
+              Launch Operator Mode
             </button>
             <button className="btn-ghost px-10 py-4 rounded-lg" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
               View Missions
@@ -116,15 +116,15 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               {
                 icon: "swap_horiz",
                 title: "Swap Tokens",
-                desc: "Exchange USDC and EURC on Arc Testnet via Circle Arc App Kit SDK. Zero routing complexity.",
+                desc: "Exchange ARC, USDC, EURO, and WETH with live balances, approvals, and wallet-confirmed execution.",
                 color: "#00dce5",
                 page: "swap" as Page,
                 cta: "Open Swap",
               },
               {
                 icon: "conversion_path",
-                title: "Bridge USDC",
-                desc: "Move native USDC cross-chain using Circle CCTP v2. No wrapped tokens, no trust assumptions.",
+                title: "Bridge to ARC",
+                desc: "Move supported assets from Ethereum Sepolia into ARC Chain with approval checks and transaction tracking.",
                 color: "#ebb2ff",
                 page: "bridge" as Page,
                 cta: "Open Bridge",
