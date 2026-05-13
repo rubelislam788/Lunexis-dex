@@ -2,7 +2,7 @@
 // Arc App Kit SDK configuration
 // Docs: https://docs.arc.network/app-kit
 
-import type { PublicClient, WalletClient } from "wagmi";
+import type { PublicClient, WalletClient } from "viem";
 
 export const SUPPORTED_CHAINS = {
   ARC_TESTNET: "Arc_Testnet",
