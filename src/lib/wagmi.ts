@@ -1,6 +1,6 @@
 // src/lib/wagmi.ts
 import { createConfig, http } from "wagmi";
-import { injected, walletConnect } from "wagmi/connectors";
+import { coinbaseWallet, injected, metaMask, walletConnect } from "wagmi/connectors";
 import { sepolia, baseSepolia, arbitrumSepolia, optimismSepolia } from "wagmi/chains";
 
 export const arcTestnet = {
@@ -19,6 +19,12 @@ export const arcTestnet = {
 } as const;
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
+const connectors = [
+  metaMask(),
+  injected(),
+  coinbaseWallet({ appName: "ARC Quest" }),
+  ...(projectId ? [walletConnect({ projectId, showQrModal: true })] : []),
+];
 
 export const wagmiChains = [
   arcTestnet,
@@ -30,10 +36,7 @@ export const wagmiChains = [
 
 export const wagmiConfig = createConfig({
   chains: wagmiChains,
-  connectors: [
-    injected(),
-    walletConnect({ projectId }),
-  ],
+  connectors,
   transports: {
     [arcTestnet.id]: http("https://rpc.arc.io"),
     [sepolia.id]: http(process.env.NEXT_PUBLIC_ETH_SEPOLIA_RPC ?? "https://rpc.sepolia.org"),

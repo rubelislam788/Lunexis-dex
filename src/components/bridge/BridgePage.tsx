@@ -114,6 +114,11 @@ export default function BridgePage() {
             <button disabled={isLoading || !state.amount} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Routing Bridge..." : isConnected ? "Review Bridge" : "Connect Wallet to Bridge"}
             </button>
+            {state.txHash && (
+              <a href={`https://scan.arc.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+                View Transaction
+              </a>
+            )}
             {state.status === "success" && <button onClick={() => { reset(); setActiveStep(0); }} className="btn-ghost w-full py-3 rounded-2xl mt-3">Bridge Again</button>}
           </section>
 

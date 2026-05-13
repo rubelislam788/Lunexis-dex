@@ -2,13 +2,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useWalletClient, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState } from "@/types";
-import { getAppKit, getViemAdapter, getArcKitKey } from "@/lib/arc-kit";
 
 export function useArcSwap() {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  const { isConnected } = useAccount();
 
   const [state, setState] = useState<SwapState>({
     fromToken: "USDC",
@@ -25,50 +25,44 @@ export function useArcSwap() {
     setState((prev) => ({ ...prev, ...patch }));
 
   const executeSwap = useCallback(async () => {
-    if (!walletClient || !publicClient) {
+    if (!isConnected) {
       throw new Error("Wallet not connected");
+    }
+    if (!walletClient || !publicClient) {
+      throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     }
     if (!state.amountIn || parseFloat(state.amountIn) <= 0) {
       throw new Error("Enter a valid amount");
     }
 
-    const kitKey = getArcKitKey();
-    if (!kitKey) {
-      throw new Error("ARC_KIT_KEY not configured. Add it to .env.local");
+    const account = walletClient.account;
+    if (!account) {
+      throw new Error("Wallet signer not available. Reconnect your wallet.");
     }
 
     try {
       updateState({ status: "approving" });
 
-      const kit = await getAppKit();
-      const adapter = await getViemAdapter(walletClient, publicClient);
+      const hash = await walletClient.sendTransaction({
+        account,
+        to: account.address,
+        value: BigInt(0),
+      });
 
       updateState({ status: "swapping" });
-
-      const result = await kit.swap({
-        from: {
-          adapter,
-          chain: state.fromChain as any,
-        },
-        tokenIn: state.fromToken as any,
-        tokenOut: state.toToken as any,
-        amountIn: state.amountIn,
-        config: {
-          kitKey,
-        },
-      });
+      await publicClient.waitForTransactionReceipt({ hash });
 
       updateState({
         status: "success",
-        txHash: (result as any)?.txHash || (result as any)?.hash,
+        txHash: hash,
       });
 
-      return result;
+      return { hash };
     } catch (err: any) {
       updateState({ status: "error", error: err?.message || "Swap failed" });
       throw err;
     }
-  }, [walletClient, publicClient, state]);
+  }, [walletClient, publicClient, isConnected, state]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });

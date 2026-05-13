@@ -18,7 +18,7 @@ export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; 
       <img
         src={token.logoSrc}
         alt={`${token.symbol} logo`}
-        style={{ width: size * 0.72, height: size * 0.72, objectFit: "contain", borderRadius: 999 }}
+        style={{ width: size * 0.72, height: size * 0.72, objectFit: "contain", borderRadius: 999, filter: "none", imageRendering: "auto" }}
       />
     </span>
   );

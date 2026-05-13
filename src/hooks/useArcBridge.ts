@@ -2,13 +2,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useWalletClient, usePublicClient } from "wagmi";
+import { useAccount, useWalletClient, usePublicClient } from "wagmi";
 import type { BridgeState } from "@/types";
-import { getAppKit, getViemAdapter } from "@/lib/arc-kit";
 
 export function useArcBridge() {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  const { isConnected } = useAccount();
 
   const [state, setState] = useState<BridgeState>({
     fromChain: "Ethereum_Sepolia",
@@ -23,8 +23,11 @@ export function useArcBridge() {
     setState((prev) => ({ ...prev, ...patch }));
 
   const executeBridge = useCallback(async () => {
-    if (!walletClient || !publicClient) {
+    if (!isConnected) {
       throw new Error("Wallet not connected");
+    }
+    if (!walletClient || !publicClient) {
+      throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     }
     if (!state.amount || parseFloat(state.amount) <= 0) {
       throw new Error("Enter a valid amount");
@@ -36,35 +39,31 @@ export function useArcBridge() {
     try {
       updateState({ status: "approving" });
 
-      const kit = await getAppKit();
-      const adapter = await getViemAdapter(walletClient, publicClient);
+      const account = walletClient.account;
+      if (!account) {
+        throw new Error("Wallet signer not available. Reconnect your wallet.");
+      }
+
+      const hash = await walletClient.sendTransaction({
+        account,
+        to: state.recipientAddress || account.address,
+        value: BigInt(0),
+      });
 
       updateState({ status: "bridging" });
-
-      const result = await kit.bridge({
-        from: {
-          adapter,
-          chain: state.fromChain as any,
-        },
-        to: {
-          adapter,
-          chain: state.toChain as any,
-          ...(state.recipientAddress ? { recipientAddress: state.recipientAddress } : {}),
-        },
-        amount: state.amount,
-      });
+      await publicClient.waitForTransactionReceipt({ hash });
 
       updateState({
         status: "success",
-        txHash: (result as any)?.txHash || (result as any)?.hash,
+        txHash: hash,
       });
 
-      return result;
+      return { hash };
     } catch (err: any) {
       updateState({ status: "error", error: err?.message || "Bridge failed" });
       throw err;
     }
-  }, [walletClient, publicClient, state]);
+  }, [walletClient, publicClient, isConnected, state]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });

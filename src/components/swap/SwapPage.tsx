@@ -95,6 +95,11 @@ export default function SwapPage() {
             <button onClick={handleSwap} disabled={isLoading || !state.amountIn} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Swapping..." : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
             </button>
+            {state.txHash && (
+              <a href={`https://scan.arc.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+                View Transaction
+              </a>
+            )}
             {state.status === "success" && (
               <button onClick={reset} className="btn-ghost w-full py-3 rounded-2xl mt-3">Swap Again</button>
             )}

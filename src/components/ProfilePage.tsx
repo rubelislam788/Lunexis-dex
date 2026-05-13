@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
+import { useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { ARC_FAUCET_URL } from "@/lib/constants";
 import { TOKEN_META } from "@/lib/tokens";
@@ -9,13 +10,26 @@ import ActivityTimeline from "@/components/ActivityTimeline";
 
 export default function ProfilePage() {
   const { profile, address, isConnected, update } = useProfile();
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState({ username: "", xUsername: "", githubUsername: "", avatarDataUrl: "" });
 
   const handleAvatar = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => update({ avatarDataUrl: String(reader.result) });
+    reader.onload = () => setDraft((prev) => ({ ...prev, avatarDataUrl: String(reader.result) }));
     reader.readAsDataURL(file);
+  };
+
+  const openEdit = () => {
+    if (!profile) return;
+    setDraft({
+      username: profile.username,
+      xUsername: profile.xUsername,
+      githubUsername: profile.githubUsername,
+      avatarDataUrl: profile.avatarDataUrl ?? "",
+    });
+    setIsEditing(true);
   };
 
   if (!isConnected || !profile) {
@@ -38,14 +52,13 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="arc-card rounded-3xl p-6">
             <div className="flex items-center gap-4">
-              <label className="relative cursor-pointer">
+              <div className="relative">
                 {profile.avatarDataUrl ? (
                   <img src={profile.avatarDataUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover" style={{ border: "1px solid rgba(56,189,248,0.45)", boxShadow: "0 0 34px rgba(56,189,248,0.28)" }} />
                 ) : (
                   <span className="w-24 h-24 rounded-full grid place-items-center" style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", color: "white", fontFamily: "'Space Grotesk'", fontSize: 24, fontWeight: 900, boxShadow: "0 0 34px rgba(56,189,248,0.28)" }}>OP</span>
                 )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleAvatar} />
-              </label>
+              </div>
               <div>
                 <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 28, fontWeight: 900, color: "#f8fbff" }}>{profile.username}</h1>
                 <p style={{ color: "#849495", fontSize: 12 }}>{address?.slice(0, 6)}...{address?.slice(-4)}</p>
@@ -53,23 +66,17 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid gap-3 mt-6">
-              {[
-                ["username", "Username", profile.username],
-                ["xUsername", "Twitter/X", profile.xUsername],
-                ["githubUsername", "GitHub", profile.githubUsername],
-              ].map(([key, label, value]) => (
-                <label key={key} style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495", textTransform: "uppercase" }}>
-                  {label}
-                  <input
-                    value={value}
-                    onChange={(e) => update({ [key]: e.target.value } as any)}
-                    className="mt-1 w-full px-4 py-3 rounded-xl"
-                    placeholder={label}
-                  />
-                </label>
-              ))}
+              <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ color: "#849495", fontSize: 11 }}>Twitter/X</div>
+                <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{profile.xUsername || "Not set"}</div>
+              </div>
+              <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ color: "#849495", fontSize: 11 }}>GitHub</div>
+                <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{profile.githubUsername || "Not set"}</div>
+              </div>
             </div>
 
+            <button onClick={openEdit} className="btn-outline-cyan w-full mt-5 px-5 py-3 rounded-xl">Edit Profile</button>
             <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-primary block text-center mt-5 px-5 py-3 rounded-xl">Open Arc Faucet</a>
 
             <div className="mt-5">
@@ -116,6 +123,36 @@ export default function ProfilePage() {
           </section>
         </div>
       </div>
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }}>
+          <div className="arc-card rounded-3xl p-6 w-[min(520px,92vw)]">
+            <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, color: "#f8fbff", marginBottom: 18 }}>Edit Profile</h2>
+            <label className="flex items-center gap-4 cursor-pointer mb-5">
+              {draft.avatarDataUrl ? (
+                <img src={draft.avatarDataUrl} alt="Profile draft" className="w-20 h-20 rounded-full object-cover" />
+              ) : (
+                <span className="w-20 h-20 rounded-full grid place-items-center" style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", color: "white", fontFamily: "'Space Grotesk'", fontWeight: 900 }}>OP</span>
+              )}
+              <span className="btn-ghost px-4 py-3 rounded-xl">Upload Picture</span>
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatar} />
+            </label>
+            {[
+              ["username", "Username"],
+              ["xUsername", "Twitter/X"],
+              ["githubUsername", "GitHub"],
+            ].map(([key, label]) => (
+              <label key={key} className="block mb-3" style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495", textTransform: "uppercase" }}>
+                {label}
+                <input value={(draft as any)[key]} onChange={(event) => setDraft((prev) => ({ ...prev, [key]: event.target.value }))} className="mt-1 w-full px-4 py-3 rounded-xl" />
+              </label>
+            ))}
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setIsEditing(false)} className="btn-ghost flex-1 py-3 rounded-xl">Cancel</button>
+              <button onClick={() => { update(draft); setIsEditing(false); }} className="btn-primary flex-1 py-3 rounded-xl">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
