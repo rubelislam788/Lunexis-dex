@@ -18,39 +18,118 @@ A Next.js 15 web3 questing platform integrated with [Circle Arc App Kit](https:/
 
 ---
 
+## Features
+
+- ✨ **Modern Glassmorphism UI** with smooth animations and transitions
+- 🎯 **Real Web3 Integration** via wagmi, viem, and Circle Arc App Kit
+- 🔄 **Token Swaps** with live balance tracking and approval management
+- 🌉 **Cross-Chain Bridging** via Circle CCTP v2
+- 📊 **Mission Tracking** with activity timeline and leaderboard
+- 👛 **Wallet Management** with multi-chain support
+- 📱 **Responsive Design** for desktop and mobile
+- ⚡ **Fast Deployments** with Vercel integration
+
+---
+
 ## Quick Start
 
 ### 1. Install dependencies
 
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 ### 2. Configure environment variables
 
-```bash
+\`\`\`bash
 cp .env.local.example .env.local
-```
+\`\`\`
 
-Then edit `.env.local`:
+Then edit \`.env.local\`:
 
-```env
+\`\`\`env
 # Required for Swap — get from https://console.circle.com
 NEXT_PUBLIC_ARC_KIT_KEY=your_kit_key_here
 
-# Required for WalletConnect — get from https://cloud.walletconnect.com
+# Optional for WalletConnect — get from https://cloud.walletconnect.com
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
-```
 
-> **Note**: Bridge works without a kit key. Swap requires `NEXT_PUBLIC_ARC_KIT_KEY`.
+# RPC endpoints (optional, defaults provided)
+NEXT_PUBLIC_ARC_RPC_URL=https://rpc.arc.io
+NEXT_PUBLIC_ARC_EXPLORER_URL=https://scan.arc.io
+\`\`\`
+
+> **Note**: Bridge works without a kit key. Swap requires \`NEXT_PUBLIC_ARC_KIT_KEY\`.
 
 ### 3. Run the dev server
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### 4. Build for production
+
+\`\`\`bash
+npm run build
+npm start
+\`\`\`
+
+---
+
+## Deployment (Vercel)
+
+### 1. Push to GitHub
+
+\`\`\`bash
+git add .
+git commit -m "Deploy: ready for production"
+git push origin main
+\`\`\`
+
+### 2. Deploy to Vercel
+
+1. Go to [Vercel Dashboard](https://vercel.com)
+2. Click "Add New Project"
+3. Import your GitHub repository
+4. Add Environment Variables:
+   - \`NEXT_PUBLIC_ARC_KIT_KEY\`
+   - \`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID\`
+   - \`NEXT_PUBLIC_ARC_RPC_URL\`
+   - \`NEXT_PUBLIC_ARC_EXPLORER_URL\`
+5. Click "Deploy"
+
+The site will be live in ~2 minutes at \`https://your-project.vercel.app\`
+
+---
+
+## UI Enhancements (v1.1)
+
+---
+
+## UI Enhancements (v1.1)
+
+Recent improvements for production deployment:
+
+### Visual Enhancements
+- ✨ **Enhanced Toast Notifications** with icon indicators and smooth slide animations
+- 🎨 **Improved Input Focus States** with cyan glow effects and background transitions
+- 🔄 **Smooth Button Transitions** with active/hover states and scale animations
+- 📱 **Better Icon Button Interactions** with elevation and glow on hover
+- ⌛ **Loading Spinner** styles with CSS-based animations
+
+### UX Improvements
+- ✅ **Better Toast Exit Animation** with smooth fade and slide out
+- 🎯 **Enhanced Button States** with disabled state opacity and cursor changes
+- 🔍 **Improved Input Styling** with focus ring glow and background color shifts
+- 🔔 **Type-Specific Icons** for success (✓), error (!), and info (ℹ) notifications
+- 🎪 **Modal Animation** with slide-up entrance effect
+
+### Accessibility
+- ⌨️ **Better Focus States** with visible focus rings
+- 🖱️ **Disabled State Clarity** with cursor not-allowed on disabled elements
+- 📊 **Improved Contrast** in notification backgrounds
 
 ---
 

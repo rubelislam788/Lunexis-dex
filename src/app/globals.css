@@ -712,3 +712,99 @@ select:focus {
   filter: grayscale(0%) !important;
   transform: scale(1.08);
 }
+
+/* Enhanced loading states */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 220, 229, 0.2);
+  border-top-color: #00dce5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Improved input focus states */
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: #00dce5 !important;
+  box-shadow: 0 0 16px rgba(0, 220, 229, 0.2), inset 0 0 8px rgba(0, 220, 229, 0.06) !important;
+  background: rgba(0, 220, 229, 0.03) !important;
+}
+
+/* Enhanced button active states */
+button:active {
+  transform: scale(0.98) !important;
+}
+
+/* Icon action button enhancements */
+.arc-icon-action {
+  transition: all 0.24s ease;
+}
+
+.arc-icon-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(56, 189, 248, 0.15);
+}
+
+.arc-icon-action:active {
+  transform: scale(0.96);
+}
+
+/* Modal animations */
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-enter {
+  animation: modalSlideUp 0.28s ease both;
+}
+
+/* Toast improvements */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.24s ease both;
+}
+
+/* Better disabled state */
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

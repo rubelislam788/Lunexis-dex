@@ -10,15 +10,38 @@ interface ToastProps {
 }
 
 export function Toast({ message, type = "info", onClose }: ToastProps) {
+  const [isExiting, setIsExiting] = useState(false);
+
   useEffect(() => {
-    const t = setTimeout(onClose, 4000);
+    const t = setTimeout(() => {
+      setIsExiting(true);
+      setTimeout(onClose, 200);
+    }, 4000);
     return () => clearTimeout(t);
   }, [onClose]);
 
   const colors = {
-    success: { bg: "rgba(0,220,229,0.08)", border: "rgba(0,220,229,0.3)", color: "#00dce5" },
-    error: { bg: "rgba(255,80,80,0.08)", border: "rgba(255,80,80,0.3)", color: "#ffb4ab" },
-    info: { bg: "rgba(0,220,229,0.08)", border: "rgba(0,220,229,0.3)", color: "#e5e2e3" },
+    success: {
+      bg: "rgba(0, 220, 229, 0.1)",
+      border: "rgba(0, 220, 229, 0.35)",
+      color: "#00dce5",
+      glow: "0 0 16px rgba(0, 220, 229, 0.2)",
+      icon: "✓",
+    },
+    error: {
+      bg: "rgba(255, 107, 107, 0.1)",
+      border: "rgba(255, 107, 107, 0.35)",
+      color: "#ffb4ab",
+      glow: "0 0 16px rgba(255, 107, 107, 0.15)",
+      icon: "!",
+    },
+    info: {
+      bg: "rgba(0, 220, 229, 0.1)",
+      border: "rgba(0, 220, 229, 0.35)",
+      color: "#e5e2e3",
+      glow: "0 0 12px rgba(0, 220, 229, 0.15)",
+      icon: "ℹ",
+    },
   };
   const c = colors[type];
 
@@ -33,17 +56,58 @@ export function Toast({ message, type = "info", onClose }: ToastProps) {
         alignItems: "center",
         gap: 12,
         padding: "14px 20px",
-        borderRadius: 10,
+        borderRadius: 14,
         background: c.bg,
         border: `1px solid ${c.border}`,
         backdropFilter: "blur(12px)",
-        animation: "slideUp 0.2s ease",
-      }}
+        boxShadow: c.glow,
+        animation: isExiting ? "toastSlideOut 0.2s ease forwards" : "toastSlideIn 0.24s ease both",
+      } as any}
     >
-      <span style={{ color: c.color, fontSize: 14, fontFamily: "'Space Grotesk'", fontWeight: 600 }}>
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 20,
+          height: 20,
+          borderRadius: 999,
+          background: `${c.color}22`,
+          color: c.color,
+          fontSize: 12,
+          fontWeight: 700,
+          flexShrink: 0,
+        }}
+      >
+        {c.icon}
+      </span>
+      <span style={{ color: c.color, fontSize: 14, fontFamily: "'Space Grotesk'", fontWeight: 600, flexGrow: 1 }}>
         {message}
       </span>
-      <button onClick={onClose} style={{ color: "#555", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>
+      <button
+        onClick={() => {
+          setIsExiting(true);
+          setTimeout(onClose, 200);
+        }}
+        style={{
+          color: c.color,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          fontSize: 20,
+          opacity: 0.7,
+          transition: "opacity 0.2s ease",
+          padding: 0,
+          width: 20,
+          height: 20,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+        onMouseEnter={(e) => ((e.target as HTMLElement).style.opacity = "1")}
+        onMouseLeave={(e) => ((e.target as HTMLElement).style.opacity = "0.7")}
+      >
         ×
       </button>
     </div>
