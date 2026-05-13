@@ -1,10 +1,12 @@
 // src/components/layout/Header.tsx
 "use client";
 
-import WalletButton from "@/components/ui/WalletButton";
+import dynamic from "next/dynamic";
 import FaucetButton from "@/components/ui/FaucetButton";
 import ArcLogo from "@/components/ui/ArcLogo";
 import type { Page } from "@/types";
+
+const ArcSwapConnectButton = dynamic(() => import("@/components/arc-swap/ArcSwapConnectButton"), { ssr: false });
 
 interface HeaderProps {
   currentPage: Page;
@@ -133,7 +135,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
         </nav>
       </div>
 
-      <WalletButton onNavigate={onNavigate} />
+      <ArcSwapConnectButton />
     </header>
   );
 }

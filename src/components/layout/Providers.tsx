@@ -5,7 +5,8 @@ import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { wagmiConfig } from "@/lib/wagmi";
+import { arcChain, wagmiConfig } from "@/lib/wagmi";
+import WalletStatusToasts from "@/components/layout/WalletStatusToasts";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -14,6 +15,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={wagmiConfig} reconnectOnMount>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
+          initialChain={arcChain}
           modalSize="compact"
           theme={darkTheme({
             accentColor: "#7c3aed",
@@ -22,6 +24,7 @@ export default function Providers({ children }: { children: ReactNode }) {
             overlayBlur: "small",
           })}
         >
+          <WalletStatusToasts />
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>
