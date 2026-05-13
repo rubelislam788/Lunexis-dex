@@ -1,4 +1,4 @@
-export const ARC_FAUCET_URL = "https://example.com/arc-faucet";
+export const ARC_FAUCET_URL = "https://faucet.circle.com";
 
 export const SOCIAL_LINKS = {
   rubel: "https://x.com/rubelislam0461",

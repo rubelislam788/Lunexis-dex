@@ -4,6 +4,7 @@
 import type { Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { SOCIAL_LINKS } from "@/lib/constants";
+import FaucetButton from "@/components/ui/FaucetButton";
 
 export const QUESTS: Quest[] = [
   { id: "q1", title: "First Swap on Arc", description: "Complete your first token swap using Circle Arc App Kit on Arc Testnet.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 1, tags: ["Swap", "Arc Kit"], featured: true },
@@ -45,6 +46,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             </p>
           </div>
           <div className="flex gap-3">
+            <FaucetButton label="Need Test USDC?" compact />
             <button
               onClick={() => onNavigate("swap")}
               className="btn-outline-cyan px-4 py-2 rounded-lg text-xs"

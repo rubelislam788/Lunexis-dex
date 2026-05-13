@@ -2,6 +2,7 @@
 "use client";
 
 import type { Page } from "@/types";
+import FaucetButton from "@/components/ui/FaucetButton";
 
 interface LandingPageProps {
   onNavigate: (page: Page) => void;
@@ -59,6 +60,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             >
               View Missions
             </button>
+            <FaucetButton label="Claim Faucet Tokens" />
           </div>
 
           {/* Swap/Bridge quick links */}

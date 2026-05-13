@@ -3,7 +3,6 @@
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
-import { ARC_FAUCET_URL } from "@/lib/constants";
 import { TOKEN_META } from "@/lib/tokens";
 import TokenIcon from "@/components/ui/TokenIcon";
 import ActivityTimeline from "@/components/ActivityTimeline";
@@ -39,7 +38,6 @@ export default function ProfilePage() {
           <div className="arc-card rounded-3xl p-10">
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, color: "#f8fbff" }}>Connect Wallet</h1>
             <p style={{ color: "#849495", marginTop: 10 }}>Your editable profile, rewards, balances, and history appear after wallet connection.</p>
-            <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-primary inline-block mt-6 px-6 py-3 rounded-xl">Open Faucet</a>
           </div>
         </div>
       </div>
@@ -77,8 +75,6 @@ export default function ProfilePage() {
             </div>
 
             <button onClick={openEdit} className="btn-outline-cyan w-full mt-5 px-5 py-3 rounded-xl">Edit Profile</button>
-            <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-primary block text-center mt-5 px-5 py-3 rounded-xl">Open Arc Faucet</a>
-
             <div className="mt-5">
               <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginBottom: 10 }}>Connected Wallets</h2>
               <div className="grid gap-2">

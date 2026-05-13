@@ -6,11 +6,11 @@ import { useAccount } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/components/ui/Toast";
-import { ARC_FAUCET_URL } from "@/lib/constants";
 import { createActivity } from "@/lib/profile";
 import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
+import FaucetButton from "@/components/ui/FaucetButton";
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
@@ -18,6 +18,7 @@ export default function SwapPage() {
   const { profile, pushActivity } = useProfile();
   const { show, ToastContainer } = useToast();
   const [selector, setSelector] = useState<"from" | "to" | null>(null);
+  const [showFaucetHint, setShowFaucetHint] = useState(false);
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
@@ -32,7 +33,9 @@ export default function SwapPage() {
       pushActivity(createActivity("swap", "Token swap", `${state.amountIn} ${state.fromToken} swapped to ${state.toToken}.`, state.fromToken as TokenSymbol));
       show(`Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}`, "success");
     } catch (err: any) {
-      show(err.message || "Swap failed", "error");
+      const message = err?.message || "Swap failed";
+      setShowFaucetHint(/insufficient|funds|balance/i.test(message));
+      show(message, "error");
     }
   };
 
@@ -62,7 +65,7 @@ export default function SwapPage() {
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Token Swap</h1>
             <p style={{ color: "#849495", fontSize: 16 }}>Swap USDC, EURC, and WETH with exact uploaded token logos.</p>
           </div>
-          <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-outline-cyan px-5 py-3 rounded-xl text-xs">Open Faucet</a>
+          <FaucetButton label="Need Test USDC?" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -95,6 +98,18 @@ export default function SwapPage() {
             <button onClick={handleSwap} disabled={isLoading || !state.amountIn} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Swapping..." : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
             </button>
+            {!isConnected && (
+              <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.16)" }}>
+                <span style={{ color: "#849495", fontSize: 12 }}>Need test funds after connecting?</span>
+                <FaucetButton label="Faucet" compact />
+              </div>
+            )}
+            {showFaucetHint && (
+              <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
+                <span style={{ color: "#ffb7eb", fontSize: 12 }}>Transaction may need test tokens.</span>
+                <FaucetButton label="Get Test Tokens" compact />
+              </div>
+            )}
             {state.txHash && (
               <a href={`https://scan.arc.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction

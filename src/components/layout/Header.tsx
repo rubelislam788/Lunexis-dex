@@ -2,6 +2,7 @@
 "use client";
 
 import WalletButton from "@/components/ui/WalletButton";
+import FaucetButton from "@/components/ui/FaucetButton";
 import type { Page } from "@/types";
 
 interface HeaderProps {
@@ -130,6 +131,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             </svg>
             Bridge
           </button>
+          <FaucetButton label="Faucet" compact />
         </nav>
       </div>
 

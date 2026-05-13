@@ -1,8 +1,8 @@
 "use client";
 
 import { useProfile } from "@/hooks/useProfile";
-import { ARC_FAUCET_URL } from "@/lib/constants";
 import ActivityTimeline from "@/components/ActivityTimeline";
+import FaucetButton from "@/components/ui/FaucetButton";
 
 const REWARDS = [
   { id: "reward-social", title: "Social Signal Pack", amount: 650, requirement: "Complete social missions" },
@@ -21,7 +21,7 @@ export default function RewardsPage() {
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 34, fontWeight: 900, color: "#f8fbff" }}>Rewards Command</h1>
             <p style={{ color: "#849495" }}>Claim ARCQ rewards, monitor XP, and track achievements.</p>
           </div>
-          <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-primary px-5 py-3 rounded-xl">Open Faucet</a>
+          <FaucetButton label="Get Test Tokens" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

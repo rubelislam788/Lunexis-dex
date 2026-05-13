@@ -7,11 +7,11 @@ import { useArcBridge } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/components/ui/Toast";
 import { CHAIN_META, SUPPORTED_CHAINS, type SupportedChain } from "@/lib/arc-kit";
-import { ARC_FAUCET_URL } from "@/lib/constants";
 import { createActivity } from "@/lib/profile";
 import { BRIDGE_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
+import FaucetButton from "@/components/ui/FaucetButton";
 
 const CHAIN_LIST = Object.values(SUPPORTED_CHAINS) as SupportedChain[];
 
@@ -22,6 +22,7 @@ export default function BridgePage() {
   const { show, ToastContainer } = useToast();
   const [activeStep, setActiveStep] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [showFaucetHint, setShowFaucetHint] = useState(false);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
 
   const handleBridge = async () => {
@@ -39,8 +40,10 @@ export default function BridgePage() {
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken));
       show(`Bridged ${state.amount} ${selectedToken}`, "success");
     } catch (err: any) {
+      const message = err?.message || "Bridge failed";
       setActiveStep(0);
-      show(err.message || "Bridge failed", "error");
+      setShowFaucetHint(/insufficient|funds|balance/i.test(message));
+      show(message, "error");
     }
   };
 
@@ -59,7 +62,7 @@ export default function BridgePage() {
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Cross-Chain Bridge</h1>
             <p style={{ color: "#849495", fontSize: 16 }}>Bridge USDC or WETH through a cinematic ARC transaction flow.</p>
           </div>
-          <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-outline-cyan px-5 py-3 rounded-xl text-xs">Open Faucet</a>
+          <FaucetButton label="Open Arc Faucet" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -114,6 +117,18 @@ export default function BridgePage() {
             <button disabled={isLoading || !state.amount} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Routing Bridge..." : isConnected ? "Review Bridge" : "Connect Wallet to Bridge"}
             </button>
+            {!isConnected && (
+              <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.06)", border: "1px solid rgba(255,45,178,0.16)" }}>
+                <span style={{ color: "#849495", fontSize: 12 }}>Need test tokens for bridging?</span>
+                <FaucetButton label="Faucet" compact />
+              </div>
+            )}
+            {showFaucetHint && (
+              <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
+                <span style={{ color: "#ffb7eb", fontSize: 12 }}>Insufficient balance? Claim test tokens.</span>
+                <FaucetButton label="Get Test Tokens" compact />
+              </div>
+            )}
             {state.txHash && (
               <a href={`https://scan.arc.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
