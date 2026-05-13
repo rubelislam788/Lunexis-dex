@@ -5,11 +5,11 @@ const STORAGE_KEY = "arcquest.profiles.v1";
 type ProfileStore = Record<string, UserProfile>;
 
 const DEFAULT_BALANCES: PortfolioBalance[] = [
-  { token: "ETH", amount: "0.824", value: "$2,682.14" },
-  { token: "ARC", amount: "4,250", value: "Testnet" },
-  { token: "USDC", amount: "128.50", value: "$128.50" },
-  { token: "EURC", amount: "46.20", value: "€46.20" },
-  { token: "WETH", amount: "1.42", value: "$4,622.10" },
+  { token: "ETH", amount: "0", value: "Live", chain: "Connected network" },
+  { token: "ARC", amount: "0", value: "Live", chain: "Arc Testnet" },
+  { token: "USDC", amount: "0", value: "$0.00", chain: "Connected network" },
+  { token: "EURC", amount: "0", value: "EUR 0.00", chain: "Connected network" },
+  { token: "WETH", amount: "0", value: "Live", chain: "Connected network" },
 ];
 
 function normalizeAddress(address: string) {
@@ -37,7 +37,8 @@ export function createActivity(
   title: string,
   description: string,
   token?: TokenSymbol,
-  status: ActivityItem["status"] = "completed"
+  status: ActivityItem["status"] = "completed",
+  txHash?: string
 ): ActivityItem {
   return {
     id: `${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -45,6 +46,7 @@ export function createActivity(
     title,
     description,
     token,
+    txHash,
     status,
     timestamp: new Date().toISOString(),
   };

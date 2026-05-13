@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useArcBridge } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
+import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
 import { CHAIN_META, SUPPORTED_CHAINS, type SupportedChain } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
@@ -12,17 +13,20 @@ import { BRIDGE_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
+import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
 const CHAIN_LIST = Object.values(SUPPORTED_CHAINS) as SupportedChain[];
 
 export default function BridgePage() {
   const { isConnected, address } = useAccount();
   const { state, updateState, executeBridge, reset } = useArcBridge();
-  const { profile, pushActivity } = useProfile();
+  const { pushActivity } = useProfile();
+  const { balances, isLoading: balancesLoading } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
   const [activeStep, setActiveStep] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
+  const [successTx, setSuccessTx] = useState<{ hash?: string; timestamp: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
 
   const handleBridge = async () => {
@@ -36,8 +40,9 @@ export default function BridgePage() {
       setTimeout(() => setActiveStep(2), 1200);
       setTimeout(() => setActiveStep(3), 2600);
       setTimeout(() => setActiveStep(4), 4200);
-      await executeBridge();
-      pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken));
+      const result = await executeBridge();
+      pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
+      setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString() });
       show(`Bridged ${state.amount} ${selectedToken}`, "success");
     } catch (err: any) {
       const message = err?.message || "Bridge failed";
@@ -142,7 +147,7 @@ export default function BridgePage() {
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Bridge Progress</h3>
               {["Approve", "Lock / Burn", "Attest", "Mint"].map((label, index) => (
                 <div key={label} className="flex items-center gap-3 mb-3 p-3 rounded-xl" style={{ background: activeStep === index + 1 ? "rgba(255,45,178,0.12)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: activeStep > index ? "#38bdf8" : "rgba(255,255,255,0.06)", color: "white", fontFamily: "'Space Grotesk'", fontSize: 11 }}>{activeStep > index ? "✓" : index + 1}</span>
+                  <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: activeStep > index ? "#38bdf8" : "rgba(255,255,255,0.06)", color: "white", fontFamily: "'Space Grotesk'", fontSize: 11 }}>{activeStep > index ? "OK" : index + 1}</span>
                   <span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{label}</span>
                 </div>
               ))}
@@ -150,10 +155,10 @@ export default function BridgePage() {
 
             <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Bridge Balances</h3>
-              {(profile?.balances.filter((item) => BRIDGE_TOKENS.includes(item.token)) ?? []).map((item) => (
+              {balances.filter((item) => BRIDGE_TOKENS.includes(item.token)).map((item) => (
                 <div key={item.token} className="flex items-center justify-between rounded-xl p-3 mb-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <div className="flex items-center gap-2"><TokenIcon symbol={item.token} size={32} /><span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{item.token}</span></div>
-                  <span style={{ color: "#849495" }}>{item.amount}</span>
+                  <span style={{ color: "#849495" }}>{balancesLoading || item.isLoading ? "..." : item.amount}</span>
                 </div>
               ))}
             </div>
@@ -173,6 +178,17 @@ export default function BridgePage() {
           </div>
         </div>
       )}
+      <TransactionSuccessModal
+        open={Boolean(successTx)}
+        kind="bridge"
+        amount={state.amount}
+        fromLabel={`${selectedToken} from ${CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain}`}
+        toLabel={CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}
+        network={`${CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain} -> ${CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}`}
+        txHash={successTx?.hash}
+        timestamp={successTx?.timestamp}
+        onClose={() => setSuccessTx(null)}
+      />
     </div>
   );
 }

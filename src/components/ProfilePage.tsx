@@ -3,12 +3,14 @@
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
+import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { TOKEN_META } from "@/lib/tokens";
 import TokenIcon from "@/components/ui/TokenIcon";
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 export default function ProfilePage() {
   const { profile, address, isConnected, update } = useProfile();
+  const { balances, isLoading: balancesLoading, lastUpdated, refresh } = usePortfolioBalances();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState({ username: "", xUsername: "", githubUsername: "", avatarDataUrl: "" });
 
@@ -100,13 +102,26 @@ export default function ProfilePage() {
             ))}
 
             <div className="md:col-span-3 arc-card rounded-3xl p-6">
-              <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Portfolio Overview</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>Live Portfolio</h2>
+                  <p style={{ color: "#849495", fontSize: 12, marginTop: 4 }}>
+                    {lastUpdated ? `Synced ${lastUpdated}` : "Reading balances from your connected wallet"}
+                  </p>
+                </div>
+                <button onClick={refresh} disabled={balancesLoading} className="btn-ghost px-4 py-2 rounded-xl" style={{ fontSize: 11 }}>
+                  {balancesLoading ? "Syncing..." : "Refresh"}
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                {profile.balances.map((balance) => (
+                {balances.map((balance) => (
                   <div key={balance.token} className="p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${TOKEN_META[balance.token].accent}44` }}>
                     <TokenIcon symbol={balance.token} size={42} />
-                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginTop: 10 }}>{balance.amount} {balance.token}</div>
+                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginTop: 10 }}>
+                      {balance.isLoading ? <span className="arc-skeleton inline-block w-16 h-4 rounded-full" /> : `${balance.amount} ${balance.token}`}
+                    </div>
                     <div style={{ color: "#849495", fontSize: 11 }}>{balance.value}</div>
+                    <div style={{ color: "#5f778b", fontSize: 10, marginTop: 3 }}>{balance.chain}</div>
                   </div>
                 ))}
               </div>

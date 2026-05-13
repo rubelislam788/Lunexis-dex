@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAccount, useBalance, useConnect, useDisconnect } from "wagmi";
 import type { Page } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
+import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { formatAddress } from "@/lib/utils";
 import TokenIcon from "@/components/ui/TokenIcon";
 
@@ -14,6 +15,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
   const { disconnect } = useDisconnect();
   const { data: balance } = useBalance({ address });
   const { profile } = useProfile();
+  const { balances, isLoading: balancesLoading } = usePortfolioBalances();
   const [showMenu, setShowMenu] = useState(false);
   const [showWallets, setShowWallets] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
@@ -90,10 +92,10 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                {(profile?.balances.slice(0, 3) ?? []).map((item) => (
+                {balances.slice(0, 3).map((item) => (
                   <div key={item.token} className="rounded-xl p-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                     <TokenIcon symbol={item.token} size={28} />
-                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#f8fbff", marginTop: 6 }}>{item.amount}</div>
+                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#f8fbff", marginTop: 6 }}>{balancesLoading ? "..." : item.amount}</div>
                     <div style={{ fontSize: 10, color: "#849495" }}>{item.token}</div>
                   </div>
                 ))}

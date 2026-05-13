@@ -64,6 +64,8 @@ export interface PortfolioBalance {
   token: TokenSymbol;
   amount: string;
   value: string;
+  chain: string;
+  isLoading?: boolean;
 }
 
 export interface UserProfile {
