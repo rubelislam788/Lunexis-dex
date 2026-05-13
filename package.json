@@ -1,5 +1,5 @@
 {
-  "name": "arc-quest",
+  "name": "arc-swap",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,10 +15,12 @@
     "react-dom": "^19.0.0",
     "@circle-fin/app-kit": "^1.0.0",
     "@circle-fin/adapter-viem-v2": "^1.0.0",
+    "@rainbow-me/rainbowkit": "^2.2.11",
     "viem": "^2.21.0",
     "wagmi": "^2.12.0",
     "@tanstack/react-query": "^5.62.0",
     "clsx": "^2.1.1",
+    "ethers": "^6.15.0",
     "tailwind-merge": "^2.5.4",
     "framer-motion": "^11.12.0",
     "recharts": "^2.13.3",

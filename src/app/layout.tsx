@@ -1,19 +1,19 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
 
 export const metadata: Metadata = {
-  title: "ARC Quest — Web3 Mission Control",
-  description:
-    "Deploy your expertise into the most advanced cryptographic questing protocol. Track, earn, and dominate the decentralized frontier.",
-  keywords: ["Web3", "ARC", "quests", "DeFi", "crypto", "missions"],
+  title: "ARC Swap - ARC Chain DEX",
+  description: "A modern decentralized exchange for the ARC Chain ecosystem with swap, liquidity, bridge, portfolio, and admin tooling.",
+  keywords: ["Web3", "ARC Swap", "ARC Chain", "DEX", "DeFi", "RainbowKit", "wagmi"],
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <html lang="en" className="dark">
@@ -22,10 +22,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
           rel="stylesheet"
         />
       </head>

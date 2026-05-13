@@ -53,7 +53,7 @@ export default function ArcLogo({
             lineHeight: 1,
           }}
         >
-          ARC QUEST
+          ARC SWAP
         </div>
         <div
           style={{
@@ -66,7 +66,7 @@ export default function ArcLogo({
             marginTop: 4,
           }}
         >
-          Operator Network
+          ARC Chain DEX
         </div>
       </div>
     </div>

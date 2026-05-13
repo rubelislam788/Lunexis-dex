@@ -1,48 +1,33 @@
-// src/lib/wagmi.ts
-import { createConfig, http } from "wagmi";
-import { coinbaseWallet, injected, metaMask, walletConnect } from "wagmi/connectors";
-import { sepolia, baseSepolia, arbitrumSepolia, optimismSepolia } from "wagmi/chains";
+import { getDefaultConfig, type Chain } from "@rainbow-me/rainbowkit";
+import { http } from "wagmi";
+import { sepolia } from "wagmi/chains";
 
-export const arcTestnet = {
+export const arcChain = {
   id: 1723,
-  name: "Arc Testnet",
-  network: "arc-testnet",
-  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  name: "ARC Chain",
+  iconUrl: "/arc-assets/arc.jpg",
+  iconBackground: "#07111f",
+  nativeCurrency: { name: "ARC Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://rpc.arc.io"] },
-    public: { http: ["https://rpc.arc.io"] },
+    default: { http: [process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.arc.io"] },
   },
   blockExplorers: {
-    default: { name: "ArcScan", url: "https://scan.arc.io" },
+    default: { name: "ARC Scan", url: process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://scan.arc.io" },
   },
   testnet: true,
-} as const;
+} satisfies Chain;
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
-const connectors = [
-  metaMask(),
-  injected(),
-  coinbaseWallet({ appName: "ARC Quest" }),
-  ...(projectId ? [walletConnect({ projectId, showQrModal: true })] : []),
-];
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "arc-swap-demo";
 
-export const wagmiChains = [
-  arcTestnet,
-  sepolia,
-  baseSepolia,
-  arbitrumSepolia,
-  optimismSepolia,
-] as const;
+export const wagmiChains: readonly [Chain, ...Chain[]] = [arcChain, sepolia];
 
-export const wagmiConfig = createConfig({
+export const wagmiConfig = getDefaultConfig({
+  appName: "ARC Swap",
+  projectId,
   chains: wagmiChains,
-  connectors,
-  transports: {
-    [arcTestnet.id]: http("https://rpc.arc.io"),
-    [sepolia.id]: http(process.env.NEXT_PUBLIC_ETH_SEPOLIA_RPC ?? "https://rpc.sepolia.org"),
-    [baseSepolia.id]: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC ?? "https://base-sepolia.publicnode.com"),
-    [arbitrumSepolia.id]: http(process.env.NEXT_PUBLIC_ARB_SEPOLIA_RPC ?? "https://arbitrum-sepolia.publicnode.com"),
-    [optimismSepolia.id]: http(process.env.NEXT_PUBLIC_OP_SEPOLIA_RPC ?? "https://optimism-sepolia.publicnode.com"),
-  },
   ssr: true,
+  transports: {
+    [arcChain.id]: http(process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.arc.io"),
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"),
+  },
 });
