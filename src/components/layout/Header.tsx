@@ -2,7 +2,6 @@
 "use client";
 
 import WalletButton from "@/components/ui/WalletButton";
-import { cn } from "@/lib/utils";
 import type { Page } from "@/types";
 
 interface HeaderProps {
@@ -22,15 +21,17 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
     <header
       className="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 border-b"
       style={{
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(16px)",
-        borderColor: "rgba(0,220,229,0.15)",
+        background: "linear-gradient(90deg, rgba(2,4,10,0.88), rgba(6,20,40,0.76), rgba(2,4,10,0.88))",
+        backdropFilter: "blur(22px)",
+        borderColor: "rgba(148,217,255,0.16)",
+        boxShadow: "0 14px 44px rgba(0,0,0,0.32)",
       }}
     >
       {/* Logo + Nav */}
       <div className="flex items-center gap-8">
         <button
           onClick={() => onNavigate("landing")}
+          className="flex items-center gap-3"
           style={{
             fontFamily: "'Space Grotesk'",
             fontWeight: 900,
@@ -43,6 +44,18 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             cursor: "pointer",
           }}
         >
+          <span
+            className="grid place-items-center rounded-full"
+            style={{
+              width: 36,
+              height: 36,
+              background: "rgba(56,189,248,0.1)",
+              border: "1px solid rgba(56,189,248,0.35)",
+              boxShadow: "0 0 22px rgba(56,189,248,0.24)",
+            }}
+          >
+            <img src="/arc-assets/arc.jpg" alt="Arc logo" style={{ width: 26, height: 26, borderRadius: 999, objectFit: "cover" }} />
+          </span>
           ARC QUEST
         </button>
 

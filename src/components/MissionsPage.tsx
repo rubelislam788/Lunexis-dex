@@ -2,6 +2,7 @@
 "use client";
 
 import type { Page, Quest } from "@/types";
+import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 export const QUESTS: Quest[] = [
   { id: "q1", title: "First Swap on Arc", description: "Complete your first token swap using Circle Arc App Kit on Arc Testnet.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 1, tags: ["Swap", "Arc Kit"], featured: true },
@@ -26,13 +27,13 @@ interface MissionsPageProps {
 
 export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
   return (
-    <div className="min-h-screen pt-16 pl-64" style={{ background: "#131314" }}>
-      <div className="max-w-5xl mx-auto px-8 py-10">
+    <div className="min-h-screen pt-16 pl-64 arc-page-shell">
+      <div className="relative z-10 max-w-6xl mx-auto px-8 py-10">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 arc-fade-up">
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#e9feff", marginBottom: 4 }}>
-              Active Quests
+              ARC Mission Grid
             </h1>
             <p style={{ color: "#849495", fontSize: 14 }}>
               {QUESTS.length} missions available · Earn ARCQ & climb the ranks
@@ -63,6 +64,10 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
               🌉 Bridge
             </button>
           </div>
+        </div>
+
+        <div className="mb-10 arc-fade-up">
+          <EcosystemShowcase compact />
         </div>
 
         {/* Featured */}
@@ -97,7 +102,7 @@ function QuestCard({ quest, onSelectQuest, featured }: { quest: Quest; onSelectQ
   const progressPct = quest.totalSteps > 0 ? (quest.progress / quest.totalSteps) * 100 : 0;
   return (
     <div
-      className="rounded-xl p-5 cursor-pointer transition-all"
+      className="rounded-xl p-5 cursor-pointer transition-all arc-card"
       style={{
         background: "#0e0e0f",
         border: `1px solid ${featured ? "rgba(0,220,229,0.2)" : "rgba(255,255,255,0.06)"}`,

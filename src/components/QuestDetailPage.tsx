@@ -2,6 +2,7 @@
 "use client";
 
 import type { Page, Quest } from "@/types";
+import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
@@ -54,7 +55,7 @@ interface QuestDetailPageProps {
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
   if (!quest) {
     return (
-      <div className="min-h-screen pt-16 pl-64 flex items-center justify-center" style={{ background: "#131314" }}>
+      <div className="min-h-screen pt-16 pl-64 flex items-center justify-center arc-page-shell">
         <div className="text-center">
           <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, color: "#e9feff", marginBottom: 12 }}>
             Quest Not Found
@@ -72,8 +73,8 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
   const progressPct = quest.totalSteps > 0 ? Math.min(100, (quest.progress / quest.totalSteps) * 100) : 0;
 
   return (
-    <div className="min-h-screen pt-16 pl-64" style={{ background: "#131314" }}>
-      <div className="max-w-5xl mx-auto px-8 py-10">
+    <div className="min-h-screen pt-16 pl-64 arc-page-shell">
+      <div className="relative z-10 max-w-6xl mx-auto px-8 py-10">
         <button
           onClick={() => onNavigate("missions")}
           className="mb-6 px-4 py-2 rounded-lg"
@@ -92,7 +93,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <section className="lg:col-span-3 rounded-2xl p-6" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <section className="lg:col-span-3 rounded-2xl p-6 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="flex flex-wrap gap-2 mb-5">
               {quest.tags.map((tag) => (
                 <span key={tag} className="px-2 py-1 rounded-md" style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, color: "#849495", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -124,6 +125,10 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
               </div>
             </div>
 
+            <div className="mb-6">
+              <EcosystemShowcase compact />
+            </div>
+
             <button
               onClick={() => onNavigate(action.page)}
               className="w-full py-4 rounded-xl transition-all"
@@ -142,7 +147,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
           </section>
 
           <aside className="lg:col-span-2 flex flex-col gap-4">
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, color: "#849495", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>
                 Reward
               </div>
@@ -154,7 +159,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
               </div>
             </div>
 
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex justify-between mb-2">
                 <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495" }}>Progress</span>
                 <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5" }}>{quest.progress}/{quest.totalSteps}</span>

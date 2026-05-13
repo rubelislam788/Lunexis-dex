@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useToast } from "@/components/ui/Toast";
 import { SUPPORTED_CHAINS, SUPPORTED_TOKENS, CHAIN_META } from "@/lib/arc-kit";
+import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 const TOKEN_LIST = [
   { sym: "USDC", name: "USD Coin", color: "#2775CA", logo: "💵" },
@@ -39,13 +40,10 @@ export default function SwapPage() {
   const isSuccess = state.status === "success";
 
   return (
-    <div
-      className="min-h-screen pt-16"
-      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,180,200,0.06) 0%, transparent 70%), #131314" }}
-    >
+    <div className="min-h-screen pt-16 arc-page-shell">
       <ToastContainer />
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
         {/* Page header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "rgba(0,220,229,0.08)", border: "1px solid rgba(0,220,229,0.2)" }}>
@@ -66,7 +64,7 @@ export default function SwapPage() {
           {/* === SWAP CARD === */}
           <div className="lg:col-span-3">
             <div
-              className="rounded-2xl p-6"
+              className="rounded-2xl p-6 arc-card"
               style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}
             >
               {/* Chain selector */}
@@ -276,8 +274,9 @@ export default function SwapPage() {
 
           {/* === SIDE INFO === */}
           <div className="lg:col-span-2 flex flex-col gap-4">
+            <EcosystemShowcase compact />
             {/* How it works */}
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 700, color: "#e5e2e3", marginBottom: 16 }}>
                 How Swap Works
               </h3>
@@ -303,7 +302,7 @@ export default function SwapPage() {
             </div>
 
             {/* SDK snippet */}
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center justify-between mb-3">
                 <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color: "#849495" }}>SDK CALL</h3>
                 <span style={{ fontFamily: "'Space Grotesk'", fontSize: 9, color: "#555", letterSpacing: "0.1em" }}>@circle-fin/app-kit</span>

@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { useArcBridge } from "@/hooks/useArcBridge";
 import { useToast } from "@/components/ui/Toast";
 import { SUPPORTED_CHAINS, CHAIN_META, type SupportedChain } from "@/lib/arc-kit";
+import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 const CHAIN_LIST = Object.values(SUPPORTED_CHAINS) as SupportedChain[];
 
@@ -47,13 +48,10 @@ export default function BridgePage() {
   const isSuccess = state.status === "success";
 
   return (
-    <div
-      className="min-h-screen pt-16"
-      style={{ background: "radial-gradient(ellipse 80% 60% at 30% 40%, rgba(182,0,248,0.05) 0%, transparent 70%), #131314" }}
-    >
+    <div className="min-h-screen pt-16 arc-page-shell">
       <ToastContainer />
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "rgba(182,0,248,0.08)", border: "1px solid rgba(182,0,248,0.2)" }}>
@@ -74,7 +72,7 @@ export default function BridgePage() {
           {/* === BRIDGE CARD === */}
           <div className="lg:col-span-3">
             <div
-              className="rounded-2xl p-6"
+              className="rounded-2xl p-6 arc-card"
               style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}
             >
               {/* From chain */}
@@ -273,8 +271,9 @@ export default function BridgePage() {
 
           {/* === SIDE PANEL === */}
           <div className="lg:col-span-2 flex flex-col gap-4">
+            <EcosystemShowcase compact />
             {/* CCTP Steps */}
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 700, color: "#e5e2e3", marginBottom: 16 }}>
                 Bridge Progress
               </h3>
@@ -325,7 +324,7 @@ export default function BridgePage() {
             </div>
 
             {/* SDK snippet */}
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center justify-between mb-3">
                 <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color: "#849495" }}>SDK CALL</h3>
                 <span style={{ fontFamily: "'Space Grotesk'", fontSize: 9, color: "#555", letterSpacing: "0.1em" }}>@circle-fin/app-kit</span>
@@ -355,7 +354,7 @@ export default function BridgePage() {
             </div>
 
             {/* Supported chains */}
-            <div className="rounded-2xl p-5" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color: "#849495", marginBottom: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 Supported Chains
               </h3>

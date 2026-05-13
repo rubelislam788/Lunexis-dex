@@ -2,6 +2,7 @@
 "use client";
 
 import type { Page } from "@/types";
+import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 interface LandingPageProps {
   onNavigate: (page: Page) => void;
@@ -19,10 +20,12 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {/* Scanline + grid */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden scanline opacity-20" />
       <div className="absolute inset-0 z-0 grid-bg" />
+      <span className="arc-floating-orb" style={{ width: 260, height: 260, left: "7%", top: "18%", background: "rgba(56,189,248,0.13)" }} />
+      <span className="arc-floating-orb" style={{ width: 220, height: 220, right: "9%", top: "28%", background: "rgba(255,45,178,0.12)", animationDelay: "1.2s" }} />
 
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center px-8 text-center" style={{ minHeight: "80vh" }}>
-        <div className="relative z-10 max-w-4xl mx-auto" style={{ paddingTop: 120, paddingBottom: 80 }}>
+        <div className="relative z-10 max-w-5xl mx-auto arc-fade-up" style={{ paddingTop: 112, paddingBottom: 72 }}>
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 glass-panel rounded-full" style={{ borderColor: "rgba(0,220,229,0.25)" }}>
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#00dce5", boxShadow: "0 0 8px rgba(0,220,229,0.8)" }} />
@@ -33,13 +36,12 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
           {/* Headline */}
           <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: "clamp(36px,6vw,64px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.025em", color: "#e9feff", marginBottom: 24 }}>
-            The Hub of{" "}
-            <span className="gradient-text">Web3 Exploration.</span>
+            ARC Ecosystem{" "}
+            <span className="gradient-text">Mission Control.</span>
           </h1>
 
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "#b9caca", maxWidth: 600, margin: "0 auto 40px" }}>
-            Deploy your expertise into the most advanced cryptographic questing protocol.
-            Track, earn, and dominate the decentralized frontier.
+            A cinematic Web3 dashboard for swaps, CCTP bridges, token quests, and operator progress across Arc, Ethereum, USDC, Circle USDC, and WETH.
           </p>
 
           {/* CTA */}
@@ -96,13 +98,25 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         </div>
       </section>
 
+      <section className="relative z-10 px-8 pb-20">
+        <div className="max-w-7xl mx-auto text-center">
+          <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.16em", color: "#38bdf8", textTransform: "uppercase", marginBottom: 14 }}>
+            Supported ARC ecosystem assets
+          </div>
+          <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: "clamp(28px,4vw,44px)", fontWeight: 900, color: "#f8fbff", marginBottom: 28 }}>
+            Token rails in a premium neon interface
+          </h2>
+          <EcosystemShowcase />
+        </div>
+      </section>
+
       {/* Stats */}
-      <section className="px-8 pb-16">
+      <section className="relative z-10 px-8 pb-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           {STATS.map(({ icon, color, label, value, tag }) => (
             <div
               key={tag}
-              className="glass-panel p-6 rounded-xl"
+              className="glass-panel arc-card p-6 rounded-xl"
               style={{ borderLeft: `4px solid ${color}` }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -125,7 +139,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* Feature highlights */}
-      <section className="px-8 pb-24">
+      <section className="relative z-10 px-8 pb-24">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -156,7 +170,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             ].map(({ icon, title, desc, color, page, cta }) => (
               <div
                 key={title}
-                className="glass-panel p-6 rounded-xl transition-all cursor-pointer"
+                className="glass-panel arc-card p-6 rounded-xl transition-all cursor-pointer"
                 style={{ borderTop: `2px solid ${color}22` }}
                 onClick={() => onNavigate(page)}
                 onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderTopColor = color)}

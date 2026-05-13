@@ -22,21 +22,20 @@ export default function Sidebar({ currentPage, onNavigate, show }: SidebarProps)
     <aside
       className="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex flex-col pt-8 border-r z-40"
       style={{
-        background: "rgba(0,0,0,0.65)",
-        backdropFilter: "blur(20px)",
-        borderColor: "rgba(0,220,229,0.12)",
+        background: "linear-gradient(180deg, rgba(3,7,18,0.78), rgba(8,17,34,0.72))",
+        backdropFilter: "blur(24px)",
+        borderColor: "rgba(148,217,255,0.16)",
+        boxShadow: "18px 0 54px rgba(0,0,0,0.3)",
       }}
     >
       {/* User profile */}
       <div className="px-6 mb-8">
-        <div className="glass-panel p-3 rounded-lg flex items-center gap-3">
+        <div className="glass-panel p-3 rounded-xl flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#00dce5,#b600f8)" }}
+            style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 22px rgba(56,189,248,0.28)" }}
           >
-            <span className="material-symbols-outlined text-white" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
-              military_tech
-            </span>
+            <img src="/arc-assets/arc.jpg" alt="Arc operator" style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover" }} />
           </div>
           <div>
             <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#00dce5" }}>
@@ -106,7 +105,7 @@ export default function Sidebar({ currentPage, onNavigate, show }: SidebarProps)
       {/* Sync button */}
       <div className="p-6">
         <button
-          className="w-full py-3 flex items-center justify-center gap-2 rounded-sm transition-all"
+          className="w-full py-3 flex items-center justify-center gap-2 rounded-xl transition-all"
           style={{
             border: "1px solid rgba(0,220,229,0.3)",
             color: "#00dce5",
