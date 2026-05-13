@@ -29,16 +29,18 @@ export const CHAIN_META: Record<SupportedChain, { label: string; color: string; 
   OP_Sepolia: { label: "OP Sepolia", color: "#FF0420", icon: "⬡" },
 };
 
-export async function getAppKit() {
+export async function getAppKit(): Promise<any> {
   const { AppKit } = await import("@circle-fin/app-kit");
   return new AppKit();
 }
 
-export async function getViemAdapter(walletClient: WalletClient, publicClient: PublicClient) {
+export async function getViemAdapter(walletClient: WalletClient, publicClient: PublicClient): Promise<any> {
   const { ViemAdapter } = await import("@circle-fin/adapter-viem-v2");
-  return new ViemAdapter({
-    getPublicClient: () => publicClient,
-    getWalletClient: () => walletClient,
+  const Adapter = ViemAdapter as unknown as new (...args: any[]) => any;
+
+  return new Adapter({
+    publicClient,
+    walletClient,
   });
 }
 
