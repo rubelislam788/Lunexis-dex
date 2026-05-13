@@ -2,7 +2,6 @@
 "use client";
 
 import type { Page, Quest } from "@/types";
-import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
@@ -123,10 +122,6 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="mb-6">
-              <EcosystemShowcase compact />
             </div>
 
             <button

@@ -2,7 +2,6 @@
 "use client";
 
 import type { Page } from "@/types";
-import EcosystemShowcase from "@/components/EcosystemShowcase";
 
 interface LandingPageProps {
   onNavigate: (page: Page) => void;
@@ -92,21 +91,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 cursor: "pointer",
               }}
             >
-              🌉 Bridge USDC
+              Bridge USDC
             </button>
           </div>
-        </div>
-      </section>
-
-      <section className="relative z-10 px-8 pb-20">
-        <div className="max-w-7xl mx-auto text-center">
-          <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.16em", color: "#38bdf8", textTransform: "uppercase", marginBottom: 14 }}>
-            Supported ARC ecosystem assets
-          </div>
-          <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: "clamp(28px,4vw,44px)", fontWeight: 900, color: "#f8fbff", marginBottom: 28 }}>
-            Token rails in a premium neon interface
-          </h2>
-          <EcosystemShowcase />
         </div>
       </section>
 
@@ -152,7 +139,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 cta: "Open Swap →",
               },
               {
-                icon: "🌉",
+                icon: "↗",
                 title: "Bridge USDC",
                 desc: "Move native USDC cross-chain using Circle CCTP v2. No wrapped tokens, no trust assumptions.",
                 color: "#ebb2ff",

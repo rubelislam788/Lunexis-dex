@@ -4,20 +4,23 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
+import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/components/ui/Toast";
-import { SUPPORTED_CHAINS, SUPPORTED_TOKENS, CHAIN_META } from "@/lib/arc-kit";
-import EcosystemShowcase from "@/components/EcosystemShowcase";
-
-const TOKEN_LIST = [
-  { sym: "USDC", name: "USD Coin", color: "#2775CA", logo: "💵" },
-  { sym: "EURC", name: "Euro Coin", color: "#3B82F6", logo: "💶" },
-];
+import { ARC_FAUCET_URL } from "@/lib/constants";
+import { createActivity } from "@/lib/profile";
+import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
+import type { TokenSymbol } from "@/types";
+import TokenIcon from "@/components/ui/TokenIcon";
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
   const { state, updateState, executeSwap, reset } = useArcSwap();
+  const { profile, pushActivity } = useProfile();
   const { show, ToastContainer } = useToast();
-  const [showTokenModal, setShowTokenModal] = useState<"from" | "to" | null>(null);
+  const [selector, setSelector] = useState<"from" | "to" | null>(null);
+
+  const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
+  const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -26,369 +29,139 @@ export default function SwapPage() {
     }
     try {
       await executeSwap();
-      show(`✓ Swapped ${state.amountIn} ${state.fromToken} → ${state.toToken}`, "success");
+      pushActivity(createActivity("swap", "Token swap", `${state.amountIn} ${state.fromToken} swapped to ${state.toToken}.`, state.fromToken as TokenSymbol));
+      show(`Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}`, "success");
     } catch (err: any) {
       show(err.message || "Swap failed", "error");
     }
   };
 
-  const flipTokens = () => {
-    updateState({ fromToken: state.toToken, toToken: state.fromToken });
+  const pickToken = (symbol: TokenSymbol) => {
+    if (selector === "from") {
+      updateState(symbol === state.toToken ? { fromToken: symbol, toToken: state.fromToken } : { fromToken: symbol });
+    } else {
+      updateState(symbol === state.fromToken ? { toToken: symbol, fromToken: state.toToken } : { toToken: symbol });
+    }
+    setSelector(null);
   };
 
   const isLoading = state.status === "approving" || state.status === "swapping";
-  const isSuccess = state.status === "success";
 
   return (
     <div className="min-h-screen pt-16 arc-page-shell">
       <ToastContainer />
-
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
-        {/* Page header */}
-        <div className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "rgba(0,220,229,0.08)", border: "1px solid rgba(0,220,229,0.2)" }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#00dce5" }} />
-            <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "#00dce5" }}>
-              POWERED BY CIRCLE ARC APP KIT
-            </span>
+        <div className="flex items-start justify-between gap-6 mb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.22)" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#38bdf8" }} />
+              <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#38bdf8" }}>
+                ARC SWAP TERMINAL
+              </span>
+            </div>
+            <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Token Swap</h1>
+            <p style={{ color: "#849495", fontSize: 16 }}>Swap USDC, EURC, and WETH with exact uploaded token logos.</p>
           </div>
-          <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, letterSpacing: "-0.02em", color: "#e9feff", marginBottom: 8 }}>
-            Token Swap
-          </h1>
-          <p style={{ color: "#849495", fontSize: 16 }}>
-            Swap USDC and EURC on Arc Testnet via Circle's App Kit SDK.
-          </p>
+          <a href={ARC_FAUCET_URL} target="_blank" rel="noreferrer" className="btn-outline-cyan px-5 py-3 rounded-xl text-xs">Open Faucet</a>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* === SWAP CARD === */}
-          <div className="lg:col-span-3">
-            <div
-              className="rounded-2xl p-6 arc-card"
-              style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}
-            >
-              {/* Chain selector */}
-              <div className="mb-4">
-                <label style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#555", textTransform: "uppercase" }}>
-                  Network
-                </label>
-                <select
-                  value={state.fromChain}
-                  onChange={(e) => updateState({ fromChain: e.target.value })}
-                  className="mt-1 w-full px-3 py-2 rounded-lg"
-                  style={{ fontFamily: "'Space Grotesk'", fontSize: 13 }}
-                >
-                  {Object.entries(SUPPORTED_CHAINS).map(([key, val]) => (
-                    <option key={key} value={val}>{CHAIN_META[val]?.label ?? val}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* From token */}
-              <div className="mb-2">
-                <label style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#555", textTransform: "uppercase" }}>
-                  You Pay
-                </label>
-                <div
-                  className="mt-1 flex items-center gap-3 px-4 py-4 rounded-xl"
-                  style={{ background: "#000", border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  <input
-                    type="number"
-                    value={state.amountIn}
-                    onChange={(e) => updateState({ amountIn: e.target.value })}
-                    placeholder="0.00"
-                    className="flex-1 text-2xl bg-transparent border-none outline-none"
-                    style={{ fontFamily: "'Space Grotesk'", fontWeight: 700, color: "#e5e2e3" }}
-                    min="0"
-                    step="any"
-                  />
-                  <button
-                    onClick={() => setShowTokenModal("from")}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                    style={{ background: "rgba(0,220,229,0.1)", border: "1px solid rgba(0,220,229,0.25)" }}
-                  >
-                    <span style={{ fontSize: 18 }}>{TOKEN_LIST.find(t => t.sym === state.fromToken)?.logo}</span>
-                    <span style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 700, color: "#00dce5" }}>{state.fromToken}</span>
-                    <span style={{ color: "#555" }}>▾</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Flip button */}
-              <div className="flex justify-center my-2">
-                <button
-                  onClick={flipTokens}
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{
-                    background: "rgba(0,220,229,0.1)",
-                    border: "1px solid rgba(0,220,229,0.25)",
-                    color: "#00dce5",
-                    fontSize: 18,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,220,229,0.2)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0,220,229,0.1)")}
-                >
-                  ⇅
-                </button>
-              </div>
-
-              {/* To token */}
-              <div className="mb-6">
-                <label style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#555", textTransform: "uppercase" }}>
-                  You Receive (est.)
-                </label>
-                <div
-                  className="mt-1 flex items-center gap-3 px-4 py-4 rounded-xl"
-                  style={{ background: "#000", border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  <div
-                    className="flex-1 text-2xl"
-                    style={{ fontFamily: "'Space Grotesk'", fontWeight: 700, color: "#849495" }}
-                  >
-                    {state.amountIn ? `≈ ${state.amountIn}` : "0.00"}
-                  </div>
-                  <button
-                    onClick={() => setShowTokenModal("to")}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                    style={{ background: "rgba(182,0,248,0.1)", border: "1px solid rgba(182,0,248,0.25)" }}
-                  >
-                    <span style={{ fontSize: 18 }}>{TOKEN_LIST.find(t => t.sym === state.toToken)?.logo}</span>
-                    <span style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 700, color: "#ebb2ff" }}>{state.toToken}</span>
-                    <span style={{ color: "#555" }}>▾</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Slippage */}
-              <div
-                className="rounded-xl p-4 mb-6"
-                style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
+          <section className="lg:col-span-3 arc-card rounded-3xl p-6">
+            <TokenAmountPanel label="You Pay" token={fromToken.symbol} amount={state.amountIn} onAmount={(amount) => updateState({ amountIn: amount })} onToken={() => setSelector("from")} />
+            <div className="flex justify-center my-4">
+              <button
+                onClick={() => updateState({ fromToken: state.toToken, toToken: state.fromToken })}
+                className="w-12 h-12 rounded-full transition-all"
+                style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 28px rgba(56,189,248,0.34)", color: "white", fontSize: 22 }}
               >
-                <div className="flex justify-between items-center mb-2">
-                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#555" }}>Slippage Tolerance</span>
-                  <div className="flex gap-2">
-                    {["auto", "0.5%", "1%"].map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => updateState({ slippage: s })}
-                        style={{
-                          fontFamily: "'Space Grotesk'",
-                          fontSize: 10,
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          background: state.slippage === s ? "rgba(0,220,229,0.15)" : "rgba(255,255,255,0.04)",
-                          border: `1px solid ${state.slippage === s ? "rgba(0,220,229,0.4)" : "rgba(255,255,255,0.1)"}`,
-                          color: state.slippage === s ? "#00dce5" : "#849495",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#555" }}>Price Impact</span>
-                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#22c55e" }}>{"< 0.1%"}</span>
-                </div>
-              </div>
-
-              {/* Arc App Kit info badge */}
-              <div
-                className="rounded-xl p-3 mb-6 flex items-center gap-3"
-                style={{ background: "rgba(0,220,229,0.04)", border: "1px solid rgba(0,220,229,0.15)" }}
-              >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(0,220,229,0.15)" }}
-                >
-                  <span style={{ fontSize: 16 }}>⬡</span>
-                </div>
-                <div>
-                  <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, color: "#00dce5", letterSpacing: "0.08em" }}>
-                    CIRCLE ARC APP KIT
-                  </div>
-                  <div style={{ fontSize: 11, color: "#555" }}>
-                    Powered by Circle's unified swap SDK · No routing complexity
-                  </div>
-                </div>
-              </div>
-
-              {/* CTA */}
-              {isSuccess ? (
-                <div className="text-center">
-                  <div
-                    className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: "rgba(0,220,229,0.12)", border: "2px solid #00dce5", boxShadow: "0 0 28px rgba(0,220,229,0.3)" }}
-                  >
-                    <span style={{ fontSize: 32, color: "#00dce5" }}>✓</span>
-                  </div>
-                  <div style={{ fontFamily: "'Space Grotesk'", fontSize: 20, fontWeight: 700, color: "#00dce5", marginBottom: 4 }}>
-                    Swap Complete!
-                  </div>
-                  {state.txHash && (
-                    <a
-                      href={`https://scan.arc.io/tx/${state.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#555", textDecoration: "underline" }}
-                    >
-                      View on ArcScan →
-                    </a>
-                  )}
-                  <button
-                    onClick={reset}
-                    className="btn-outline-cyan w-full py-3 rounded-lg mt-4"
-                    style={{ fontSize: 12 }}
-                  >
-                    Swap Again
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleSwap}
-                  disabled={isLoading || !state.amountIn}
-                  className="btn-primary w-full py-4 rounded-xl glow-cyan"
-                  style={{ fontSize: 13 }}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-3">
-                      <span className="spinner w-5 h-5 inline-block" />
-                      {state.status === "approving" ? "Approving…" : "Swapping…"}
-                    </span>
-                  ) : (
-                    isConnected ? "Confirm Swap" : "Connect Wallet to Swap"
-                  )}
-                </button>
-              )}
-
-              {state.error && (
-                <p className="mt-3 text-center" style={{ color: "#ffb4ab", fontSize: 12 }}>
-                  {state.error}
-                </p>
-              )}
+                ⇅
+              </button>
             </div>
-          </div>
+            <TokenAmountPanel label="You Receive" token={toToken.symbol} amount={state.amountIn ? `≈ ${state.amountIn}` : ""} readOnly onToken={() => setSelector("to")} />
 
-          {/* === SIDE INFO === */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            <EcosystemShowcase compact />
-            {/* How it works */}
-            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 700, color: "#e5e2e3", marginBottom: 16 }}>
-                How Swap Works
-              </h3>
-              {[
-                { n: "01", title: "Connect Wallet", desc: "MetaMask or WalletConnect on Arc Testnet" },
-                { n: "02", title: "Select Tokens", desc: "Choose USDC or EURC to swap on-chain" },
-                { n: "03", title: "Arc App Kit Routes", desc: "Circle SDK handles liquidity & routing automatically" },
-                { n: "04", title: "Sign & Confirm", desc: "Approve in wallet — tokens arrive in seconds" },
-              ].map(({ n, title, desc }) => (
-                <div key={n} className="flex gap-3 mb-4 last:mb-0">
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{ background: "rgba(0,220,229,0.1)", border: "1px solid rgba(0,220,229,0.3)" }}
-                  >
-                    <span style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 700, color: "#00dce5" }}>{n}</span>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color: "#e5e2e3", marginBottom: 2 }}>{title}</div>
-                    <div style={{ fontSize: 11, color: "#555", lineHeight: 1.5 }}>{desc}</div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-3 gap-3 my-6">
+              {["auto", "0.5%", "1%"].map((slippage) => (
+                <button key={slippage} onClick={() => updateState({ slippage })} className="rounded-xl py-3" style={{ background: state.slippage === slippage ? "rgba(56,189,248,0.16)" : "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: state.slippage === slippage ? "#38bdf8" : "#849495", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800 }}>
+                  {slippage}
+                </button>
               ))}
             </div>
 
-            {/* SDK snippet */}
-            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color: "#849495" }}>SDK CALL</h3>
-                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 9, color: "#555", letterSpacing: "0.1em" }}>@circle-fin/app-kit</span>
-              </div>
-              <pre
-                className="rounded-lg p-4 text-xs overflow-auto"
-                style={{
-                  background: "#000",
-                  border: "1px solid rgba(0,220,229,0.1)",
-                  color: "#00dce5",
-                  fontFamily: "'Space Grotesk', monospace",
-                  lineHeight: 1.7,
-                }}
-              >
-{`await kit.swap({
-  from: {
-    adapter: viemAdapter,
-    chain: "${state.fromChain}",
-  },
-  tokenIn: "${state.fromToken}",
-  tokenOut: "${state.toToken}",
-  amountIn: "${state.amountIn || "1.00"}",
-  config: { kitKey },
-});`}
-              </pre>
+            <div className="flex justify-between rounded-2xl p-4 mb-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <span style={{ color: "#849495" }}>Price Impact</span>
+              <span style={{ color: "#22c55e", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{"< 0.1%"}</span>
             </div>
-          </div>
+
+            <button onClick={handleSwap} disabled={isLoading || !state.amountIn} className="btn-primary w-full py-4 rounded-2xl">
+              {isLoading ? "Swapping..." : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
+            </button>
+            {state.status === "success" && (
+              <button onClick={reset} className="btn-ghost w-full py-3 rounded-2xl mt-3">Swap Again</button>
+            )}
+          </section>
+
+          <aside className="lg:col-span-2 flex flex-col gap-4">
+            <div className="arc-card rounded-3xl p-5">
+              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Portfolio Balances</h3>
+              <div className="grid gap-2">
+                {(profile?.balances.filter((item) => SWAP_TOKENS.includes(item.token)) ?? []).map((item) => (
+                  <div key={item.token} className="flex items-center justify-between rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="flex items-center gap-2"><TokenIcon symbol={item.token} size={32} /><span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{item.token}</span></div>
+                    <span style={{ color: "#849495" }}>{item.amount}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="arc-card rounded-3xl p-5">
+              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Swap Route</h3>
+              <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>Animated ARC route preview with live balance context, slippage controls, and token selector motion.</p>
+            </div>
+          </aside>
         </div>
       </div>
 
-      {/* Token modal */}
-      {showTokenModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
-          onClick={() => setShowTokenModal(null)}
-        >
-          <div
-            className="rounded-2xl p-6 w-80"
-            style={{ background: "#1c1b1c", border: "1px solid rgba(255,255,255,0.12)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 700, color: "#e5e2e3", marginBottom: 16 }}>
-              Select Token
-            </h3>
-            {TOKEN_LIST.map((token) => (
-              <button
-                key={token.sym}
-                onClick={() => {
-                  if (showTokenModal === "from") {
-                    const newFrom = token.sym;
-                    if (newFrom === state.toToken) {
-                      updateState({ fromToken: newFrom, toToken: state.fromToken });
-                    } else {
-                      updateState({ fromToken: newFrom });
-                    }
-                  } else {
-                    const newTo = token.sym;
-                    if (newTo === state.fromToken) {
-                      updateState({ toToken: newTo, fromToken: state.toToken });
-                    } else {
-                      updateState({ toToken: newTo });
-                    }
-                  }
-                  setShowTokenModal(null);
-                }}
-                className="w-full flex items-center gap-4 p-4 rounded-xl mb-2 transition-all"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(0,220,229,0.3)")}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
-              >
-                <span style={{ fontSize: 28 }}>{token.logo}</span>
-                <div>
-                  <div style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 700, color: "#e5e2e3" }}>{token.sym}</div>
-                  <div style={{ fontSize: 11, color: "#555" }}>{token.name}</div>
-                </div>
-              </button>
-            ))}
+      {selector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }} onClick={() => setSelector(null)}>
+          <div className="arc-card rounded-3xl p-6 w-96" onClick={(event) => event.stopPropagation()}>
+            <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Select Token</h3>
+            {SWAP_TOKENS.map((symbol) => {
+              const token = TOKEN_META[symbol];
+              return (
+                <button key={symbol} onClick={() => pickToken(symbol)} className="w-full flex items-center gap-4 p-4 rounded-2xl mb-2" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${token.accent}44` }}>
+                  <TokenIcon symbol={symbol} size={44} />
+                  <div className="text-left">
+                    <div style={{ fontFamily: "'Space Grotesk'", color: "#f8fbff", fontWeight: 900 }}>{symbol}</div>
+                    <div style={{ color: "#849495", fontSize: 12 }}>{token.label}</div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function TokenAmountPanel({ label, token, amount, readOnly, onAmount, onToken }: { label: string; token: TokenSymbol; amount: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void }) {
+  return (
+    <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
+      <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
+      <div className="flex items-center gap-4">
+        <input
+          type={readOnly ? "text" : "number"}
+          value={amount}
+          readOnly={readOnly}
+          onChange={(event) => onAmount?.(event.target.value)}
+          placeholder="0.00"
+          className="flex-1 bg-transparent border-none outline-none"
+          style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#f8fbff" }}
+        />
+        <button onClick={onToken} className="flex items-center gap-2 px-4 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${TOKEN_META[token].accent}66` }}>
+          <TokenIcon symbol={token} size={34} />
+          <span style={{ fontFamily: "'Space Grotesk'", fontWeight: 900, color: "#f8fbff" }}>{token}</span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge";
+export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge" | "profile";
 
 export interface Quest {
   id: string;
@@ -37,6 +37,48 @@ export interface SwapState {
   status: "idle" | "approving" | "swapping" | "success" | "error";
   txHash?: string;
   error?: string;
+}
+
+export type TokenSymbol = "USDC" | "EURC" | "WETH" | "ETH" | "ARC";
+
+export interface TokenMeta {
+  symbol: TokenSymbol;
+  label: string;
+  chain: string;
+  logoSrc: string;
+  accent: string;
+}
+
+export interface ActivityItem {
+  id: string;
+  type: "swap" | "bridge" | "mission" | "reward" | "wallet";
+  title: string;
+  description: string;
+  timestamp: string;
+  token?: TokenSymbol;
+  txHash?: string;
+  status?: "pending" | "completed" | "failed";
+}
+
+export interface PortfolioBalance {
+  token: TokenSymbol;
+  amount: string;
+  value: string;
+}
+
+export interface UserProfile {
+  walletAddress: string;
+  avatarDataUrl?: string;
+  username: string;
+  xUsername: string;
+  githubUsername: string;
+  wallets: string[];
+  xp: number;
+  rewardsEarned: number;
+  completedMissionIds: string[];
+  claimedRewardIds: string[];
+  activities: ActivityItem[];
+  balances: PortfolioBalance[];
 }
 
 export interface BridgeState {

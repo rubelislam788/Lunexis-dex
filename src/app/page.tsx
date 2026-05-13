@@ -10,8 +10,10 @@ import MissionsPage, { QUESTS } from "@/components/MissionsPage";
 import QuestDetailPage from "@/components/QuestDetailPage";
 import SwapPage from "@/components/swap/SwapPage";
 import BridgePage from "@/components/bridge/BridgePage";
+import ProfilePage from "@/components/ProfilePage";
+import RewardsPage from "@/components/RewardsPage";
 
-const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge"];
+const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile"];
 
 // Placeholder pages for routes not fully built
 function PlaceholderPage({ title, onNavigate }: { title: string; onNavigate: (p: Page) => void }) {
@@ -56,8 +58,9 @@ export default function Home() {
         {currentPage === "swap" && <SwapPage />}
         {currentPage === "bridge" && <BridgePage />}
         {currentPage === "leaderboard" && <PlaceholderPage title="Leaderboard" onNavigate={navigate} />}
-        {currentPage === "rewards" && <PlaceholderPage title="Rewards" onNavigate={navigate} />}
+        {currentPage === "rewards" && <RewardsPage />}
         {currentPage === "stats" && <PlaceholderPage title="Stats" onNavigate={navigate} />}
+        {currentPage === "profile" && <ProfilePage />}
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
 

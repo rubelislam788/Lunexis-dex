@@ -44,17 +44,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             cursor: "pointer",
           }}
         >
-          <span
-            className="grid place-items-center rounded-full"
-            style={{
-              width: 36,
-              height: 36,
-              background: "rgba(56,189,248,0.1)",
-              border: "1px solid rgba(56,189,248,0.35)",
-              boxShadow: "0 0 22px rgba(56,189,248,0.24)",
-            }}
-          >
-            <img src="/arc-assets/arc.jpg" alt="Arc logo" style={{ width: 26, height: 26, borderRadius: 999, objectFit: "cover" }} />
+          <span className="grid place-items-center rounded-full" style={{ width: 36, height: 36, background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 22px rgba(56,189,248,0.24)", color: "white", fontSize: 13 }}>
+            AQ
           </span>
           ARC QUEST
         </button>
@@ -143,7 +134,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
       </div>
 
       {/* Wallet */}
-      <WalletButton />
+      <WalletButton onNavigate={onNavigate} />
     </header>
   );
 }

@@ -1,0 +1,139 @@
+import type { ActivityItem, PortfolioBalance, TokenSymbol, UserProfile } from "@/types";
+
+const STORAGE_KEY = "arcquest.profiles.v1";
+
+type ProfileStore = Record<string, UserProfile>;
+
+const DEFAULT_BALANCES: PortfolioBalance[] = [
+  { token: "ETH", amount: "0.824", value: "$2,682.14" },
+  { token: "ARC", amount: "4,250", value: "Testnet" },
+  { token: "USDC", amount: "128.50", value: "$128.50" },
+  { token: "EURC", amount: "46.20", value: "€46.20" },
+  { token: "WETH", amount: "1.42", value: "$4,622.10" },
+];
+
+function normalizeAddress(address: string) {
+  return address.toLowerCase();
+}
+
+function readStore(): ProfileStore {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStore(store: ProfileStore) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  window.dispatchEvent(new Event("arc-profile-updated"));
+}
+
+export function createActivity(
+  type: ActivityItem["type"],
+  title: string,
+  description: string,
+  token?: TokenSymbol,
+  status: ActivityItem["status"] = "completed"
+): ActivityItem {
+  return {
+    id: `${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    type,
+    title,
+    description,
+    token,
+    status,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function getDefaultProfile(address: string): UserProfile {
+  return {
+    walletAddress: address,
+    username: `Operator ${address.slice(2, 6).toUpperCase()}`,
+    xUsername: "",
+    githubUsername: "",
+    wallets: [address],
+    xp: 0,
+    rewardsEarned: 0,
+    completedMissionIds: [],
+    claimedRewardIds: [],
+    balances: DEFAULT_BALANCES,
+    activities: [
+      createActivity("wallet", "Wallet connected", `${address.slice(0, 6)}...${address.slice(-4)} joined ARC Quest.`),
+    ],
+  };
+}
+
+export function loadProfile(address?: string): UserProfile | null {
+  if (!address) return null;
+  const key = normalizeAddress(address);
+  const store = readStore();
+  const profile = store[key] ?? getDefaultProfile(address);
+  if (!store[key]) {
+    store[key] = profile;
+    writeStore(store);
+  }
+  return profile;
+}
+
+export function saveProfile(profile: UserProfile): UserProfile {
+  const store = readStore();
+  store[normalizeAddress(profile.walletAddress)] = profile;
+  writeStore(store);
+  return profile;
+}
+
+export function updateProfile(address: string, patch: Partial<UserProfile>): UserProfile {
+  const current = loadProfile(address) ?? getDefaultProfile(address);
+  return saveProfile({ ...current, ...patch });
+}
+
+export function addWalletToProfile(address: string, wallet: string): UserProfile {
+  const current = loadProfile(address) ?? getDefaultProfile(address);
+  if (current.wallets.some((item) => normalizeAddress(item) === normalizeAddress(wallet))) return current;
+  return saveProfile({
+    ...current,
+    wallets: [...current.wallets, wallet],
+    activities: [
+      createActivity("wallet", "Wallet linked", `${wallet.slice(0, 6)}...${wallet.slice(-4)} added to profile.`),
+      ...current.activities,
+    ],
+  });
+}
+
+export function addActivity(address: string, activity: ActivityItem): UserProfile {
+  const current = loadProfile(address) ?? getDefaultProfile(address);
+  return saveProfile({ ...current, activities: [activity, ...current.activities].slice(0, 30) });
+}
+
+export function completeMission(address: string, missionId: string, xp: number): UserProfile {
+  const current = loadProfile(address) ?? getDefaultProfile(address);
+  if (current.completedMissionIds.includes(missionId)) return current;
+  return saveProfile({
+    ...current,
+    xp: current.xp + xp,
+    completedMissionIds: [...current.completedMissionIds, missionId],
+    activities: [
+      createActivity("mission", "Mission completed", `Mission reward unlocked for ${xp} XP.`),
+      ...current.activities,
+    ],
+  });
+}
+
+export function claimReward(address: string, rewardId: string, amount: number): UserProfile {
+  const current = loadProfile(address) ?? getDefaultProfile(address);
+  if (current.claimedRewardIds.includes(rewardId)) return current;
+  return saveProfile({
+    ...current,
+    rewardsEarned: current.rewardsEarned + amount,
+    claimedRewardIds: [...current.claimedRewardIds, rewardId],
+    activities: [
+      createActivity("reward", "Reward claimed", `${amount} ARCQ claimed from mission rewards.`),
+      ...current.activities,
+    ],
+  });
+}

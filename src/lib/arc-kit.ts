@@ -17,6 +17,7 @@ export type SupportedChain = (typeof SUPPORTED_CHAINS)[keyof typeof SUPPORTED_CH
 export const SUPPORTED_TOKENS = {
   USDC: "USDC",
   EURC: "EURC",
+  WETH: "WETH",
 } as const;
 
 export type SupportedToken = (typeof SUPPORTED_TOKENS)[keyof typeof SUPPORTED_TOKENS];

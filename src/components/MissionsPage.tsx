@@ -2,7 +2,8 @@
 "use client";
 
 import type { Page, Quest } from "@/types";
-import EcosystemShowcase from "@/components/EcosystemShowcase";
+import { useProfile } from "@/hooks/useProfile";
+import { SOCIAL_LINKS } from "@/lib/constants";
 
 export const QUESTS: Quest[] = [
   { id: "q1", title: "First Swap on Arc", description: "Complete your first token swap using Circle Arc App Kit on Arc Testnet.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 1, tags: ["Swap", "Arc Kit"], featured: true },
@@ -11,6 +12,9 @@ export const QUESTS: Quest[] = [
   { id: "q4", title: "Cross-Chain Arbitrageur", description: "Execute a swap + bridge in a single session to profit from price differences.", reward: "2,500 ARCQ", rewardAmt: 2500, xp: 1000, difficulty: "Hard", category: "Advanced", progress: 0, totalSteps: 5, tags: ["Swap", "Bridge", "Advanced"] },
   { id: "q5", title: "ARC Validator Supporter", description: "Stake ETH to support ARC network validators for 7 days.", reward: "3,000 ARCQ + ELITE", rewardAmt: 3000, xp: 1500, difficulty: "Elite", category: "Staking", progress: 0, totalSteps: 2, tags: ["Staking", "Elite"] },
   { id: "q6", title: "USDC OG", description: "Hold at least 10 USDC on Arc Testnet for 3 days.", reward: "200 ARCQ", rewardAmt: 200, xp: 100, difficulty: "Easy", category: "Holding", progress: 0, totalSteps: 1, tags: ["USDC", "Hold"] },
+  { id: "social-follow", title: "Follow ARC Signals", description: "Follow Rubel and Arc on X to activate your social signal layer.", reward: "250 ARCQ", rewardAmt: 250, xp: 150, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 2, tags: ["X", "Social"], featured: true },
+  { id: "social-rubel-post", title: "Engage Rubel Dispatch", description: "Like and comment on Rubel's selected X post.", reward: "200 ARCQ", rewardAmt: 200, xp: 125, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Like", "Comment"] },
+  { id: "social-arc-post", title: "Engage Arc Dispatch", description: "Like and comment on Arc's selected X post.", reward: "200 ARCQ", rewardAmt: 200, xp: 125, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Like", "Comment"] },
 ];
 
 const DIFF_COLORS: Record<string, string> = {
@@ -26,6 +30,7 @@ interface MissionsPageProps {
 }
 
 export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
+  const { profile, isConnected, markMissionComplete, claim } = useProfile();
   return (
     <div className="min-h-screen pt-16 pl-64 arc-page-shell">
       <div className="relative z-10 max-w-6xl mx-auto px-8 py-10">
@@ -61,13 +66,9 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
                 cursor: "pointer",
               }}
             >
-              🌉 Bridge
+              Bridge
             </button>
           </div>
-        </div>
-
-        <div className="mb-10 arc-fade-up">
-          <EcosystemShowcase compact />
         </div>
 
         {/* Featured */}
@@ -77,7 +78,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {QUESTS.filter((q) => q.featured).map((quest) => (
-              <QuestCard key={quest.id} quest={quest} onSelectQuest={onSelectQuest} featured />
+              <QuestCard key={quest.id} quest={quest} onSelectQuest={onSelectQuest} completed={profile?.completedMissionIds.includes(quest.id)} claimed={profile?.claimedRewardIds.includes(quest.id)} onComplete={() => markMissionComplete(quest.id, quest.xp)} onClaim={() => claim(quest.id, quest.rewardAmt)} isConnected={isConnected} featured />
             ))}
           </div>
         </div>
@@ -89,7 +90,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           </div>
           <div className="flex flex-col gap-3">
             {QUESTS.filter((q) => !q.featured).map((quest) => (
-              <QuestCard key={quest.id} quest={quest} onSelectQuest={onSelectQuest} />
+              <QuestCard key={quest.id} quest={quest} onSelectQuest={onSelectQuest} completed={profile?.completedMissionIds.includes(quest.id)} claimed={profile?.claimedRewardIds.includes(quest.id)} onComplete={() => markMissionComplete(quest.id, quest.xp)} onClaim={() => claim(quest.id, quest.rewardAmt)} isConnected={isConnected} />
             ))}
           </div>
         </div>
@@ -98,8 +99,10 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   );
 }
 
-function QuestCard({ quest, onSelectQuest, featured }: { quest: Quest; onSelectQuest: (questId: string) => void; featured?: boolean }) {
-  const progressPct = quest.totalSteps > 0 ? (quest.progress / quest.totalSteps) * 100 : 0;
+function QuestCard({ quest, onSelectQuest, completed, claimed, onComplete, onClaim, isConnected, featured }: { quest: Quest; onSelectQuest: (questId: string) => void; completed?: boolean; claimed?: boolean; onComplete: () => void; onClaim: () => void; isConnected: boolean; featured?: boolean }) {
+  const progressPct = completed ? 100 : quest.totalSteps > 0 ? (quest.progress / quest.totalSteps) * 100 : 0;
+  const isSocial = quest.category === "Social";
+  const socialHref = quest.id === "social-rubel-post" ? SOCIAL_LINKS.rubelPost : quest.id === "social-arc-post" ? SOCIAL_LINKS.arcPost : SOCIAL_LINKS.rubel;
   return (
     <div
       className="rounded-xl p-5 cursor-pointer transition-all arc-card"
@@ -131,7 +134,7 @@ function QuestCard({ quest, onSelectQuest, featured }: { quest: Quest; onSelectQ
             border: `1px solid ${DIFF_COLORS[quest.difficulty]}44`,
           }}
         >
-          {quest.difficulty.toUpperCase()}
+          {completed ? "COMPLETED" : quest.difficulty.toUpperCase()}
         </span>
       </div>
 
@@ -160,6 +163,24 @@ function QuestCard({ quest, onSelectQuest, featured }: { quest: Quest; onSelectQ
           <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, color: "#00dce5" }}>{quest.reward}</span>
           <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: "#555" }}>+{quest.xp} XP</span>
         </div>
+      </div>
+      <div className="flex gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
+        {isSocial && quest.id === "social-follow" && (
+          <a href={SOCIAL_LINKS.arc} target="_blank" rel="noreferrer" className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            Open Arc
+          </a>
+        )}
+        {isSocial && (
+          <a href={socialHref} target="_blank" rel="noreferrer" className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            {quest.id === "social-follow" ? "Open Rubel" : "Open X"}
+          </a>
+        )}
+        <button disabled={!isConnected || completed} onClick={onComplete} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+          {completed ? "Completed" : "Mark Complete"}
+        </button>
+        <button disabled={!completed || claimed} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+          {claimed ? "Claimed" : "Claim"}
+        </button>
       </div>
     </div>
   );

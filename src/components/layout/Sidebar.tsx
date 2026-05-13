@@ -2,6 +2,7 @@
 "use client";
 
 import type { Page } from "@/types";
+import { useProfile } from "@/hooks/useProfile";
 
 interface SidebarProps {
   currentPage: Page;
@@ -12,10 +13,13 @@ interface SidebarProps {
 const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
   { label: "All Quests", page: "missions", icon: "grid_view" },
   { label: "Active", page: "quest-detail", icon: "rocket_launch" },
+  { label: "Profile", page: "profile", icon: "account_circle" },
+  { label: "Rewards", page: "rewards", icon: "workspace_premium" },
   { label: "Completed", page: "stats", icon: "verified" },
 ];
 
 export default function Sidebar({ currentPage, onNavigate, show }: SidebarProps) {
+  const { profile, address } = useProfile();
   if (!show) return null;
 
   return (
@@ -35,14 +39,18 @@ export default function Sidebar({ currentPage, onNavigate, show }: SidebarProps)
             className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ background: "linear-gradient(135deg,#38bdf8,#ff2db2)", boxShadow: "0 0 22px rgba(56,189,248,0.28)" }}
           >
-            <img src="/arc-assets/arc.jpg" alt="Arc operator" style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover" }} />
+            {profile?.avatarDataUrl ? (
+              <img src={profile.avatarDataUrl} alt="Arc operator" style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover" }} />
+            ) : (
+              <span style={{ color: "white", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900 }}>OP</span>
+            )}
           </div>
           <div>
             <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#00dce5" }}>
-              OPERATOR_01
+              {profile?.username ?? "OPERATOR_01"}
             </div>
             <div style={{ fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "#555" }}>
-              Tier: Orbital Elite
+              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Tier: Orbital Elite"}
             </div>
           </div>
         </div>
