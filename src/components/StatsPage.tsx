@@ -13,7 +13,6 @@ export default function StatsPage() {
     ["Verified Missions", stats.missionsCompleted.toLocaleString(), "Completed mission verifications"],
     ["Rewards Claimed", `${stats.rewardsClaimed.toLocaleString()} ARCQ`, "Claimed mission reward points"],
     ["Confirmed Swaps", stats.swaps.toLocaleString(), "Wallet-confirmed swap activities"],
-    ["Confirmed Bridges", stats.bridges.toLocaleString(), "Wallet-confirmed bridge activities"],
   ];
 
   return (
