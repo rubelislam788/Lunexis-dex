@@ -59,8 +59,7 @@ const toDateTimeInputValue = (value?: string) => {
 
 const fromDateTimeInputValue = (value: string) => value ? new Date(value).toISOString() : undefined;
 
-const getMissionTimeState = (quest: Quest) => {
-  const now = Date.now();
+const getMissionTimeState = (quest: Quest, now = Date.now()) => {
   const start = quest.startsAt ? new Date(quest.startsAt).getTime() : 0;
   const end = quest.endsAt ? new Date(quest.endsAt).getTime() : 0;
   if (start && now < start) return "Upcoming";
@@ -77,10 +76,19 @@ function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionT
   const baseIds = new Set(base.map((quest) => quest.id));
   const created = storedCreated.filter((quest) => !baseIds.has(quest.id));
   const removed = new Set(removedIds);
-  return [...base, ...created].filter((quest) => !removed.has(quest.id)).map((quest) => {
+  return ensureMissionSchedule([...base, ...created].filter((quest) => !removed.has(quest.id)).map((quest) => {
     const custom = storedCustom[quest.id] ?? {};
     const tasks = storedTasks[quest.id]?.length ? storedTasks[quest.id] : quest.tasks ?? [];
     return { ...quest, ...custom, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
+  }));
+}
+
+function ensureMissionSchedule(quests: Quest[]) {
+  const createdAt = new Date();
+  return quests.map((quest) => {
+    const startsAt = quest.startsAt ?? createdAt.toISOString();
+    const endsAt = quest.endsAt ?? addDaysIso(new Date(startsAt), DEFAULT_MISSION_DAYS);
+    return { ...quest, startsAt, endsAt };
   });
 }
 
@@ -102,10 +110,11 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const { address } = useAccount();
   const { balances } = usePortfolioBalances();
   const [proof, setProof] = useState<SocialProof>({});
-  const [quests, setQuests] = useState<Quest[]>(QUESTS);
+  const [quests, setQuests] = useState<Quest[]>(() => ensureMissionSchedule(QUESTS));
   const [showMissionAdmin, setShowMissionAdmin] = useState(false);
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
+  const [missionClock, setMissionClock] = useState(() => Date.now());
   const isMissionAdmin = Boolean(address && address.toLowerCase() === MISSION_ADMIN_ADDRESS);
 
   useEffect(() => {
@@ -126,10 +135,15 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.quests) && data.quests.length > 0) {
-          setQuests(data.quests);
+          setQuests(ensureMissionSchedule(data.quests));
         }
       })
       .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setMissionClock(Date.now()), 30000);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -316,7 +330,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
         <MissionSection
           title="Missions"
-          quests={quests.filter((quest) => isMissionAdmin || getMissionTimeState(quest) !== "Expired")}
+          quests={quests.filter((quest) => isMissionAdmin || getMissionTimeState(quest, missionClock) !== "Expired")}
           profile={profile}
           onSelectQuest={onSelectQuest}
           onVerify={verifyQuest}
@@ -650,8 +664,8 @@ function QuestCard({
           <button disabled={completed || isChecking || isTimeLocked} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
             {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
           </button>
-          <button disabled={!completed || claimed} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-            {claimed ? "Claimed" : "Claim"}
+          <button disabled={!completed || claimed || isTimeLocked} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            {claimed ? "Claimed" : isTimeLocked ? timeState : "Claim"}
           </button>
         </div>
       </div>
