@@ -8,7 +8,6 @@ import LandingPage from "@/components/LandingPage";
 import MissionsPage, { QUESTS } from "@/components/MissionsPage";
 import QuestDetailPage from "@/components/QuestDetailPage";
 import SwapPage from "@/components/swap/SwapPage";
-import BridgePage from "@/components/bridge/BridgePage";
 import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
 import LeaderboardPage from "@/components/LeaderboardPage";
@@ -16,7 +15,7 @@ import StatsPage from "@/components/StatsPage";
 
 export const dynamic = "force-dynamic";
 
-const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile"];
+const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "profile"];
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
@@ -90,7 +89,6 @@ export default function Home() {
         {currentPage === "landing" && <LandingPage onNavigate={navigate} />}
         {currentPage === "missions" && <MissionsPage onNavigate={navigate} onSelectQuest={selectQuest} />}
         {currentPage === "swap" && <SwapPage />}
-        {currentPage === "bridge" && <BridgePage />}
         {currentPage === "leaderboard" && <LeaderboardPage />}
         {currentPage === "rewards" && <RewardsPage />}
         {currentPage === "stats" && <StatsPage />}
@@ -110,7 +108,7 @@ export default function Home() {
             (C) 2026 ARC SWAP. ARC CHAIN OPERATOR SURFACE.
           </p>
           <div className="flex gap-5 md:gap-8">
-            {["Protocols", "Security", "Bridge", "Status"].map((link) => (
+            {["Protocols", "Security", "Status"].map((link) => (
               <a
                 key={link}
                 href="#"

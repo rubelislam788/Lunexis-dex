@@ -38,7 +38,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </h1>
 
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "#b9caca", maxWidth: 600, margin: "0 auto 40px" }}>
-            A cleaner ARC Chain operator surface for live token swaps, Sepolia bridge routing, mission verification, and wallet-based portfolio tracking.
+            A cleaner ARC Chain operator surface for live token swaps, mission verification, and wallet-based portfolio tracking.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -67,22 +67,6 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>swap_horiz</span>
               Swap Tokens
-            </button>
-            <button
-              onClick={() => onNavigate("bridge")}
-              className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
-              style={{
-                background: "rgba(182,0,248,0.08)",
-                border: "1px solid rgba(182,0,248,0.25)",
-                color: "#ebb2ff",
-                fontFamily: "'Space Grotesk'",
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>conversion_path</span>
-              Bridge USDC
             </button>
           </div>
         </div>
@@ -124,12 +108,12 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 cta: "Open Swap",
               },
               {
-                icon: "conversion_path",
-                title: "Bridge to ARC",
-                desc: "Move supported assets from Ethereum Sepolia into ARC Chain with approval checks and transaction tracking.",
+                icon: "account_balance_wallet",
+                title: "Live Portfolio",
+                desc: "Track wallet balances, activity, rewards, and operator progress in one clean profile surface.",
                 color: "#ebb2ff",
-                page: "bridge" as Page,
-                cta: "Open Bridge",
+                page: "profile" as Page,
+                cta: "Open Profile",
               },
               {
                 icon: "military_tech",

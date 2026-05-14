@@ -23,7 +23,6 @@ const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
   { label: "Stats", page: "stats", icon: "query_stats" },
   { label: "Profile", page: "profile", icon: "account_circle" },
   { label: "Swap", page: "swap", icon: "swap_horiz" },
-  { label: "Bridge", page: "bridge", icon: "conversion_path" },
 ];
 
 export default function Sidebar({

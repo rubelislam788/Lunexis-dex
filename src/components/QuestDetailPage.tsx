@@ -8,7 +8,7 @@ const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
-  q2: { label: "Open Bridge", page: "bridge", accent: "#ebb2ff" },
+  q2: { label: "Open Swap", page: "swap", accent: "#ebb2ff" },
   q3: { label: "Open Swap", page: "swap", accent: "#00dce5" },
   q4: { label: "Start With Swap", page: "swap", accent: "#00dce5" },
 };
@@ -21,9 +21,9 @@ const QUEST_STEPS: Record<string, string[]> = {
   ],
   q2: [
     "Connect your wallet.",
-    "Open the bridge tool.",
-    "Set From Chain to Ethereum Sepolia and To Chain to ARC Chain.",
-    "Bridge 1 USDC using Circle CCTP v2.",
+    "Open Swap.",
+    "Hold a positive USDC balance.",
+    "Refresh live balances.",
   ],
   q3: [
     "Connect a wallet on Arc Testnet.",
@@ -32,7 +32,7 @@ const QUEST_STEPS: Record<string, string[]> = {
   ],
   q4: [
     "Complete a swap on ARC Chain.",
-    "Bridge USDC across supported testnets.",
+    "Keep USDC available.",
     "Keep gas available on Arc.",
     "Verify both actions.",
   ],

@@ -72,7 +72,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
           </div>
         </button>
 
-        <nav className="hidden xl:flex items-center gap-5">
+        <nav className="hidden xl:flex items-center gap-3">
           {NAV_LINKS.map(({ label, page }) => (
             <button
               key={page}
@@ -122,29 +122,6 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
             Swap
           </button>
 
-          <button
-            onClick={() => onNavigate("bridge")}
-            className="arc-topbar-button flex items-center gap-2 transition-all"
-            style={{
-              fontFamily: "'Space Grotesk'",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              padding: "5px 14px",
-              borderRadius: 99,
-              background: currentPage === "bridge" ? "rgba(182,0,248,0.25)" : "rgba(182,0,248,0.1)",
-              border: `1px solid ${currentPage === "bridge" ? "rgba(182,0,248,0.6)" : "rgba(182,0,248,0.35)"}`,
-              color: "#ebb2ff",
-              boxShadow: currentPage === "bridge" ? "0 0 16px rgba(182,0,248,0.3)" : "none",
-              cursor: "pointer",
-            }}
-          >
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 7H13M7 1L13 7L7 13" stroke="#ebb2ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Bridge
-          </button>
           <button
             onClick={() => onNavigate("profile")}
             className="arc-topbar-button flex items-center gap-2 transition-all"
