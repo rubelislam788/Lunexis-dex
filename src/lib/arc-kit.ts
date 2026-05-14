@@ -88,6 +88,29 @@ export async function getBrowserViemAdapter(): Promise<any> {
   } as any);
 }
 
+export async function withCircleApiProxy<T>(operation: () => Promise<T>): Promise<T> {
+  if (typeof window === "undefined") return operation();
+
+  const originalFetch = window.fetch.bind(window);
+
+  window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" || input instanceof URL ? input.toString() : input.url;
+
+    if (url.startsWith("https://api.circle.com/v1/stablecoinKits/")) {
+      const proxiedUrl = `/api/circle/${url.slice("https://api.circle.com/".length)}`;
+      return originalFetch(proxiedUrl, init);
+    }
+
+    return originalFetch(input, init);
+  }) as typeof window.fetch;
+
+  try {
+    return await operation();
+  } finally {
+    window.fetch = originalFetch;
+  }
+}
+
 export function getArcKitKey(): string {
   if (process.env.NEXT_PUBLIC_ARC_KIT_KEY) {
     return process.env.NEXT_PUBLIC_ARC_KIT_KEY;

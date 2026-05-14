@@ -5,7 +5,7 @@ import { erc20Abi, formatEther, formatUnits, isAddressEqual, maxUint256, parseUn
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, SWAP_ROUTER_ABI } from "@/lib/arc-dex";
-import { ARC_TESTNET_CHAIN_ID, getAppKit, getAppKitResultHash, getArcKitKey, getBrowserViemAdapter } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, getAppKit, getAppKitResultHash, getArcKitKey, getBrowserViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
@@ -216,13 +216,15 @@ export function useArcSwap() {
 
         const adapter = await getBrowserViemAdapter();
         const kit = await getAppKit();
-        const result = await kit.swap({
-          from: { adapter, chain: "Arc_Testnet" },
-          tokenIn: fromToken,
-          tokenOut: toToken,
-          amountIn: state.amountIn,
-          config: { kitKey: appKitKey },
-        });
+        const result = await withCircleApiProxy(() =>
+          kit.swap({
+            from: { adapter, chain: "Arc_Testnet" },
+            tokenIn: fromToken,
+            tokenOut: toToken,
+            amountIn: state.amountIn,
+            config: { kitKey: appKitKey },
+          })
+        );
 
         const hash = getAppKitResultHash(result);
 
