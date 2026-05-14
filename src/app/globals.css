@@ -136,7 +136,7 @@ body::after {
   position: relative;
   display: inline-block;
   overflow: hidden;
-  background: #000;
+  background: transparent;
   color: #fff;
 }
 
