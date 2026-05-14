@@ -15,9 +15,11 @@ import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
+const APP_KIT_SWAP_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
+
 export default function SwapPage() {
   const { isConnected } = useAccount();
-  const { state, updateState, executeSwap, approve, needsApproval, swapReady, routeMode, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
+  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, routeMode, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
@@ -29,6 +31,7 @@ export default function SwapPage() {
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
+  const selectableSwapTokens = routerConfigured ? SWAP_TOKENS : APP_KIT_SWAP_TOKENS;
 
   useEffect(() => {
     const syncKey = () => setKitKeyInput(getArcKitKey());
@@ -268,7 +271,7 @@ export default function SwapPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }} onClick={() => setSelector(null)}>
           <div className="arc-card rounded-3xl p-6 w-96" onClick={(event) => event.stopPropagation()}>
             <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Select Token</h3>
-            {SWAP_TOKENS.map((symbol) => {
+            {selectableSwapTokens.map((symbol) => {
               const token = TOKEN_META[symbol];
               return (
                 <button key={symbol} onClick={() => pickToken(symbol)} className="w-full flex items-center gap-4 p-4 rounded-2xl mb-2 btn-ghost" style={{ borderColor: `${token.accent}44` }}>

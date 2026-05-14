@@ -81,6 +81,17 @@ export function useArcSwap() {
   const estimatedOut = useMemo(() => state.amountOut, [state.amountOut]);
 
   useEffect(() => {
+    if (routerReady || canUseAppKitSwap) return;
+
+    updateState({
+      fromToken: "USDC",
+      toToken: "EURC",
+      amountOut: "",
+      error: undefined,
+    });
+  }, [canUseAppKitSwap, routerReady, updateState]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const syncQuote = async () => {
