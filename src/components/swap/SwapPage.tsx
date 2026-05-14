@@ -24,6 +24,7 @@ export default function SwapPage() {
   const { switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const [selector, setSelector] = useState<"from" | "to" | null>(null);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
+  const [showNetworkSwitchModal, setShowNetworkSwitchModal] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
@@ -50,6 +51,10 @@ export default function SwapPage() {
       show("Please connect your wallet first", "error");
       return;
     }
+    if (currentChainId !== requiredChainId) {
+      setShowNetworkSwitchModal(true);
+      return;
+    }
     try {
       const result = await executeSwap();
       pushActivity(createActivity("swap", "Swap completed", `Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}.`, state.fromToken as TokenSymbol, "completed", result?.hash));
@@ -66,6 +71,7 @@ export default function SwapPage() {
   const handleSwitchNetwork = async () => {
     try {
       await switchChainAsync({ chainId: requiredChainId });
+      setShowNetworkSwitchModal(false);
       show("Wallet switched to ARC Chain", "success");
     } catch (err: any) {
       show(err?.message || "Network switch failed", "error");
@@ -92,7 +98,8 @@ export default function SwapPage() {
   };
 
   const isLoading = state.status === "approving" || state.status === "swapping";
-  const actionDisabled = isLoading || !state.amountIn || needsApproval || !swapReady || currentChainId !== requiredChainId;
+  const wrongNetwork = isConnected && currentChainId !== requiredChainId;
+  const actionDisabled = isLoading || !state.amountIn || needsApproval || (!swapReady && !wrongNetwork);
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <ToastContainer />
@@ -155,18 +162,13 @@ export default function SwapPage() {
               <span style={{ color: estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? "< 0.1%" : "Onchain Quote"}</span>
             </div>
 
-            {currentChainId !== requiredChainId && isConnected && (
-              <button onClick={handleSwitchNetwork} disabled={isSwitchingNetwork} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
-                {isSwitchingNetwork ? "Switching Network..." : "Switch to ARC Chain"}
-              </button>
-            )}
             {needsApproval && currentChainId === requiredChainId && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
                 {state.status === "approving" ? `Approving ${state.fromToken}...` : `Approve ${state.fromToken}`}
               </button>
             )}
             <button onClick={handleSwap} disabled={actionDisabled} className="btn-primary w-full py-4 rounded-2xl">
-              {isLoading ? "Swapping..." : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
+              {isLoading ? "Swapping..." : wrongNetwork ? "Switch to ARC Chain" : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
             </button>
             {!isConnected && (
               <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.16)" }}>
@@ -209,6 +211,44 @@ export default function SwapPage() {
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {showNetworkSwitchModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "rgba(0,0,0,0.78)", backdropFilter: "blur(14px)" }}
+          onClick={() => setShowNetworkSwitchModal(false)}
+        >
+          <div className="arc-card rounded-[28px] p-6 w-[min(440px,92vw)]" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center gap-4 mb-5">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, rgba(0,229,255,0.18), rgba(255,45,178,0.14))",
+                  border: "1px solid rgba(56,189,248,0.32)",
+                  boxShadow: "0 0 26px rgba(56,189,248,0.18)",
+                }}
+              >
+                <TokenIcon symbol="ARC" size={34} />
+              </div>
+              <div>
+                <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  Network Required
+                </div>
+                <h3 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900 }}>Switch to Arc Chain</h3>
+              </div>
+            </div>
+            <p style={{ color: "#9fb2c4", fontSize: 14, lineHeight: 1.7, marginBottom: 22 }}>
+              Swap korar age wallet Arc Testnet e switch korte hobe. Apni jei chain e thaken, ekhane click korlei wallet Arc Chain e switch request pabe.
+            </p>
+            <button onClick={handleSwitchNetwork} disabled={isSwitchingNetwork} className="btn-primary w-full py-3.5 rounded-2xl mb-3">
+              {isSwitchingNetwork ? "Switching..." : "Switch to Arc Chain"}
+            </button>
+            <button onClick={() => setShowNetworkSwitchModal(false)} className="btn-ghost w-full py-3 rounded-2xl">
+              Cancel
+            </button>
           </div>
         </div>
       )}
