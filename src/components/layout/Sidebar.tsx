@@ -32,6 +32,7 @@ export default function Sidebar({
   isOverlaySidebar,
   isOpen,
   isCollapsed,
+  onToggleCollapse,
   onCloseMobile,
 }: SidebarProps) {
   const { profile, address } = useProfile();
@@ -50,6 +51,22 @@ export default function Sidebar({
       <aside
         className={`arc-sidebar-shell ${isOverlaySidebar ? "arc-sidebar-overlay" : ""} ${isOpen ? "is-open" : ""} ${isCollapsed && !isOverlaySidebar ? "is-collapsed" : ""}`}
       >
+        <div className="arc-sidebar-menu-row">
+          <button
+            type="button"
+            onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse}
+            className={`arc-sidebar-plain arc-sidebar-hamburger ${isOpen && !isCollapsed ? "is-active" : ""}`}
+            aria-label={isOverlaySidebar ? "Close sidebar" : "Toggle sidebar"}
+            aria-pressed={isOpen && !isCollapsed}
+          >
+            <span className="hamburger-label" aria-hidden="true">
+              <span className="line1" />
+              <span className="line2" />
+              <span className="line3" />
+            </span>
+          </button>
+        </div>
+
         <nav className="arc-sidebar-nav">
           {SIDE_LINKS.map(({ label, page, icon }, index) => {
             const active = currentPage === page || (currentPage === "quest-detail" && page === "missions");
