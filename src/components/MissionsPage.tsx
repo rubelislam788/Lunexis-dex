@@ -58,11 +58,15 @@ const MISSION_ICONS: Record<string, string> = {
 
 const PROOF_KEY = "arcquest.social-proof.v1";
 const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
+const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
 
-function mergeStoredTasks(base: Quest[], stored: Record<string, MissionTask[]>): Quest[] {
+type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags">>;
+
+function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>): Quest[] {
   return base.map((quest) => {
-    const tasks = stored[quest.id]?.length ? stored[quest.id] : quest.tasks ?? [];
-    return { ...quest, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
+    const custom = storedCustom[quest.id] ?? {};
+    const tasks = storedTasks[quest.id]?.length ? storedTasks[quest.id] : quest.tasks ?? [];
+    return { ...quest, ...custom, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
   });
 }
 
@@ -83,11 +87,34 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   useEffect(() => {
     try {
       setProof(JSON.parse(window.localStorage.getItem(PROOF_KEY) || "{}"));
-      setQuests(mergeStoredTasks(QUESTS, JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}")));
+      setQuests(mergeStoredMissions(
+        QUESTS,
+        JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}"),
+        JSON.parse(window.localStorage.getItem(MISSION_CUSTOM_KEY) || "{}"),
+      ));
     } catch {
       setProof({});
     }
   }, []);
+
+  const updateMission = (questId: string, patch: EditableQuestPatch) => {
+    const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, ...patch } : quest);
+    const stored = nextQuests.reduce<Record<string, EditableQuestPatch>>((acc, quest) => {
+      acc[quest.id] = {
+        title: quest.title,
+        description: quest.description,
+        reward: quest.reward,
+        rewardAmt: quest.rewardAmt,
+        xp: quest.xp,
+        difficulty: quest.difficulty,
+        category: quest.category,
+        tags: quest.tags,
+      };
+      return acc;
+    }, {});
+    setQuests(nextQuests);
+    window.localStorage.setItem(MISSION_CUSTOM_KEY, JSON.stringify(stored));
+  };
 
   const updateMissionTasks = (questId: string, tasks: MissionTask[]) => {
     const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, tasks, totalSteps: Math.max(1, tasks.length) } : quest);
@@ -180,7 +207,16 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           </div>
         </div>
 
-        {showMissionAdmin && <MissionControlPanel quests={quests} onUpdateTasks={updateMissionTasks} />}
+        {showMissionAdmin && (
+          <MissionControlPanel
+            quests={quests}
+            completedIds={profile?.completedMissionIds ?? []}
+            isConnected={isConnected}
+            onUpdateMission={updateMission}
+            onUpdateTasks={updateMissionTasks}
+            onConfirmMission={(quest) => markMissionComplete(quest.id, quest.xp)}
+          />
+        )}
 
         <MissionSection
           title="Missions"
@@ -198,12 +234,28 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   );
 }
 
-function MissionControlPanel({ quests, onUpdateTasks }: { quests: Quest[]; onUpdateTasks: (questId: string, tasks: MissionTask[]) => void }) {
+function MissionControlPanel({
+  quests,
+  completedIds,
+  isConnected,
+  onUpdateMission,
+  onUpdateTasks,
+  onConfirmMission,
+}: {
+  quests: Quest[];
+  completedIds: string[];
+  isConnected: boolean;
+  onUpdateMission: (questId: string, patch: EditableQuestPatch) => void;
+  onUpdateTasks: (questId: string, tasks: MissionTask[]) => void;
+  onConfirmMission: (quest: Quest) => void;
+}) {
   const [selectedId, setSelectedId] = useState(quests[0]?.id ?? "");
   const selected = quests.find((quest) => quest.id === selectedId) ?? quests[0];
   if (!selected) return null;
 
   const tasks = selected?.tasks ?? [];
+  const completed = completedIds.includes(selected.id);
+  const tagsValue = selected.tags.join(", ");
 
   const updateTask = (taskId: string, title: string) => {
     onUpdateTasks(selected.id, tasks.map((task) => task.id === taskId ? { ...task, title } : task));
@@ -223,12 +275,65 @@ function MissionControlPanel({ quests, onUpdateTasks }: { quests: Quest[]; onUpd
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
         <div>
           <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission Control</div>
-          <h2 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, marginTop: 6 }}>Task Manager</h2>
+          <h2 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, marginTop: 6 }}>Mission Manager</h2>
         </div>
         <select value={selected.id} onChange={(event) => setSelectedId(event.target.value)} className="rounded-2xl px-4 py-3">
           {quests.map((quest) => <option key={quest.id} value={quest.id}>{quest.title}</option>)}
         </select>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Mission Name</span>
+          <input value={selected.title} onChange={(event) => onUpdateMission(selected.id, { title: event.target.value })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Reward Label</span>
+          <input value={selected.reward} onChange={(event) => onUpdateMission(selected.id, { reward: event.target.value })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="lg:col-span-2 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Description</span>
+          <textarea value={selected.description} onChange={(event) => onUpdateMission(selected.id, { description: event.target.value })} className="mt-2 w-full rounded-2xl px-4 py-3 min-h-[92px]" />
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>XP</span>
+          <input type="number" min={0} value={selected.xp} onChange={(event) => onUpdateMission(selected.id, { xp: Number(event.target.value) || 0 })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Reward Amount</span>
+          <input type="number" min={0} value={selected.rewardAmt} onChange={(event) => onUpdateMission(selected.id, { rewardAmt: Number(event.target.value) || 0 })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Difficulty</span>
+          <select value={selected.difficulty} onChange={(event) => onUpdateMission(selected.id, { difficulty: event.target.value as Quest["difficulty"] })} className="mt-2 w-full rounded-2xl px-4 py-3">
+            {["Easy", "Medium", "Hard", "Elite"].map((difficulty) => <option key={difficulty} value={difficulty}>{difficulty}</option>)}
+          </select>
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Category</span>
+          <input value={selected.category} onChange={(event) => onUpdateMission(selected.id, { category: event.target.value })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="lg:col-span-2 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Tags</span>
+          <input value={tagsValue} onChange={(event) => onUpdateMission(selected.id, { tags: event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} className="mt-2 w-full rounded-2xl px-4 py-3" placeholder="Swap, USDC, Gas" />
+        </label>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5 rounded-2xl p-4" style={{ background: completed ? "rgba(34,197,94,0.09)" : "rgba(0,220,229,0.06)", border: `1px solid ${completed ? "rgba(34,197,94,0.22)" : "rgba(0,220,229,0.14)"}` }}>
+        <div>
+          <div style={{ color: completed ? "#22c55e" : "#00dce5", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            {completed ? "Mission Confirmed" : "Manual Confirmation"}
+          </div>
+          <p style={{ color: "#9fb1c1", fontSize: 13, marginTop: 4 }}>
+            {completed ? "This mission is already completed for the connected wallet." : "Use this after reviewing the wallet/action proof."}
+          </p>
+        </div>
+        <button disabled={!isConnected || completed} onClick={() => onConfirmMission(selected)} className="btn-primary px-5 py-3 rounded-full">
+          {completed ? "Confirmed" : isConnected ? "Confirm Mission" : "Connect Wallet"}
+        </button>
+      </div>
+
+      <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>Tasks</div>
       <div className="grid gap-3">
         {tasks.map((task, index) => (
           <div key={task.id} className="flex flex-col sm:flex-row gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
