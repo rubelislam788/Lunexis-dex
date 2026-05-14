@@ -3,6 +3,8 @@ import type { TokenMeta, TokenSymbol } from "@/types";
 import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID } from "@/lib/arc-kit";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
+const ARC_TOKEN_ADDRESS = "0x6a801562296A1Dbc9244ca3764981D21A22974d6" as Address;
+const WETH_ARC_ADDRESS = "0x7E24AF6B090871ebbD60f57BA0A09F27db898640" as Address;
 
 export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
   WETH: {
@@ -57,7 +59,7 @@ export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
 export const TOKEN_CONTRACTS: Partial<Record<TokenSymbol, Partial<Record<number, Address>>>> = {
   ARC: {
     [ETHEREUM_SEPOLIA_CHAIN_ID]: (process.env.NEXT_PUBLIC_ARC_SEPOLIA_ADDRESS || ZERO_ADDRESS) as Address,
-    [ARC_TESTNET_CHAIN_ID]: (process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS || ZERO_ADDRESS) as Address,
+    [ARC_TESTNET_CHAIN_ID]: (process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS || ARC_TOKEN_ADDRESS) as Address,
   },
   USDC: {
     [ETHEREUM_SEPOLIA_CHAIN_ID]: (process.env.NEXT_PUBLIC_USDC_SEPOLIA_ADDRESS || "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238") as Address,
@@ -68,6 +70,6 @@ export const TOKEN_CONTRACTS: Partial<Record<TokenSymbol, Partial<Record<number,
   },
   WETH: {
     [ETHEREUM_SEPOLIA_CHAIN_ID]: (process.env.NEXT_PUBLIC_WETH_SEPOLIA_ADDRESS || "0xfff9976782d46cc05630d1f6ebab18b2324d6b14") as Address,
-    [ARC_TESTNET_CHAIN_ID]: (process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS || ZERO_ADDRESS) as Address,
+    [ARC_TESTNET_CHAIN_ID]: (process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS || WETH_ARC_ADDRESS) as Address,
   },
 };

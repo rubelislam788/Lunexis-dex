@@ -28,6 +28,9 @@ function parseAddress(value?: string) {
   return value && isAddress(value) ? (value as Address) : undefined;
 }
 
+const ARC_TOKEN_ADDRESS = "0x6a801562296A1Dbc9244ca3764981D21A22974d6" as Address;
+const WETH_ARC_ADDRESS = "0x7E24AF6B090871ebbD60f57BA0A09F27db898640" as Address;
+
 export const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 export const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 
@@ -35,7 +38,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "ARC",
     name: "ARC",
-    address: parseAddress(process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS),
+    address: parseAddress(process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS) ?? ARC_TOKEN_ADDRESS,
     decimals: 18,
     accent: "#7dd3fc",
     icon: "/arc-assets/arc.jpg",
@@ -62,7 +65,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "WETH",
     name: "Wrapped Ether",
-    address: parseAddress(process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS),
+    address: parseAddress(process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS) ?? WETH_ARC_ADDRESS,
     decimals: 18,
     accent: "#ec4899",
     icon: "/arc-assets/weth.png",
