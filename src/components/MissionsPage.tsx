@@ -7,36 +7,12 @@ import type { MissionTask, Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { SOCIAL_LINKS } from "@/lib/constants";
+import { QUESTS } from "@/lib/missions";
 import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchain";
 import FaucetButton from "@/components/ui/FaucetButton";
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
 type SocialProof = Record<string, boolean>;
-
-export const QUESTS: Quest[] = [
-  { id: "q1", title: "Arc Swap Initiation", description: "Complete a confirmed token swap on Arc and activate your operator route.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 3, tags: ["Swap", "Arc"], featured: true, tasks: [
-    { id: "q1-t1", title: "Connect wallet on Arc Testnet." },
-    { id: "q1-t2", title: "Select a token pair in Swap." },
-    { id: "q1-t3", title: "Confirm one onchain swap transaction." },
-  ] },
-  { id: "q2", title: "Arc Liquidity Signal", description: "Hold Arc ecosystem assets and refresh your live wallet balances.", reward: "800 ARCQ + NFT", rewardAmt: 800, xp: 400, difficulty: "Medium", category: "Portfolio", progress: 0, totalSteps: 4, tags: ["Balance", "USDC"], featured: true, tasks: [
-    { id: "q2-t1", title: "Connect wallet." },
-    { id: "q2-t2", title: "Open Swap." },
-    { id: "q2-t3", title: "Hold a positive USDC balance." },
-    { id: "q2-t4", title: "Refresh live balances." },
-  ] },
-  { id: "q3", title: "Stablecoin Pair Operator", description: "Hold both USDC and EURC on Arc Testnet to prove you can operate the live swap route.", reward: "1,200 ARCQ", rewardAmt: 1200, xp: 600, difficulty: "Medium", category: "DeFi", progress: 0, totalSteps: 3, tags: ["USDC", "EURC"], tasks: [
-    { id: "q3-t1", title: "Hold a positive USDC balance." },
-    { id: "q3-t2", title: "Hold a positive EURC balance." },
-    { id: "q3-t3", title: "Refresh portfolio balances." },
-  ] },
-  { id: "q4", title: "Route Pathfinder", description: "Complete a swap and keep gas available to prove operator capability.", reward: "2,500 ARCQ", rewardAmt: 2500, xp: 1000, difficulty: "Hard", category: "Advanced", progress: 0, totalSteps: 4, tags: ["Swap", "Gas"], tasks: [
-    { id: "q4-t1", title: "Complete one swap." },
-    { id: "q4-t2", title: "Keep USDC available." },
-    { id: "q4-t3", title: "Keep gas available on Arc." },
-    { id: "q4-t4", title: "Verify both actions." },
-  ] },
-];
 
 const DIFF_COLORS: Record<string, string> = {
   Easy: "#22c55e",
@@ -62,8 +38,39 @@ const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
 const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
 const MISSION_ADMIN_ADDRESS = "0x01176d7052A51471a43E01A467fC572a8e23260c".toLowerCase();
+const DEFAULT_MISSION_DAYS = 7;
 
-type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags">>;
+type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt">>;
+
+const addDaysIso = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next.toISOString();
+};
+
+const toDateTimeInputValue = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
+const fromDateTimeInputValue = (value: string) => value ? new Date(value).toISOString() : undefined;
+
+const getMissionTimeState = (quest: Quest) => {
+  const now = Date.now();
+  const start = quest.startsAt ? new Date(quest.startsAt).getTime() : 0;
+  const end = quest.endsAt ? new Date(quest.endsAt).getTime() : 0;
+  if (start && now < start) return "Upcoming";
+  if (end && now > end) return "Expired";
+  return "Live";
+};
+
+const formatMissionDate = (value?: string) => {
+  if (!value) return "No time limit";
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+};
 
 function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>, storedCreated: Quest[]): Quest[] {
   const baseIds = new Set(base.map((quest) => quest.id));
@@ -73,6 +80,14 @@ function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionT
     const tasks = storedTasks[quest.id]?.length ? storedTasks[quest.id] : quest.tasks ?? [];
     return { ...quest, ...custom, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
   });
+}
+
+async function publishMissions(quests: Quest[]) {
+  await fetch("/api/missions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quests }),
+  }).catch(() => null);
 }
 
 interface MissionsPageProps {
@@ -103,6 +118,15 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     } catch {
       setProof({});
     }
+
+    fetch("/api/missions")
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (Array.isArray(data?.quests) && data.quests.length > 0) {
+          setQuests(data.quests);
+        }
+      })
+      .catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -122,6 +146,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         difficulty: quest.difficulty,
         category: quest.category,
         tags: quest.tags,
+        startsAt: quest.startsAt,
+        endsAt: quest.endsAt,
       };
       return acc;
     }, {});
@@ -134,6 +160,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.localStorage.setItem(MISSION_CUSTOM_KEY, JSON.stringify(stored));
     window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(storedTasks));
     window.localStorage.setItem(MISSION_CREATED_KEY, JSON.stringify(created));
+    void publishMissions(nextQuests);
   };
 
   const updateMission = (questId: string, patch: EditableQuestPatch) => {
@@ -150,9 +177,19 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     persistMissions(nextQuests);
   };
 
+  const removeMission = (questId: string) => {
+    if (!isMissionAdmin) return;
+    const baseIds = new Set(QUESTS.map((quest) => quest.id));
+    if (baseIds.has(questId)) return;
+    const nextQuests = quests.filter((quest) => quest.id !== questId);
+    setQuests(nextQuests);
+    persistMissions(nextQuests);
+  };
+
   const createMission = () => {
     if (!isMissionAdmin) return quests[0] ?? QUESTS[0];
     const nextNumber = quests.length + 1;
+    const startsAt = new Date().toISOString();
     const mission: Quest = {
       id: `custom-${Date.now()}`,
       title: `Custom Mission ${nextNumber}`,
@@ -166,6 +203,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       totalSteps: 1,
       tags: ["Custom"],
       tasks: [{ id: `custom-task-${Date.now()}`, title: "Add the first task." }],
+      startsAt,
+      endsAt: addDaysIso(new Date(startsAt), DEFAULT_MISSION_DAYS),
     };
     const nextQuests = [...quests, mission];
     setQuests(nextQuests);
@@ -264,6 +303,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             onUpdateMission={updateMission}
             onUpdateTasks={updateMissionTasks}
             onCreateMission={createMission}
+            onRemoveMission={removeMission}
             onConfirmMission={(quest) => {
               if (isMissionAdmin) markMissionComplete(quest.id, quest.xp);
             }}
@@ -272,7 +312,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
         <MissionSection
           title="Missions"
-          quests={quests}
+          quests={quests.filter((quest) => isMissionAdmin || getMissionTimeState(quest) !== "Expired")}
           profile={profile}
           onSelectQuest={onSelectQuest}
           onVerify={verifyQuest}
@@ -293,6 +333,7 @@ function MissionControlPanel({
   onUpdateMission,
   onUpdateTasks,
   onCreateMission,
+  onRemoveMission,
   onConfirmMission,
 }: {
   quests: Quest[];
@@ -301,6 +342,7 @@ function MissionControlPanel({
   onUpdateMission: (questId: string, patch: EditableQuestPatch) => void;
   onUpdateTasks: (questId: string, tasks: MissionTask[]) => void;
   onCreateMission: () => Quest;
+  onRemoveMission: (questId: string) => void;
   onConfirmMission: (quest: Quest) => void;
 }) {
   const [selectedId, setSelectedId] = useState(quests[0]?.id ?? "");
@@ -310,6 +352,8 @@ function MissionControlPanel({
   const tasks = selected?.tasks ?? [];
   const completed = completedIds.includes(selected.id);
   const tagsValue = selected.tags.join(", ");
+  const isCustomMission = !QUESTS.some((quest) => quest.id === selected.id);
+  const timeState = getMissionTimeState(selected);
 
   const updateTask = (taskId: string, title: string) => {
     onUpdateTasks(selected.id, tasks.map((task) => task.id === taskId ? { ...task, title } : task));
@@ -329,12 +373,22 @@ function MissionControlPanel({
     setSelectedId(mission.id);
   };
 
+  const removeSelectedMission = () => {
+    if (!isCustomMission) return;
+    onRemoveMission(selected.id);
+    const next = quests.find((quest) => quest.id !== selected.id) ?? QUESTS[0];
+    setSelectedId(next.id);
+  };
+
   return (
     <section className="arc-card rounded-[28px] p-5 mb-8 arc-fade-up" style={{ background: "rgba(5,10,20,0.58)" }}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
         <div>
           <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission Control</div>
           <h2 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, marginTop: 6 }}>Mission Manager</h2>
+          <p style={{ color: "#849495", fontSize: 12, marginTop: 6 }}>
+            Custom missions publish to the live app session and this browser. Add a database later for permanent storage.
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <select value={selected.id} onChange={(event) => setSelectedId(event.target.value)} className="rounded-2xl px-4 py-3">
@@ -342,6 +396,9 @@ function MissionControlPanel({
           </select>
           <button onClick={createAndSelectMission} className="btn-primary px-5 py-3 rounded-full">
             Create Mission
+          </button>
+          <button onClick={removeSelectedMission} disabled={!isCustomMission} className="btn-ghost px-5 py-3 rounded-full">
+            Remove Mission
           </button>
         </div>
       </div>
@@ -381,6 +438,22 @@ function MissionControlPanel({
           <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Tags</span>
           <input value={tagsValue} onChange={(event) => onUpdateMission(selected.id, { tags: event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} className="mt-2 w-full rounded-2xl px-4 py-3" placeholder="Swap, USDC, Gas" />
         </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Start Time</span>
+          <input type="datetime-local" value={toDateTimeInputValue(selected.startsAt)} onChange={(event) => onUpdateMission(selected.id, { startsAt: fromDateTimeInputValue(event.target.value) })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>End Time</span>
+          <input type="datetime-local" value={toDateTimeInputValue(selected.endsAt)} onChange={(event) => onUpdateMission(selected.id, { endsAt: fromDateTimeInputValue(event.target.value) })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <div className="lg:col-span-2 rounded-2xl p-3" style={{ background: "rgba(0,220,229,0.06)", border: "1px solid rgba(0,220,229,0.14)" }}>
+          <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            Time Status: {timeState}
+          </div>
+          <p style={{ color: "#9fb1c1", fontSize: 13, marginTop: 6 }}>
+            Starts {formatMissionDate(selected.startsAt)}. Ends {formatMissionDate(selected.endsAt)}. New missions default to {DEFAULT_MISSION_DAYS} days.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5 rounded-2xl p-4" style={{ background: completed ? "rgba(34,197,94,0.09)" : "rgba(0,220,229,0.06)", border: `1px solid ${completed ? "rgba(34,197,94,0.22)" : "rgba(0,220,229,0.14)"}` }}>
@@ -487,6 +560,8 @@ function QuestCard({
   const progressPct = completed ? 100 : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
   const socialHref = quest.id === "social-rubel-post" ? SOCIAL_LINKS.rubelPost : quest.id === "social-arc-post" ? SOCIAL_LINKS.arcPost : SOCIAL_LINKS.rubel;
+  const timeState = getMissionTimeState(quest);
+  const isTimeLocked = timeState !== "Live";
 
   return (
     <article
@@ -509,9 +584,14 @@ function QuestCard({
             <p style={{ fontSize: 13, color: "#9fb1c1", lineHeight: 1.55 }}>{quest.description}</p>
           </div>
         </div>
-        <span className="px-2 py-1 rounded-md h-fit" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: completed ? "#22c55e" : DIFF_COLORS[quest.difficulty], background: completed ? "rgba(34,197,94,0.12)" : `${DIFF_COLORS[quest.difficulty]}18`, border: `1px solid ${completed ? "rgba(34,197,94,0.32)" : `${DIFF_COLORS[quest.difficulty]}44`}` }}>
-          {completed ? "COMPLETED" : quest.difficulty.toUpperCase()}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className="px-2 py-1 rounded-md h-fit" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: completed ? "#22c55e" : DIFF_COLORS[quest.difficulty], background: completed ? "rgba(34,197,94,0.12)" : `${DIFF_COLORS[quest.difficulty]}18`, border: `1px solid ${completed ? "rgba(34,197,94,0.32)" : `${DIFF_COLORS[quest.difficulty]}44`}` }}>
+            {completed ? "COMPLETED" : quest.difficulty.toUpperCase()}
+          </span>
+          <span className="px-2 py-1 rounded-md h-fit" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: timeState === "Live" ? "#38bdf8" : "#f59e0b", background: timeState === "Live" ? "rgba(56,189,248,0.1)" : "rgba(245,158,11,0.1)", border: `1px solid ${timeState === "Live" ? "rgba(56,189,248,0.28)" : "rgba(245,158,11,0.28)"}` }}>
+            {timeState.toUpperCase()}
+          </span>
+        </div>
       </div>
 
       <div className="mt-4">
@@ -523,6 +603,12 @@ function QuestCard({
           <div className="stat-bar" style={{ width: `${progressPct}%`, height: "100%", background: completed ? "#22c55e" : "linear-gradient(90deg,#38bdf8,#ff2db2)", borderRadius: 99 }} />
         </div>
       </div>
+
+      {(quest.startsAt || quest.endsAt) && (
+        <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)", color: "#9fb1c1", fontSize: 12 }}>
+          {formatMissionDate(quest.startsAt)} - {formatMissionDate(quest.endsAt)}
+        </div>
+      )}
 
       {verifyMessage && (
         <div className="mt-3 rounded-xl p-3" style={{ background: verifyState === "failed" ? "rgba(255,80,80,0.08)" : "rgba(56,189,248,0.07)", border: `1px solid ${verifyState === "failed" ? "rgba(255,80,80,0.18)" : "rgba(56,189,248,0.16)"}`, color: verifyState === "failed" ? "#ffb4ab" : "#b9eaff", fontSize: 12 }}>
@@ -552,8 +638,8 @@ function QuestCard({
               {quest.id === "social-follow" ? "Open Rubel" : "Open Signal"}
             </a>
           )}
-          <button disabled={completed || isChecking} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-            {isChecking ? "Checking..." : completed ? "Verified" : "Verify"}
+          <button disabled={completed || isChecking || isTimeLocked} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
           </button>
           <button disabled={!completed || claimed} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
             {claimed ? "Claimed" : "Claim"}

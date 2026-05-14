@@ -5,13 +5,14 @@ import type { Page } from "@/types";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import LandingPage from "@/components/LandingPage";
-import MissionsPage, { QUESTS } from "@/components/MissionsPage";
+import MissionsPage from "@/components/MissionsPage";
 import QuestDetailPage from "@/components/QuestDetailPage";
 import SwapPage from "@/components/swap/SwapPage";
 import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
 import LeaderboardPage from "@/components/LeaderboardPage";
 import StatsPage from "@/components/StatsPage";
+import { QUESTS } from "@/lib/missions";
 
 export const dynamic = "force-dynamic";
 

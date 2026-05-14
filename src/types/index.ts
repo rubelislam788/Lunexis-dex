@@ -22,6 +22,8 @@ export interface Quest {
   tags: string[];
   tasks?: MissionTask[];
   featured?: boolean;
+  startsAt?: string;
+  endsAt?: string;
 }
 
 export interface LeaderboardEntry {
