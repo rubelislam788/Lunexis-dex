@@ -37,8 +37,8 @@ export function useArcSwap() {
   const { address, chainId, isConnected } = useAccount();
 
   const [state, setState] = useState<SwapState>({
-    fromToken: "USDC",
-    toToken: "EURC",
+    fromToken: "ARC",
+    toToken: "WETH",
     fromChain: "Arc_Testnet",
     toChain: "Arc_Testnet",
     amountIn: "",
@@ -79,17 +79,6 @@ export function useArcSwap() {
       : "unavailable";
 
   const estimatedOut = useMemo(() => state.amountOut, [state.amountOut]);
-
-  useEffect(() => {
-    if (routerReady || canUseAppKitSwap) return;
-
-    updateState({
-      fromToken: "USDC",
-      toToken: "EURC",
-      amountOut: "",
-      error: undefined,
-    });
-  }, [canUseAppKitSwap, routerReady, updateState]);
 
   useEffect(() => {
     let cancelled = false;

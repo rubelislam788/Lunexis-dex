@@ -17,8 +17,6 @@ import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
-const APP_KIT_SWAP_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
-
 export default function SwapPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -35,12 +33,12 @@ export default function SwapPage() {
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
-  const selectableSwapTokens = routerConfigured ? SWAP_TOKENS : APP_KIT_SWAP_TOKENS;
+  const selectableSwapTokens = SWAP_TOKENS;
   const wethAddress = TOKEN_CONTRACTS.WETH?.[ARC_TESTNET_CHAIN_ID];
   const wethFaucetReady = Boolean(routerConfigured && wethAddress && !isAddressEqual(wethAddress, zeroAddress));
   const swapIntro = routerConfigured
     ? "Swap ARC, USDC, EURO, and WETH through your configured Arc router."
-    : "Swap USDC and EURO through Arc App Kit. WETH needs a deployed Arc router contract.";
+    : "ARC and WETH are configured on Arc Testnet. Add the router contract address to activate the live ARC/WETH swap route.";
 
   useEffect(() => {
     const syncKey = () => setKitKeyInput(getArcKitKey());
@@ -220,7 +218,7 @@ export default function SwapPage() {
                   Swap Setup Needed
                 </div>
                 <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  USDC and EURO can use Arc App Kit, but `NEXT_PUBLIC_ARC_KIT_KEY` is missing. Add the key below or set it in your environment to enable the default ARC Chain swap flow.
+                  USDC and EURC can use Arc App Kit, but `NEXT_PUBLIC_ARC_KIT_KEY` is missing. Add the key below or set it in your environment to enable the default ARC Chain swap flow.
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <input
@@ -244,7 +242,7 @@ export default function SwapPage() {
                   Router Setup Needed
                 </div>
                 <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  WETH and ARC pairs are not Arc App Kit swap routes on Arc Testnet. Add `NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS` and token addresses to enable router-backed WETH swaps.
+                  ARC and WETH token addresses are configured, but token-to-token swaps still need a deployed router contract with liquidity. Add `NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS` to enable the live ARC/WETH route.
                 </p>
               </div>
             )}
@@ -288,7 +286,7 @@ export default function SwapPage() {
             <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Live Balances</h3>
               <div className="grid gap-2">
-                {balances.filter((item) => selectableSwapTokens.includes(item.token)).map((item) => (
+                {balances.filter((item) => SWAP_TOKENS.includes(item.token)).map((item) => (
                   <div key={item.token} className="flex items-center justify-between rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                     <div className="flex items-center gap-2"><TokenIcon symbol={item.token} size={32} /><span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{item.token}</span></div>
                     <span style={{ color: "#849495" }}>{balancesLoading || item.isLoading ? "..." : item.amount}</span>
@@ -300,9 +298,9 @@ export default function SwapPage() {
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Swap Route</h3>
               <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>
                 {routeMode === "router" && "Wallet approvals, real transaction hashes, live ARC balances, and router-backed execution through your configured contract."}
-                {routeMode === "appkit" && "USDC and EURO are using Arc App Kit fallback on ARC Chain, with wallet confirmations and live balance refresh."}
-                {routeMode === "appkit-missing-key" && "The default USDC/EURO route is available through Arc App Kit, but the public kit key still needs to be configured."}
-                {routeMode === "unavailable" && "WETH swaps need a router contract on Arc Testnet. App Kit currently handles the USDC/EURO route here."}
+                {routeMode === "appkit" && "USDC and EURC are using Arc App Kit fallback on ARC Chain, with wallet confirmations and live balance refresh."}
+                {routeMode === "appkit-missing-key" && "The USDC/EURC route is available through Arc App Kit, but the public kit key still needs to be configured."}
+                {routeMode === "unavailable" && "ARC/WETH tokens are configured, but this pair needs your Arc router contract and liquidity before swaps can execute."}
               </p>
             </div>
           </aside>
