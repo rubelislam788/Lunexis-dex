@@ -1,14 +1,14 @@
 // src/components/swap/SwapPage.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
 import { parseEther, zeroAddress, isAddressEqual, type Address } from "viem";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, getArcKitKey, setArcKitKey } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL } from "@/lib/arc-kit";
 import { MOCK_WETH_ABI } from "@/lib/arc-dex";
 import { createActivity } from "@/lib/profile";
 import { SWAP_TOKENS, TOKEN_CONTRACTS, TOKEN_META } from "@/lib/tokens";
@@ -21,7 +21,7 @@ export default function SwapPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
-  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, routeMode, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
+  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
@@ -29,7 +29,6 @@ export default function SwapPage() {
   const [selector, setSelector] = useState<"from" | "to" | null>(null);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
-  const [kitKeyInput, setKitKeyInput] = useState("");
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
@@ -37,15 +36,8 @@ export default function SwapPage() {
   const wethAddress = TOKEN_CONTRACTS.WETH?.[ARC_TESTNET_CHAIN_ID];
   const wethFaucetReady = Boolean(routerConfigured && wethAddress && !isAddressEqual(wethAddress, zeroAddress));
   const swapIntro = routerConfigured
-    ? "Swap ARC, USDC, EURO, and WETH through your configured Arc router."
-    : "ARC and WETH are configured on Arc Testnet. Add the router contract address to activate the live ARC/WETH swap route.";
-
-  useEffect(() => {
-    const syncKey = () => setKitKeyInput(getArcKitKey());
-    syncKey();
-    window.addEventListener("arc-kit-key-updated", syncKey);
-    return () => window.removeEventListener("arc-kit-key-updated", syncKey);
-  }, []);
+    ? "Swap ARC, USDC, EURC, and WETH with live wallet balances and onchain execution."
+    : "Swap tokens on Arc Testnet with a clean wallet-first trading experience.";
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -84,14 +76,9 @@ export default function SwapPage() {
     }
   };
 
-  const handleSaveKitKey = () => {
-    setArcKitKey(kitKeyInput);
-    show(kitKeyInput.trim() ? "Arc App Kit key saved in this browser" : "Arc App Kit key removed", "success");
-  };
-
   const mintWeth = async () => {
     if (!walletClient || !publicClient || !wethAddress || isAddressEqual(wethAddress, zeroAddress)) {
-      show("Configure NEXT_PUBLIC_WETH_ARC_ADDRESS first", "error");
+      show("WETH faucet is unavailable right now.", "error");
       return;
     }
 
@@ -126,19 +113,6 @@ export default function SwapPage() {
 
   const isLoading = state.status === "approving" || state.status === "swapping";
   const actionDisabled = isLoading || !state.amountIn || needsApproval || !swapReady || currentChainId !== requiredChainId;
-  const routeLabel =
-    routeMode === "router"
-      ? "Router Contract"
-      : routeMode === "appkit"
-        ? "Arc App Kit"
-        : routeMode === "appkit-missing-key"
-          ? "Kit Key Required"
-          : "Not Configured";
-  const routeColor =
-    routeMode === "router" || routeMode === "appkit"
-      ? "#22c55e"
-      : "#ffb7eb";
-
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <ToastContainer />
@@ -197,56 +171,6 @@ export default function SwapPage() {
               <span style={{ color: estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? "< 0.1%" : "Onchain Quote"}</span>
             </div>
 
-            <div className="grid gap-3 mb-6">
-              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ color: "#849495" }}>Network</span>
-                <span style={{ color: currentChainId === ARC_TESTNET_CHAIN_ID ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === ARC_TESTNET_CHAIN_ID ? "Arc Testnet" : "Switch to Arc Testnet"}
-                </span>
-              </div>
-              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ color: "#849495" }}>Route Engine</span>
-                <span style={{ color: routeColor, fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {routeLabel}
-                </span>
-              </div>
-            </div>
-
-            {routeMode === "appkit-missing-key" && (
-              <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
-                <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  Swap Setup Needed
-                </div>
-                <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  USDC and EURC can use Arc App Kit, but `NEXT_PUBLIC_ARC_KIT_KEY` is missing. Add the key below or set it in your environment to enable the default ARC Chain swap flow.
-                </p>
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                  <input
-                    type="text"
-                    value={kitKeyInput}
-                    onChange={(event) => setKitKeyInput(event.target.value)}
-                    placeholder="Paste your Arc App Kit public key"
-                    className="flex-1 px-4 py-3 rounded-2xl"
-                    style={{ background: "rgba(0,0,0,0.28)" }}
-                  />
-                  <button onClick={handleSaveKitKey} className="btn-outline-cyan px-5 py-3 rounded-2xl">
-                    Save Key
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {routeMode === "unavailable" && (
-              <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
-                <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  Router Setup Needed
-                </div>
-                <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  ARC and WETH token addresses are configured, but token-to-token swaps still need a deployed router contract with liquidity. Add `NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS` to enable the live ARC/WETH route.
-                </p>
-              </div>
-            )}
-
             {currentChainId !== requiredChainId && isConnected && (
               <button onClick={handleSwitchNetwork} disabled={isSwitchingNetwork} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
                 {isSwitchingNetwork ? "Switching Network..." : "Switch to ARC Chain"}
@@ -285,23 +209,11 @@ export default function SwapPage() {
           <aside className="lg:col-span-2 flex flex-col gap-4">
             <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Live Balances</h3>
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 {balances.filter((item) => SWAP_TOKENS.includes(item.token)).map((item) => (
-                  <div key={item.token} className="flex items-center justify-between rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <div className="flex items-center gap-2"><TokenIcon symbol={item.token} size={32} /><span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{item.token}</span></div>
-                    <span style={{ color: "#849495" }}>{balancesLoading || item.isLoading ? "..." : item.amount}</span>
-                  </div>
+                  <LiveBalanceCard key={item.token} token={item.token} amount={balancesLoading || item.isLoading ? "..." : item.displayAmount || `${item.amount} ${item.token}`} />
                 ))}
               </div>
-            </div>
-            <div className="arc-card rounded-3xl p-5">
-              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Swap Route</h3>
-              <p style={{ color: "#849495", fontSize: 13, lineHeight: 1.6 }}>
-                {routeMode === "router" && "Wallet approvals, real transaction hashes, live ARC balances, and router-backed execution through your configured contract."}
-                {routeMode === "appkit" && "USDC and EURC are using Arc App Kit fallback on ARC Chain, with wallet confirmations and live balance refresh."}
-                {routeMode === "appkit-missing-key" && "The USDC/EURC route is available through Arc App Kit, but the public kit key still needs to be configured."}
-                {routeMode === "unavailable" && "ARC/WETH tokens are configured, but this pair needs your Arc router contract and liquidity before swaps can execute."}
-              </p>
             </div>
           </aside>
         </div>
@@ -340,6 +252,48 @@ export default function SwapPage() {
         explorerBaseUrl={`${ARC_TESTNET_EXPLORER_URL}/tx/`}
         onClose={() => setSuccessTx(null)}
       />
+    </div>
+  );
+}
+
+function LiveBalanceCard({ token, amount }: { token: TokenSymbol; amount: string }) {
+  const meta = TOKEN_META[token];
+
+  return (
+    <div
+      className="group flex items-center justify-between gap-4 rounded-2xl px-4 py-3 transition-all duration-200 hover:-translate-y-0.5"
+      style={{
+        background: `linear-gradient(135deg, rgba(255,255,255,0.055), ${meta.accent}14)`,
+        border: `1px solid ${meta.accent}24`,
+        boxShadow: "0 14px 34px rgba(0,0,0,0.18)",
+      }}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
+          style={{ background: `${meta.accent}16`, border: `1px solid ${meta.accent}38` }}
+        >
+          <TokenIcon symbol={token} size={28} />
+        </div>
+        <div className="min-w-0">
+          <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900 }}>{token}</div>
+          <div className="truncate" style={{ color: "#6f8699", fontSize: 11 }}>{meta.label}</div>
+        </div>
+      </div>
+      <div
+        className="shrink-0 text-right"
+        style={{
+          color: "#cbd5e1",
+          fontFamily: "'Space Grotesk'",
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: 0,
+          maxWidth: "48%",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {amount}
+      </div>
     </div>
   );
 }

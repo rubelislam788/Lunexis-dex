@@ -63,6 +63,7 @@ export interface ActivityItem {
 export interface PortfolioBalance {
   token: TokenSymbol;
   amount: string;
+  displayAmount?: string;
   value: string;
   chain: string;
   isLoading?: boolean;

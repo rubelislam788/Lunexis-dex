@@ -35,6 +35,7 @@ function emptyBalances(isLoading = false): PortfolioBalance[] {
   return PORTFOLIO_TOKENS.map((token) => ({
     token,
     amount: "0",
+    displayAmount: `0.00 ${token}`,
     value: token === "USDC" ? "$0.00" : token === "EURC" ? "EUR 0.00" : "Live",
     chain: TOKEN_META[token].chain,
     isLoading,
@@ -44,8 +45,20 @@ function emptyBalances(isLoading = false): PortfolioBalance[] {
 function cleanAmount(raw: bigint, decimals: number) {
   const formatted = formatUnits(raw, decimals);
   const [whole, fraction = ""] = formatted.split(".");
-  const trimmedFraction = fraction.slice(0, decimals === 6 ? 4 : 6).replace(/0+$/, "");
+  const maxFractionDigits = decimals <= 6 ? 4 : 6;
+  const trimmedFraction = fraction.slice(0, maxFractionDigits).replace(/0+$/, "");
   return trimmedFraction ? `${whole}.${trimmedFraction}` : whole;
+}
+
+function displayAmountFor(token: TokenSymbol, amount: string) {
+  const numeric = Number(amount || 0);
+  const maximumFractionDigits = numeric >= 1000 ? 2 : numeric >= 1 ? 4 : 6;
+  const formatted = numeric.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits,
+  });
+
+  return `${formatted} ${token}`;
 }
 
 function valueFor(token: TokenSymbol, amount: string) {
@@ -59,23 +72,33 @@ async function readTokenBalance(address: Address, token: TokenSymbol) {
   const chainId = tokenChains[token];
   const client = chainClients[chainId];
 
-  if (!client) return BigInt(0);
+  if (!client) return { raw: BigInt(0), decimals: TOKEN_DECIMALS[token] };
 
   if (token === "ETH") {
-    return client.getBalance({ address });
+    const raw = await client.getBalance({ address });
+    return { raw, decimals: 18 };
   }
 
   const tokenAddress = TOKEN_CONTRACTS[token]?.[chainId];
   if (!tokenAddress || isAddressEqual(tokenAddress, zeroAddress)) {
-    return BigInt(0);
+    return { raw: BigInt(0), decimals: TOKEN_DECIMALS[token] };
   }
 
-  return client.readContract({
-    address: tokenAddress,
-    abi: erc20Abi,
-    functionName: "balanceOf",
-    args: [address],
-  }) as Promise<bigint>;
+  const [raw, decimals] = await Promise.all([
+    client.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [address],
+    }) as Promise<bigint>,
+    client.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: "decimals",
+    }).catch(() => TOKEN_DECIMALS[token]) as Promise<number>,
+  ]);
+
+  return { raw, decimals: Number(decimals) };
 }
 
 export function usePortfolioBalances(refreshMs = 12000) {
@@ -100,12 +123,13 @@ export function usePortfolioBalances(refreshMs = 12000) {
     try {
       const next = await Promise.all(PORTFOLIO_TOKENS.map(async (token) => {
         try {
-          const raw = await readTokenBalance(address, token);
-          const amount = cleanAmount(raw, TOKEN_DECIMALS[token]);
+          const { raw, decimals } = await readTokenBalance(address, token);
+          const amount = cleanAmount(raw, decimals);
 
           return {
             token,
             amount,
+            displayAmount: displayAmountFor(token, amount),
             value: valueFor(token, amount),
             chain: TOKEN_META[token].chain,
             isLoading: false,
@@ -114,6 +138,7 @@ export function usePortfolioBalances(refreshMs = 12000) {
           return {
             token,
             amount: "0",
+            displayAmount: displayAmountFor(token, "0"),
             value: valueFor(token, "0"),
             chain: TOKEN_META[token].chain,
             isLoading: false,
