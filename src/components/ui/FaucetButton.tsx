@@ -19,7 +19,7 @@ export default function FaucetButton({
       style={{
         padding: compact ? "7px 12px" : "10px 16px",
         background: "linear-gradient(135deg, rgba(56,189,248,0.16), rgba(255,45,178,0.12))",
-        border: "1px solid rgba(56,189,248,0.42)",
+        border: "1px solid transparent",
         color: "#dff8ff",
         boxShadow: "0 0 22px rgba(56,189,248,0.18)",
         fontFamily: "'Space Grotesk'",
