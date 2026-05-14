@@ -256,6 +256,51 @@ body::after {
   box-shadow: 0 0 42px rgba(56,189,248,0.36), 0 0 28px rgba(255,45,178,0.18);
 }
 
+.arc-topbar-button {
+  position: relative !important;
+  padding: 10px 20px !important;
+  border-radius: 7px !important;
+  border: 1px solid rgb(61, 106, 255) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  background: transparent !important;
+  color: #fff !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 0 0 transparent !important;
+  transition: all 0.2s ease-in !important;
+}
+
+.arc-topbar-button:hover {
+  background: rgb(61, 106, 255) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
+  transition: all 0.2s ease-out !important;
+}
+
+.arc-topbar-button:hover::before {
+  animation: sh02 0.5s 0s linear;
+}
+
+.arc-topbar-button::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 86%;
+  position: absolute;
+  top: 7%;
+  left: 0%;
+  opacity: 0;
+  background: #fff;
+  box-shadow: 0 0 50px 30px #fff;
+  transform: skewX(-20deg);
+}
+
+.arc-topbar-button:active {
+  box-shadow: 0 0 0 0 transparent !important;
+  transition: box-shadow 0.2s ease-in !important;
+}
+
 .arc-mission-card {
   transition: transform 0.26s ease, box-shadow 0.26s ease, border-color 0.26s ease;
 }
@@ -637,6 +682,20 @@ body::after {
 @keyframes arcTokenFloat {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -8px; }
+}
+
+@keyframes sh02 {
+  from {
+    opacity: 0;
+    left: 0%;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    left: 100%;
+  }
 }
 
 @keyframes arcFloat {

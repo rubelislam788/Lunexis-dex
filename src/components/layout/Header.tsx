@@ -77,7 +77,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
             <button
               key={page}
               onClick={() => onNavigate(page)}
-              className="transition-colors"
+              className="arc-topbar-button transition-colors"
               style={{
                 fontFamily: "'Space Grotesk'",
                 fontSize: 12,
@@ -86,12 +86,8 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
                 textTransform: "uppercase",
                 color: currentPage === page ? "#00dce5" : "#8a9494",
                 borderBottom: currentPage === page ? "2px solid #00dce5" : "2px solid transparent",
-                paddingBottom: 4,
+                padding: "10px 16px",
                 background: "none",
-                border: "none",
-                borderBottomWidth: 2,
-                borderBottomStyle: "solid",
-                borderBottomColor: currentPage === page ? "#00dce5" : "transparent",
                 cursor: "pointer",
               }}
             >
@@ -103,7 +99,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
 
           <button
             onClick={() => onNavigate("swap")}
-            className="flex items-center gap-2 transition-all"
+            className="arc-topbar-button flex items-center gap-2 transition-all"
             style={{
               fontFamily: "'Space Grotesk'",
               fontSize: 12,
@@ -128,7 +124,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
 
           <button
             onClick={() => onNavigate("bridge")}
-            className="flex items-center gap-2 transition-all"
+            className="arc-topbar-button flex items-center gap-2 transition-all"
             style={{
               fontFamily: "'Space Grotesk'",
               fontSize: 12,
@@ -151,7 +147,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
           </button>
           <button
             onClick={() => onNavigate("profile")}
-            className="flex items-center gap-2 transition-all"
+            className="arc-topbar-button flex items-center gap-2 transition-all"
             style={{
               fontFamily: "'Space Grotesk'",
               fontSize: 12,
