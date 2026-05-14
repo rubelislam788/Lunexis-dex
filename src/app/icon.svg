@@ -1,17 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="18" fill="#07111F"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="url(#ring)" stroke-width="4.5"/>
-  <path d="M17 39L31.5 14L46 39" stroke="url(#stroke)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M24 39H40" stroke="url(#stroke)" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="3.8" fill="#EAFBFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="20" fill="#050B18"/>
+  <rect width="72" height="72" rx="20" fill="url(#case)"/>
+  <rect x="5" y="5" width="62" height="62" rx="17" fill="none" stroke="rgba(184,236,255,0.34)" stroke-width="1.5"/>
+  <g filter="url(#glow)">
+    <circle cx="36" cy="36" r="27" fill="url(#shell)" opacity="0.94"/>
+    <circle cx="36" cy="36" r="26" fill="none" stroke="url(#rim)" stroke-width="3.8"/>
+    <circle cx="36" cy="36" r="19" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.6"/>
+  </g>
+  <path d="M20.5 44.5L35.5 18.5C35.72 18.12 36.28 18.12 36.5 18.5L51.5 44.5" stroke="rgba(0,0,0,0.42)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 2)"/>
+  <path d="M20.5 44.5L35.5 18.5C35.72 18.12 36.28 18.12 36.5 18.5L51.5 44.5" stroke="url(#arc)" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 43.5H44" stroke="rgba(0,0,0,0.38)" stroke-width="7" stroke-linecap="round" transform="translate(0 2)"/>
+  <path d="M28 43.5H44" stroke="url(#arc)" stroke-width="5.4" stroke-linecap="round"/>
+  <circle cx="36" cy="36" r="4.4" fill="#F6FEFF"/>
+  <circle cx="36" cy="36" r="2" fill="#52E5FF"/>
+  <path d="M23 23C29 16.5 40 15.2 48 21" stroke="rgba(255,255,255,0.5)" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
   <defs>
-    <linearGradient id="ring" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#5CE1FF"/>
-      <stop offset="1" stop-color="#FF4FB7"/>
+    <radialGradient id="case" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(19 12) rotate(53) scale(76)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="0.26" stop-color="#164962" stop-opacity="0.6"/>
+      <stop offset="0.68" stop-color="#131B50" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#54153F" stop-opacity="0.62"/>
+    </radialGradient>
+    <radialGradient id="shell" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(25 20) rotate(54) scale(47)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="0.34" stop-color="#06344A" stop-opacity="0.92"/>
+      <stop offset="0.7" stop-color="#111B4F"/>
+      <stop offset="1" stop-color="#3A1039"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="13" y1="15" x2="59" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#88F2FF"/>
+      <stop offset="0.48" stop-color="#4F7DFF"/>
+      <stop offset="1" stop-color="#FF3FBC"/>
     </linearGradient>
-    <linearGradient id="stroke" x1="18" y1="16" x2="46" y2="43" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F6FEFF"/>
-      <stop offset="1" stop-color="#8EE9FF"/>
+    <linearGradient id="arc" x1="23" y1="18" x2="50" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.38" stop-color="#A9F7FF"/>
+      <stop offset="1" stop-color="#6E8CFF"/>
     </linearGradient>
+    <filter id="glow" x="4" y="4" width="64" height="64" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="#38BDF8" flood-opacity="0.36"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#FF2DB2" flood-opacity="0.16"/>
+    </filter>
   </defs>
 </svg>
