@@ -139,36 +139,34 @@ export default function Home() {
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
 
-      {showSidebar && (
-        <footer
-          className="arc-footer-shell py-8 px-6 md:px-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-center border-t"
-          style={{
-            background: "#000",
-            borderColor: "rgba(255,255,255,0.05)",
-          }}
-        >
-          <p style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#444" }}>
-            (C) 2026 ARC SWAP. ARC CHAIN OPERATOR SURFACE.
-          </p>
-          <ul className="example-2 arc-social-icons" aria-label="Social links">
-            {SOCIAL_LINKS.map((link) => (
-              <li key={link.social} className="icon-content">
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  data-social={link.social}
-                  aria-label={link.label}
-                >
-                  <span className="filled" />
-                  {link.icon}
-                </a>
-                <div className="tooltip">{link.label}</div>
-              </li>
-            ))}
-          </ul>
-        </footer>
-      )}
+      <footer
+        className="arc-footer-shell py-8 px-6 md:px-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-center border-t"
+        style={{
+          background: "#000",
+          borderColor: "rgba(255,255,255,0.05)",
+        }}
+      >
+        <p style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#444" }}>
+          (C) 2026 ARC SWAP. ARC CHAIN OPERATOR SURFACE.
+        </p>
+        <ul className="example-2 arc-social-icons" aria-label="Social links">
+          {SOCIAL_LINKS.map((link) => (
+            <li key={link.social} className="icon-content">
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                data-social={link.social}
+                aria-label={link.label}
+              >
+                <span className="filled" />
+                {link.icon}
+              </a>
+              <div className="tooltip">{link.label}</div>
+            </li>
+          ))}
+        </ul>
+      </footer>
     </div>
   );
 }
