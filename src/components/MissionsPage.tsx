@@ -114,6 +114,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [proof, setProof] = useState<SocialProof>({});
   const [quests, setQuests] = useState<Quest[]>(() => ensureMissionSchedule(QUESTS));
   const [showMissionAdmin, setShowMissionAdmin] = useState(false);
+  const [missionControlQuestId, setMissionControlQuestId] = useState(QUESTS[0]?.id ?? "");
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
   const [missionClock, setMissionClock] = useState(() => Date.now());
@@ -243,6 +244,13 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.localStorage.setItem(PROOF_KEY, JSON.stringify(next));
   };
 
+  const openMissionEditor = (questId: string) => {
+    if (!isMissionAdmin) return;
+    setMissionControlQuestId(questId);
+    setShowMissionAdmin(true);
+    window.setTimeout(() => document.getElementById("mission-control-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+
   const hasConfirmedActivity = async (type: "swap" | "bridge") => {
     const activities = profile?.activities.filter((item) => item.type === type && item.status === "completed") ?? [];
     if (activities.length === 0) return false;
@@ -323,6 +331,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         {isMissionAdmin && showMissionAdmin && (
           <MissionControlPanel
             quests={quests}
+            selectedQuestId={missionControlQuestId}
+            onSelectedQuestChange={setMissionControlQuestId}
             completedIds={profile?.completedMissionIds ?? []}
             isConnected={isConnected}
             onUpdateMission={updateMission}
@@ -345,6 +355,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           saveProof={saveProof}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}
+          isMissionAdmin={isMissionAdmin}
+          onEditQuest={openMissionEditor}
         />
       </div>
     </div>
@@ -353,6 +365,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
 function MissionControlPanel({
   quests,
+  selectedQuestId,
+  onSelectedQuestChange,
   completedIds,
   isConnected,
   onUpdateMission,
@@ -362,6 +376,8 @@ function MissionControlPanel({
   onConfirmMission,
 }: {
   quests: Quest[];
+  selectedQuestId: string;
+  onSelectedQuestChange: (questId: string) => void;
   completedIds: string[];
   isConnected: boolean;
   onUpdateMission: (questId: string, patch: EditableQuestPatch) => void;
@@ -370,14 +386,22 @@ function MissionControlPanel({
   onRemoveMission: (questId: string) => void;
   onConfirmMission: (quest: Quest) => void;
 }) {
-  const [selectedId, setSelectedId] = useState(quests[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState(selectedQuestId || quests[0]?.id || "");
   const selected = quests.find((quest) => quest.id === selectedId) ?? quests[0];
 
   useEffect(() => {
-    if (!quests.some((quest) => quest.id === selectedId)) {
-      setSelectedId(quests[0]?.id ?? "");
+    if (selectedQuestId && selectedQuestId !== selectedId) {
+      setSelectedId(selectedQuestId);
     }
-  }, [quests, selectedId]);
+  }, [selectedQuestId, selectedId]);
+
+  useEffect(() => {
+    if (!quests.some((quest) => quest.id === selectedId)) {
+      const nextId = quests[0]?.id ?? "";
+      setSelectedId(nextId);
+      onSelectedQuestChange(nextId);
+    }
+  }, [quests, selectedId, onSelectedQuestChange]);
 
   if (!selected) return null;
 
@@ -422,6 +446,7 @@ function MissionControlPanel({
   const createAndSelectMission = () => {
     const mission = onCreateMission();
     setSelectedId(mission.id);
+    onSelectedQuestChange(mission.id);
   };
 
   const removeSelectedMission = () => {
@@ -430,7 +455,7 @@ function MissionControlPanel({
   };
 
   return (
-    <section className="arc-card rounded-[28px] p-5 mb-8 arc-fade-up" style={{ background: "rgba(5,10,20,0.58)" }}>
+    <section id="mission-control-panel" className="arc-card rounded-[28px] p-5 mb-8 arc-fade-up" style={{ background: "rgba(5,10,20,0.58)" }}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
         <div>
           <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission Control</div>
@@ -440,7 +465,10 @@ function MissionControlPanel({
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <select value={selected.id} onChange={(event) => setSelectedId(event.target.value)} className="rounded-2xl px-4 py-3">
+          <select value={selected.id} onChange={(event) => {
+            setSelectedId(event.target.value);
+            onSelectedQuestChange(event.target.value);
+          }} className="rounded-2xl px-4 py-3">
             {quests.map((quest) => <option key={quest.id} value={quest.id}>{quest.title}</option>)}
           </select>
           <button onClick={createAndSelectMission} className="btn-primary px-5 py-3 rounded-full">
@@ -572,6 +600,8 @@ function MissionSection({
   saveProof,
   verifyStates,
   verifyMessages,
+  isMissionAdmin,
+  onEditQuest,
 }: {
   title: string;
   quests: Quest[];
@@ -582,6 +612,8 @@ function MissionSection({
   saveProof: (key: string) => void;
   verifyStates: Record<string, VerifyState>;
   verifyMessages: Record<string, string>;
+  isMissionAdmin: boolean;
+  onEditQuest: (questId: string) => void;
 }) {
   return (
     <section className="mb-8">
@@ -602,6 +634,8 @@ function MissionSection({
             onClaim={() => onClaim(quest)}
             saveProof={saveProof}
             featured={quest.featured}
+            isMissionAdmin={isMissionAdmin}
+            onEditQuest={onEditQuest}
           />
         ))}
       </div>
@@ -620,6 +654,8 @@ function QuestCard({
   onClaim,
   saveProof,
   featured,
+  isMissionAdmin,
+  onEditQuest,
 }: {
   quest: Quest;
   completed?: boolean;
@@ -631,6 +667,8 @@ function QuestCard({
   onClaim: () => void;
   saveProof: (key: string) => void;
   featured?: boolean;
+  isMissionAdmin: boolean;
+  onEditQuest: (questId: string) => void;
 }) {
   const progressPct = completed ? 100 : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
@@ -706,6 +744,11 @@ function QuestCard({
         </div>
 
         <div className="flex gap-2">
+          {isMissionAdmin && (
+            <button onClick={() => onEditQuest(quest.id)} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+              Edit
+            </button>
+          )}
           {quest.category === "Social" && quest.id === "social-follow" && (
             <a href={SOCIAL_LINKS.arc} target="_blank" rel="noreferrer" onClick={() => saveProof("arcFollow")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>Open Arc</a>
           )}
