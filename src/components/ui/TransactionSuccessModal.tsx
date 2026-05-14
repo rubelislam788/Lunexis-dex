@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ARC_TESTNET_EXPLORER_URL } from "@/lib/arc-kit";
 
 interface TransactionSuccessModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ export default function TransactionSuccessModal({
   txHash,
   gasFee = "Calculated by wallet",
   timestamp,
-  explorerBaseUrl = "https://scan.arc.io/tx/",
+  explorerBaseUrl = `${ARC_TESTNET_EXPLORER_URL}/tx/`,
   onClose,
 }: TransactionSuccessModalProps) {
   const [expanded, setExpanded] = useState(false);

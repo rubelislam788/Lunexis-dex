@@ -6,15 +6,16 @@ import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
 import type { PortfolioBalance, TokenSymbol } from "@/types";
 import { arcChain } from "@/lib/wagmi";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URL, ETHEREUM_SEPOLIA_CHAIN_ID, normalizeRpcUrl } from "@/lib/arc-kit";
 import { PORTFOLIO_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS, TOKEN_META } from "@/lib/tokens";
 
-const ARC_CHAIN_ID = 1723;
-const SEPOLIA_CHAIN_ID = 11155111;
+const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
+const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 
 const chainClients: Record<number, PublicClient> = {
   [ARC_CHAIN_ID]: createPublicClient({
     chain: arcChain,
-    transport: http(process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.arc.io"),
+    transport: http(normalizeRpcUrl(ARC_TESTNET_RPC_URL)),
   }),
   [SEPOLIA_CHAIN_ID]: createPublicClient({
     chain: sepolia,

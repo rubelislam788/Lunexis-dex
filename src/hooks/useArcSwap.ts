@@ -5,10 +5,10 @@ import { erc20Abi, formatEther, formatUnits, isAddressEqual, maxUint256, parseUn
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, SWAP_ROUTER_ABI } from "@/lib/arc-dex";
-import { getAppKit, getArcKitKey, getBrowserViemAdapter } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, getAppKit, getAppKitResultHash, getArcKitKey, getBrowserViemAdapter } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
-const ARC_CHAIN_ID = 1723;
+const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 
 function parseTokenAmount(value: string, decimals: number) {
   if (!value.trim()) return BigInt(0);
@@ -224,10 +224,7 @@ export function useArcSwap() {
           config: { kitKey: appKitKey },
         });
 
-        const hash =
-          result?.steps?.find?.((step: any) => step?.hash)?.hash ??
-          result?.steps?.find?.((step: any) => step?.txHash)?.txHash ??
-          result?.hash;
+        const hash = getAppKitResultHash(result);
 
         if (!hash) {
           throw new Error("Swap submitted but no transaction hash was returned.");

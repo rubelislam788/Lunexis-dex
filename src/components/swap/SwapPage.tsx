@@ -7,7 +7,7 @@ import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
-import { getArcKitKey, setArcKitKey } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, getArcKitKey, setArcKitKey } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
 import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
@@ -157,8 +157,8 @@ export default function SwapPage() {
             <div className="grid gap-3 mb-6">
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Network</span>
-                <span style={{ color: currentChainId === 1723 ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === 1723 ? "ARC Chain" : "Switch to ARC Chain"}
+                <span style={{ color: currentChainId === ARC_TESTNET_CHAIN_ID ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {currentChainId === ARC_TESTNET_CHAIN_ID ? "Arc Testnet" : "Switch to Arc Testnet"}
                 </span>
               </div>
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -230,7 +230,7 @@ export default function SwapPage() {
               </div>
             )}
             {state.txHash && (
-              <a href={`https://scan.arc.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+              <a href={`${ARC_TESTNET_EXPLORER_URL}/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
               </a>
             )}
@@ -294,6 +294,7 @@ export default function SwapPage() {
         txHash={successTx?.hash}
         gasFee={successTx?.gasFee}
         timestamp={successTx?.timestamp}
+        explorerBaseUrl={`${ARC_TESTNET_EXPLORER_URL}/tx/`}
         onClose={() => setSuccessTx(null)}
       />
     </div>

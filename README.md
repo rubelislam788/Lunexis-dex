@@ -55,8 +55,8 @@ NEXT_PUBLIC_ARC_KIT_KEY=your_kit_key_here
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 
 # RPC endpoints (optional, defaults provided)
-NEXT_PUBLIC_ARC_RPC_URL=https://rpc.arc.io
-NEXT_PUBLIC_ARC_EXPLORER_URL=https://scan.arc.io
+NEXT_PUBLIC_ARC_RPC_URL=https://rpc.testnet.arc.network
+NEXT_PUBLIC_ARC_EXPLORER_URL=https://testnet.arcscan.app
 \`\`\`
 
 > **Note**: Bridge works without a kit key. Swap requires \`NEXT_PUBLIC_ARC_KIT_KEY\`.
@@ -238,4 +238,4 @@ src/
 - [Bridge Quickstart](https://docs.arc.network/app-kit/quickstarts/bridge-tokens-across-blockchains)
 - [Swap Quickstart](https://docs.arc.network/app-kit/quickstarts/swap-tokens-same-chain)
 - [SDK Reference](https://docs.arc.network/app-kit/references/sdk-reference)
-- [Arc Testnet Explorer](https://scan.arc.io)
+- [Arc Testnet Explorer](https://testnet.arcscan.app)

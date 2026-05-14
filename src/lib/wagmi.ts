@@ -1,18 +1,19 @@
 import { getDefaultConfig, type Chain } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
 import { sepolia } from "wagmi/chains";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URL, normalizeRpcUrl } from "@/lib/arc-kit";
 
 export const arcChain = {
-  id: 1723,
-  name: "ARC Chain",
+  id: ARC_TESTNET_CHAIN_ID,
+  name: "Arc Testnet",
   iconUrl: "/arc-assets/arc.jpg",
   iconBackground: "#07111f",
-  nativeCurrency: { name: "ARC Ether", symbol: "ETH", decimals: 18 },
+  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   rpcUrls: {
-    default: { http: [process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.arc.io"] },
+    default: { http: [normalizeRpcUrl(ARC_TESTNET_RPC_URL)] },
   },
   blockExplorers: {
-    default: { name: "ARC Scan", url: process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://scan.arc.io" },
+    default: { name: "ArcScan", url: ARC_TESTNET_EXPLORER_URL },
   },
   testnet: true,
 } satisfies Chain;
@@ -27,7 +28,7 @@ export const wagmiConfig = getDefaultConfig({
   chains: wagmiChains,
   ssr: true,
   transports: {
-    [arcChain.id]: http(process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.arc.io"),
+    [arcChain.id]: http(normalizeRpcUrl(ARC_TESTNET_RPC_URL)),
     [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"),
   },
 });

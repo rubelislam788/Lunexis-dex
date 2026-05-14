@@ -1,4 +1,5 @@
 import { isAddress, type Address } from "viem";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID } from "@/lib/arc-kit";
 
 export type DexView = "dashboard" | "swap" | "liquidity" | "bridge" | "portfolio" | "admin";
 
@@ -27,14 +28,14 @@ function parseAddress(value?: string) {
   return value && isAddress(value) ? (value as Address) : undefined;
 }
 
-export const ARC_CHAIN_ID = 1723;
-export const SEPOLIA_CHAIN_ID = 11155111;
+export const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
+export const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 
 export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "ARC",
     name: "ARC",
-    address: "0x6a801562296A1Dbc9244ca3764981D21A22974d6",
+    address: parseAddress(process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS),
     decimals: 18,
     accent: "#7dd3fc",
     icon: "/arc-assets/arc.jpg",
@@ -43,7 +44,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "USDC",
     name: "USD Coin",
-    address: "0xD8fBdB46F9230B952Ad820697ac940373208ea3e",
+    address: "0x3600000000000000000000000000000000000000",
     decimals: 6,
     accent: "#2775ca",
     icon: "/arc-assets/usdc.png",
@@ -52,7 +53,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "EURO",
     name: "EURO",
-    address: "0x588c08138f0d079E2B8457ea0Bf30861890875fb",
+    address: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a",
     decimals: 6,
     accent: "#38bdf8",
     icon: "/arc-assets/circle-usdc.jpeg",
@@ -61,7 +62,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "WETH",
     name: "Wrapped Ether",
-    address: "0x7E24AF6B090871ebbD60f57BA0A09F27db898640",
+    address: parseAddress(process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS),
     decimals: 18,
     accent: "#ec4899",
     icon: "/arc-assets/weth.png",

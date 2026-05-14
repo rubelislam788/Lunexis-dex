@@ -2,9 +2,18 @@
 // Arc App Kit SDK configuration
 // Docs: https://docs.arc.network/app-kit
 
-import type { PublicClient, WalletClient } from "viem";
+import { createPublicClient, http, type PublicClient, type WalletClient } from "viem";
 
 const ARC_KIT_KEY_STORAGE = "arc-kit-public-key";
+
+export const ARC_TESTNET_CHAIN_ID = 5042002;
+export const ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
+export const ARC_TESTNET_RPC_URL = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
+export const ARC_TESTNET_EXPLORER_URL = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app";
+
+export function normalizeRpcUrl(value: string) {
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
 
 export const SUPPORTED_CHAINS = {
   ARC_TESTNET: "Arc_Testnet",
@@ -39,6 +48,7 @@ export async function getAppKit(): Promise<any> {
 
 export async function getViemAdapter(walletClient: WalletClient, publicClient: PublicClient): Promise<any> {
   const { ViemAdapter } = await import("@circle-fin/adapter-viem-v2");
+  const { ArcTestnet, EthereumSepolia } = await import("@circle-fin/app-kit/chains");
 
   return new ViemAdapter(
     {
@@ -47,7 +57,7 @@ export async function getViemAdapter(walletClient: WalletClient, publicClient: P
     } as any,
     {
       addressContext: "user-controlled",
-      supportedChains: [],
+      supportedChains: [ArcTestnet, EthereumSepolia],
     } as any
   );
 }
@@ -58,11 +68,22 @@ export async function getBrowserViemAdapter(): Promise<any> {
   }
 
   const { createViemAdapterFromProvider } = await import("@circle-fin/adapter-viem-v2");
+  const { ArcTestnet, EthereumSepolia } = await import("@circle-fin/app-kit/chains");
+
   return createViemAdapterFromProvider({
     provider: (window as any).ethereum,
+    getPublicClient: ({ chain }: any) =>
+      createPublicClient({
+        chain,
+        transport: http(
+          chain?.chainId === ARC_TESTNET_CHAIN_ID
+            ? normalizeRpcUrl(ARC_TESTNET_RPC_URL)
+            : process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"
+        ),
+      }),
     capabilities: {
       addressContext: "user-controlled",
-      supportedChains: [],
+      supportedChains: [ArcTestnet, EthereumSepolia],
     },
   });
 }
@@ -90,4 +111,11 @@ export function setArcKitKey(value: string) {
   }
 
   window.dispatchEvent(new Event("arc-kit-key-updated"));
+}
+
+export function getAppKitResultHash(result: any): string | undefined {
+  const steps = Array.isArray(result?.steps) ? result.steps : [];
+  const stepWithHash = steps.find((step: any) => step?.hash || step?.txHash || step?.data?.txHash || step?.values?.txHash);
+
+  return result?.hash ?? result?.txHash ?? stepWithHash?.hash ?? stepWithHash?.txHash ?? stepWithHash?.data?.txHash ?? stepWithHash?.values?.txHash;
 }

@@ -5,11 +5,11 @@ import { erc20Abi, formatEther, isAddress, isAddressEqual, maxUint256, parseUnit
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { BridgeState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, BRIDGE_ABI } from "@/lib/arc-dex";
-import { getAppKit, getBrowserViemAdapter } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, getAppKit, getAppKitResultHash, getBrowserViemAdapter } from "@/lib/arc-kit";
 import { BRIDGE_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
-const ARC_CHAIN_ID = 1723;
-const SEPOLIA_CHAIN_ID = 11155111;
+const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
+const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 
 function parseTokenAmount(value: string, decimals: number) {
   if (!value.trim()) return BigInt(0);
@@ -142,13 +142,10 @@ export function useArcBridge() {
         const kit = await getAppKit();
         const result = await kit.bridge({
           from: { adapter, chain: "Ethereum_Sepolia" },
-          to: { adapter, chain: "Arc_Testnet" },
+          to: { adapter, chain: "Arc_Testnet", recipientAddress: toAddress },
           amount: state.amount,
         });
-        const hash =
-          result?.steps?.find?.((step: any) => step?.hash)?.hash ??
-          result?.steps?.find?.((step: any) => step?.txHash)?.txHash ??
-          result?.hash;
+        const hash = getAppKitResultHash(result);
 
         if (!hash) {
           throw new Error("Bridge submitted but no transaction hash was returned.");
