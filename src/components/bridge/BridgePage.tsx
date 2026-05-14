@@ -30,6 +30,7 @@ export default function BridgePage() {
   const [showFaucetHint, setShowFaucetHint] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
+  const availableBridgeTokens = bridgeMode === "contract" ? BRIDGE_TOKENS : (["USDC"] as TokenSymbol[]);
 
   const handleBridge = async () => {
     setConfirmOpen(false);
@@ -102,7 +103,7 @@ export default function BridgePage() {
             <div className="rounded-3xl p-5 mb-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[selectedToken].accent}44` }}>
               <label style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, color: "#849495", textTransform: "uppercase" }}>Token</label>
               <div className="grid grid-cols-2 gap-3 mt-3">
-                {BRIDGE_TOKENS.map((symbol) => (
+                {availableBridgeTokens.map((symbol) => (
                   <button
                     key={symbol}
                     onClick={() => updateState({ token: symbol })}

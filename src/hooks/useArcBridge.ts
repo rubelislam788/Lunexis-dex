@@ -28,7 +28,7 @@ export function useArcBridge() {
   const [state, setState] = useState<BridgeState>({
     fromChain: "Ethereum_Sepolia",
     toChain: "Arc_Testnet",
-    token: BRIDGE_TOKENS[0],
+    token: "USDC",
     amount: "",
     recipientAddress: "",
     status: "idle",
@@ -53,6 +53,12 @@ export function useArcBridge() {
     !isAddressEqual(tokenAddress, zeroAddress)
   );
   const bridgeMode: "contract" | "appkit" | "unsupported" = contractBridgeReady ? "contract" : canUseAppKitBridge ? "appkit" : "unsupported";
+
+  useEffect(() => {
+    if (bridgeMode === "unsupported" && token !== "USDC") {
+      updateState({ token: "USDC", error: undefined });
+    }
+  }, [bridgeMode, token, updateState]);
 
   useEffect(() => {
     let cancelled = false;

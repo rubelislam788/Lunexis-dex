@@ -5,9 +5,10 @@ import ActivityTimeline from "@/components/ActivityTimeline";
 import FaucetButton from "@/components/ui/FaucetButton";
 
 const REWARDS = [
-  { id: "reward-social", title: "Social Signal Pack", amount: 650, requirement: "Complete social missions" },
-  { id: "reward-bridge", title: "Bridge Operator Bonus", amount: 800, requirement: "Complete Bridge to Arc" },
-  { id: "reward-swap", title: "Swap Pilot Bonus", amount: 500, requirement: "Complete First Swap" },
+  { id: "reward-social", title: "Social Signal Pack", amount: 650, requirement: "Complete all social missions", missionIds: ["social-follow", "social-rubel-post", "social-arc-post"] },
+  { id: "reward-bridge", title: "Bridge Operator Bonus", amount: 800, requirement: "Complete Bridge the Arc Gate", missionIds: ["q2"] },
+  { id: "reward-swap", title: "Swap Pilot Bonus", amount: 500, requirement: "Complete Arc Swap Initiation", missionIds: ["q1"] },
+  { id: "reward-route", title: "Route Pathfinder Bonus", amount: 2500, requirement: "Complete swap and bridge route mission", missionIds: ["q4"] },
 ];
 
 export default function RewardsPage() {
@@ -40,13 +41,17 @@ export default function RewardsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {REWARDS.map((reward) => {
             const claimed = profile?.claimedRewardIds.includes(reward.id);
+            const eligible = Boolean(isConnected && profile && reward.missionIds.every((id) => profile.completedMissionIds.includes(id)));
             return (
               <div key={reward.id} className="arc-card rounded-3xl p-6">
                 <div style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>{reward.title}</div>
                 <p style={{ color: "#849495", fontSize: 13, marginTop: 8 }}>{reward.requirement}</p>
+                <p style={{ color: eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
+                  {eligible ? "Eligible from verified missions" : "Verify required missions first"}
+                </p>
                 <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{reward.amount} ARCQ</div>
                 <button
-                  disabled={!isConnected || claimed}
+                  disabled={!eligible || claimed}
                   onClick={() => claim(reward.id, reward.amount)}
                   className="btn-primary w-full mt-5 py-3 rounded-xl"
                 >

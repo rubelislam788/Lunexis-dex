@@ -26,6 +26,16 @@ function readStore(): ProfileStore {
   }
 }
 
+export function loadAllProfiles(): UserProfile[] {
+  return Object.values(readStore()).sort((a, b) => {
+    if (b.xp !== a.xp) return b.xp - a.xp;
+    if (b.completedMissionIds.length !== a.completedMissionIds.length) {
+      return b.completedMissionIds.length - a.completedMissionIds.length;
+    }
+    return b.rewardsEarned - a.rewardsEarned;
+  });
+}
+
 function writeStore(store: ProfileStore) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));

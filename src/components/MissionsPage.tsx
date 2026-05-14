@@ -6,6 +6,7 @@ import type { Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { SOCIAL_LINKS } from "@/lib/constants";
+import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchain";
 import FaucetButton from "@/components/ui/FaucetButton";
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
@@ -14,9 +15,9 @@ type SocialProof = Record<string, boolean>;
 export const QUESTS: Quest[] = [
   { id: "q1", title: "Arc Swap Initiation", description: "Complete a confirmed token swap on Arc and activate your operator route.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 1, tags: ["Swap", "Arc Kit"], featured: true },
   { id: "q2", title: "Bridge the Arc Gate", description: "Move assets through the bridge and confirm a cross-chain transaction on your wallet history.", reward: "800 ARCQ + NFT", rewardAmt: 800, xp: 400, difficulty: "Medium", category: "Bridge", progress: 0, totalSteps: 4, tags: ["Bridge", "CCTP", "USDC"], featured: true },
-  { id: "q3", title: "Liquidity Beacon", description: "Establish liquidity presence in the Arc ecosystem and prepare for sustained network participation.", reward: "1,200 ARCQ", rewardAmt: 1200, xp: 600, difficulty: "Medium", category: "DeFi", progress: 1, totalSteps: 3, tags: ["LP", "DeFi"] },
+  { id: "q3", title: "Stablecoin Pair Operator", description: "Hold both USDC and EURC on Arc Testnet to prove you can operate the live swap route.", reward: "1,200 ARCQ", rewardAmt: 1200, xp: 600, difficulty: "Medium", category: "DeFi", progress: 0, totalSteps: 2, tags: ["USDC", "EURC"] },
   { id: "q4", title: "Route Pathfinder", description: "Complete both a swap and a bridge to prove multi-route operator capability.", reward: "2,500 ARCQ", rewardAmt: 2500, xp: 1000, difficulty: "Hard", category: "Advanced", progress: 0, totalSteps: 5, tags: ["Swap", "Bridge", "Advanced"] },
-  { id: "q5", title: "Validator Signal", description: "Signal validator support and prepare your wallet for future Arc staking missions.", reward: "3,000 ARCQ + ELITE", rewardAmt: 3000, xp: 1500, difficulty: "Elite", category: "Staking", progress: 0, totalSteps: 2, tags: ["Staking", "Elite"] },
+  { id: "q5", title: "Arc Gas Signal", description: "Hold native USDC gas on Arc Testnet so your wallet can execute real Arc transactions.", reward: "3,000 ARCQ + ELITE", rewardAmt: 3000, xp: 1500, difficulty: "Elite", category: "Network", progress: 0, totalSteps: 1, tags: ["Gas", "Elite"] },
   { id: "q6", title: "USDC Vault Access", description: "Hold at least 10 USDC in your ARC Swap portfolio to unlock stablecoin operator status.", reward: "200 ARCQ", rewardAmt: 200, xp: 100, difficulty: "Easy", category: "Holding", progress: 0, totalSteps: 1, tags: ["USDC", "Hold"] },
   { id: "social-follow", title: "Community Signal", description: "Join the Arc community pulse by following both Rubel and Arc on X.", reward: "250 ARCQ", rewardAmt: 250, xp: 150, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 2, tags: ["X", "Social"], featured: true },
   { id: "social-rubel-post", title: "Operator Relay", description: "Boost the operator channel by reacting to Rubel's selected ecosystem post.", reward: "200 ARCQ", rewardAmt: 200, xp: 125, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Signal", "Comment"] },
@@ -70,19 +71,34 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.localStorage.setItem(PROOF_KEY, JSON.stringify(next));
   };
 
-  const hasActivity = (type: "swap" | "bridge") => profile?.activities.some((item) => item.type === type && item.status === "completed");
-  const hasUsdcBalance = Number(balances.find((item) => item.token === "USDC")?.amount ?? 0) >= 10;
+  const hasConfirmedActivity = async (type: "swap" | "bridge") => {
+    const activities = profile?.activities.filter((item) => item.type === type && item.status === "completed") ?? [];
+    if (activities.length === 0) return false;
 
-  const validateQuest = (quest: Quest) => {
+    const withHashes = activities.filter((item) => item.txHash);
+    if (withHashes.length === 0) return true;
+
+    const receipts = await Promise.all(withHashes.map((item) => getTransactionReceiptAnyChain(item.txHash)));
+    return receipts.some((receipt) => receipt?.status === "success");
+  };
+  const hasUsdcBalance = Number(balances.find((item) => item.token === "USDC")?.amount ?? 0) >= 10;
+  const hasStablecoinPair = Number(balances.find((item) => item.token === "USDC")?.amount ?? 0) > 0 && Number(balances.find((item) => item.token === "EURC")?.amount ?? 0) > 0;
+
+  const validateQuest = async (quest: Quest) => {
     if (!profile) return { ok: false, message: "Connect your wallet before verification." };
-    if (quest.id === "q1") return hasActivity("swap") ? { ok: true, message: "Swap transaction confirmed." } : { ok: false, message: "No confirmed swap transaction found." };
-    if (quest.id === "q2") return hasActivity("bridge") ? { ok: true, message: "Bridge transaction confirmed." } : { ok: false, message: "No confirmed bridge transaction found." };
-    if (quest.id === "q4") return hasActivity("swap") && hasActivity("bridge") ? { ok: true, message: "Swap and bridge route confirmed." } : { ok: false, message: "Complete both a swap and a bridge first." };
+    if (quest.id === "q1") return await hasConfirmedActivity("swap") ? { ok: true, message: "Swap transaction confirmed onchain." } : { ok: false, message: "No confirmed swap transaction found." };
+    if (quest.id === "q2") return await hasConfirmedActivity("bridge") ? { ok: true, message: "Bridge transaction confirmed onchain." } : { ok: false, message: "No confirmed bridge transaction found." };
+    if (quest.id === "q3") return hasStablecoinPair ? { ok: true, message: "USDC and EURC balances detected on Arc." } : { ok: false, message: "Hold both USDC and EURC on Arc Testnet first." };
+    if (quest.id === "q4") return await hasConfirmedActivity("swap") && await hasConfirmedActivity("bridge") ? { ok: true, message: "Swap and bridge route confirmed onchain." } : { ok: false, message: "Complete both a swap and a bridge first." };
+    if (quest.id === "q5") {
+      const gasBalance = await getArcNativeBalance(profile.walletAddress as `0x${string}`).catch(() => BigInt(0));
+      return gasBalance > BigInt(0) ? { ok: true, message: "Native Arc USDC gas balance detected." } : { ok: false, message: "Claim or receive native USDC gas on Arc Testnet first." };
+    }
     if (quest.id === "q6") return hasUsdcBalance ? { ok: true, message: "USDC balance requirement met." } : { ok: false, message: "Hold at least 10 USDC before verifying." };
     if (quest.id === "social-follow") return proof.rubelFollow && proof.arcFollow ? { ok: true, message: "Community follows verified." } : { ok: false, message: "Open both X profiles before verification." };
     if (quest.id === "social-rubel-post") return proof.rubelPost ? { ok: true, message: "Rubel post engagement verified." } : { ok: false, message: "Open and complete the Rubel post action first." };
     if (quest.id === "social-arc-post") return proof.arcPost ? { ok: true, message: "Arc post engagement verified." } : { ok: false, message: "Open and complete the Arc post action first." };
-    return { ok: false, message: "This verifier is not active yet. Try an onchain or social mission." };
+    return { ok: false, message: "No verifier is configured for this mission." };
   };
 
   const verifyQuest = (quest: Quest) => {
@@ -99,8 +115,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       setVerifyMessages((prev) => ({ ...prev, [quest.id]: quest.category === "Social" ? "Verifying engagement action..." : "Verifying Onchain Action..." }));
     }, 850);
 
-    window.setTimeout(() => {
-      const result = validateQuest(quest);
+    window.setTimeout(async () => {
+      const result = await validateQuest(quest);
       if (result.ok) {
         markMissionComplete(quest.id, quest.xp);
         setVerifyStates((prev) => ({ ...prev, [quest.id]: "success" }));

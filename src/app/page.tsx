@@ -12,26 +12,12 @@ import BridgePage from "@/components/bridge/BridgePage";
 import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
 import AdminPage from "@/components/AdminPage";
+import LeaderboardPage from "@/components/LeaderboardPage";
+import StatsPage from "@/components/StatsPage";
 
 export const dynamic = "force-dynamic";
 
 const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile", "admin"];
-
-function PlaceholderPage({ title, onNavigate }: { title: string; onNavigate: (p: Page) => void }) {
-  return (
-    <div className="arc-with-sidebar-page flex items-center justify-center" style={{ background: "#131314" }}>
-      <div className="text-center">
-        <div style={{ fontFamily: "'Space Grotesk'", fontSize: 48, fontWeight: 900, color: "#00dce5", marginBottom: 16 }}>
-          {title}
-        </div>
-        <p style={{ color: "#849495", marginBottom: 24 }}>This page is under construction.</p>
-        <button onClick={() => onNavigate("missions")} className="btn-outline-cyan px-6 py-3 rounded-lg text-sm">
-          Back to Missions
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
@@ -106,9 +92,9 @@ export default function Home() {
         {currentPage === "missions" && <MissionsPage onNavigate={navigate} onSelectQuest={selectQuest} />}
         {currentPage === "swap" && <SwapPage />}
         {currentPage === "bridge" && <BridgePage />}
-        {currentPage === "leaderboard" && <PlaceholderPage title="Leaderboard" onNavigate={navigate} />}
+        {currentPage === "leaderboard" && <LeaderboardPage />}
         {currentPage === "rewards" && <RewardsPage />}
-        {currentPage === "stats" && <PlaceholderPage title="Stats" onNavigate={navigate} />}
+        {currentPage === "stats" && <StatsPage />}
         {currentPage === "profile" && <ProfilePage />}
         {currentPage === "admin" && <AdminPage />}
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}

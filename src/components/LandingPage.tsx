@@ -2,19 +2,21 @@
 "use client";
 
 import type { Page } from "@/types";
+import { useAppStats } from "@/hooks/useAppStats";
 import FaucetButton from "@/components/ui/FaucetButton";
 
 interface LandingPageProps {
   onNavigate: (page: Page) => void;
 }
 
-const STATS = [
-  { icon: "rocket_launch", color: "#00dce5", label: "Total Missions", value: "1,204,592", tag: "STAT_01" },
-  { icon: "currency_exchange", color: "#ebb2ff", label: "Total Rewards Paid", value: "4,821.40 ETH", tag: "STAT_02" },
-  { icon: "shield_person", color: "#00dce5", label: "Active Operators", value: "84,931", tag: "STAT_03" },
-];
-
 export default function LandingPage({ onNavigate }: LandingPageProps) {
+  const stats = useAppStats();
+  const liveStats = [
+    { icon: "rocket_launch", color: "#00dce5", label: "Verified Missions", value: stats.missionsCompleted.toLocaleString(), tag: "LIVE_01" },
+    { icon: "currency_exchange", color: "#ebb2ff", label: "Rewards Claimed", value: `${stats.rewardsClaimed.toLocaleString()} ARCQ`, tag: "LIVE_02" },
+    { icon: "shield_person", color: "#00dce5", label: "Arc Block", value: stats.arcBlock, tag: "LIVE_03" },
+  ];
+
   return (
     <main className="relative pt-16 min-h-screen overflow-hidden hero-bg">
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden scanline opacity-20" />
@@ -88,7 +90,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
       <section className="relative z-10 px-6 sm:px-8 pb-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {STATS.map(({ icon, color, label, value, tag }) => (
+          {liveStats.map(({ icon, color, label, value, tag }) => (
             <div key={tag} className="glass-panel arc-card p-6 rounded-xl" style={{ borderLeft: `4px solid ${color}` }}>
               <div className="flex items-center justify-between mb-4">
                 <span className="material-symbols-outlined" style={{ fontSize: 28, color }}>

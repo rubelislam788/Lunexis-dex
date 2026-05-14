@@ -6,9 +6,9 @@ import type { Page, Quest } from "@/types";
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
   q2: { label: "Open Bridge", page: "bridge", accent: "#ebb2ff" },
-  q3: { label: "View Swap Tools", page: "swap", accent: "#00dce5" },
+  q3: { label: "Open Swap", page: "swap", accent: "#00dce5" },
   q4: { label: "Start With Swap", page: "swap", accent: "#00dce5" },
-  q5: { label: "View Missions", page: "missions", accent: "#b600f8" },
+  q5: { label: "Open Faucet", page: "swap", accent: "#b600f8" },
   q6: { label: "Open Bridge", page: "bridge", accent: "#ebb2ff" },
 };
 
@@ -25,9 +25,9 @@ const QUEST_STEPS: Record<string, string[]> = {
     "Bridge 1 USDC using Circle CCTP v2.",
   ],
   q3: [
-    "Prepare testnet liquidity assets.",
-    "Add liquidity to an ARC Chain pool.",
-    "Hold the position for 24 hours.",
+    "Connect a wallet on Arc Testnet.",
+    "Hold a positive USDC balance.",
+    "Hold a positive EURC balance after a swap.",
   ],
   q4: [
     "Complete a swap on ARC Chain.",
@@ -35,9 +35,9 @@ const QUEST_STEPS: Record<string, string[]> = {
     "Finish both actions in the same session.",
   ],
   q5: [
-    "Prepare testnet ETH.",
-    "Stake ETH to support Arc validators.",
-    "Keep the stake active for 7 days.",
+    "Connect a wallet on Arc Testnet.",
+    "Claim native USDC gas from the faucet.",
+    "Verify a positive native balance on Arc.",
   ],
   q6: [
     "Bridge or receive USDC on ARC Chain.",
