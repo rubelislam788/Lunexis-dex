@@ -37,6 +37,7 @@ const PROOF_KEY = "arcquest.social-proof.v1";
 const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
 const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
+const MISSION_REMOVED_KEY = "arcquest.mission-removed.v1";
 const MISSION_ADMIN_ADDRESS = "0x01176d7052A51471a43E01A467fC572a8e23260c".toLowerCase();
 const DEFAULT_MISSION_DAYS = 7;
 
@@ -72,10 +73,11 @@ const formatMissionDate = (value?: string) => {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 };
 
-function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>, storedCreated: Quest[]): Quest[] {
+function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>, storedCreated: Quest[], removedIds: string[]): Quest[] {
   const baseIds = new Set(base.map((quest) => quest.id));
   const created = storedCreated.filter((quest) => !baseIds.has(quest.id));
-  return [...base, ...created].map((quest) => {
+  const removed = new Set(removedIds);
+  return [...base, ...created].filter((quest) => !removed.has(quest.id)).map((quest) => {
     const custom = storedCustom[quest.id] ?? {};
     const tasks = storedTasks[quest.id]?.length ? storedTasks[quest.id] : quest.tasks ?? [];
     return { ...quest, ...custom, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
@@ -114,6 +116,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}"),
         JSON.parse(window.localStorage.getItem(MISSION_CUSTOM_KEY) || "{}"),
         JSON.parse(window.localStorage.getItem(MISSION_CREATED_KEY) || "[]"),
+        JSON.parse(window.localStorage.getItem(MISSION_REMOVED_KEY) || "[]"),
       ));
     } catch {
       setProof({});
@@ -157,9 +160,11 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     }, {});
     const baseIds = new Set(QUESTS.map((quest) => quest.id));
     const created = nextQuests.filter((quest) => !baseIds.has(quest.id));
+    const removed = QUESTS.filter((quest) => !nextQuests.some((item) => item.id === quest.id)).map((quest) => quest.id);
     window.localStorage.setItem(MISSION_CUSTOM_KEY, JSON.stringify(stored));
     window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(storedTasks));
     window.localStorage.setItem(MISSION_CREATED_KEY, JSON.stringify(created));
+    window.localStorage.setItem(MISSION_REMOVED_KEY, JSON.stringify(removed));
     void publishMissions(nextQuests);
   };
 
@@ -179,8 +184,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
   const removeMission = (questId: string) => {
     if (!isMissionAdmin) return;
-    const baseIds = new Set(QUESTS.map((quest) => quest.id));
-    if (baseIds.has(questId)) return;
+    if (quests.length <= 1) return;
     const nextQuests = quests.filter((quest) => quest.id !== questId);
     setQuests(nextQuests);
     persistMissions(nextQuests);
@@ -347,12 +351,19 @@ function MissionControlPanel({
 }) {
   const [selectedId, setSelectedId] = useState(quests[0]?.id ?? "");
   const selected = quests.find((quest) => quest.id === selectedId) ?? quests[0];
+
+  useEffect(() => {
+    if (!quests.some((quest) => quest.id === selectedId)) {
+      setSelectedId(quests[0]?.id ?? "");
+    }
+  }, [quests, selectedId]);
+
   if (!selected) return null;
 
   const tasks = selected?.tasks ?? [];
   const completed = completedIds.includes(selected.id);
   const tagsValue = selected.tags.join(", ");
-  const isCustomMission = !QUESTS.some((quest) => quest.id === selected.id);
+  const canRemoveMission = quests.length > 1;
   const timeState = getMissionTimeState(selected);
 
   const updateTask = (taskId: string, title: string) => {
@@ -374,10 +385,8 @@ function MissionControlPanel({
   };
 
   const removeSelectedMission = () => {
-    if (!isCustomMission) return;
+    if (!canRemoveMission) return;
     onRemoveMission(selected.id);
-    const next = quests.find((quest) => quest.id !== selected.id) ?? QUESTS[0];
-    setSelectedId(next.id);
   };
 
   return (
@@ -397,7 +406,7 @@ function MissionControlPanel({
           <button onClick={createAndSelectMission} className="btn-primary px-5 py-3 rounded-full">
             Create Mission
           </button>
-          <button onClick={removeSelectedMission} disabled={!isCustomMission} className="btn-ghost px-5 py-3 rounded-full">
+          <button onClick={removeSelectedMission} disabled={!canRemoveMission} className="btn-ghost px-5 py-3 rounded-full">
             Remove Mission
           </button>
         </div>
