@@ -38,6 +38,11 @@ export default function SwapPage() {
   const swapIntro = routerConfigured
     ? "Swap ARC, USDC, EURC, and WETH with live wallet balances and onchain execution."
     : "Swap tokens on Arc Testnet with a clean wallet-first trading experience.";
+  const balanceLabel = (symbol: TokenSymbol) => {
+    const item = balances.find((balance) => balance.token === symbol);
+    if (balancesLoading || item?.isLoading) return "Loading...";
+    return item?.displayAmount || `${item?.amount ?? "0"} ${symbol}`;
+  };
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -138,9 +143,9 @@ export default function SwapPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <section className="lg:col-span-3 arc-card rounded-3xl p-6">
-            <TokenAmountPanel label="You Pay" token={fromToken.symbol} amount={state.amountIn} onAmount={(amount) => updateState({ amountIn: amount })} onToken={() => setSelector("from")} />
+        <div className="grid grid-cols-1 justify-center lg:grid-cols-[minmax(0,760px)] gap-6">
+          <section className="arc-card rounded-3xl p-6">
+            <TokenAmountPanel label="You Pay" token={fromToken.symbol} amount={state.amountIn} balance={balanceLabel(fromToken.symbol)} onAmount={(amount) => updateState({ amountIn: amount })} onToken={() => setSelector("from")} />
             <div className="flex justify-center my-4">
               <button
                 onClick={() => updateState({ fromToken: state.toToken, toToken: state.fromToken })}
@@ -154,6 +159,7 @@ export default function SwapPage() {
               label="You Receive"
               token={toToken.symbol}
               amount={quoteLoading ? "Loading..." : estimatedOut ? `~ ${estimatedOut}` : ""}
+              balance={balanceLabel(toToken.symbol)}
               readOnly
               onToken={() => setSelector("to")}
             />
@@ -205,17 +211,6 @@ export default function SwapPage() {
               <button onClick={reset} className="btn-ghost w-full py-3 rounded-2xl mt-3">Swap Again</button>
             )}
           </section>
-
-          <aside className="lg:col-span-2 flex flex-col gap-4">
-            <div className="arc-card rounded-3xl p-5">
-              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Live Balances</h3>
-              <div className="grid gap-3">
-                {balances.filter((item) => SWAP_TOKENS.includes(item.token)).map((item) => (
-                  <LiveBalanceCard key={item.token} token={item.token} amount={balancesLoading || item.isLoading ? "..." : item.displayAmount || `${item.amount} ${item.token}`} />
-                ))}
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
 
@@ -231,6 +226,7 @@ export default function SwapPage() {
                   <div className="text-left">
                     <div style={{ fontFamily: "'Space Grotesk'", color: "#f8fbff", fontWeight: 900 }}>{symbol}</div>
                     <div style={{ color: "#849495", fontSize: 12 }}>{token.label}</div>
+                    <div style={{ color: "#6f8699", fontSize: 11, marginTop: 4 }}>Balance: {balanceLabel(symbol)}</div>
                   </div>
                 </button>
               );
@@ -256,49 +252,7 @@ export default function SwapPage() {
   );
 }
 
-function LiveBalanceCard({ token, amount }: { token: TokenSymbol; amount: string }) {
-  const meta = TOKEN_META[token];
-
-  return (
-    <div
-      className="group flex items-center justify-between gap-4 rounded-2xl px-4 py-3 transition-all duration-200 hover:-translate-y-0.5"
-      style={{
-        background: `linear-gradient(135deg, rgba(255,255,255,0.055), ${meta.accent}14)`,
-        border: `1px solid ${meta.accent}24`,
-        boxShadow: "0 14px 34px rgba(0,0,0,0.18)",
-      }}
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
-          style={{ background: `${meta.accent}16`, border: `1px solid ${meta.accent}38` }}
-        >
-          <TokenIcon symbol={token} size={28} />
-        </div>
-        <div className="min-w-0">
-          <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900 }}>{token}</div>
-          <div className="truncate" style={{ color: "#6f8699", fontSize: 11 }}>{meta.label}</div>
-        </div>
-      </div>
-      <div
-        className="shrink-0 text-right"
-        style={{
-          color: "#cbd5e1",
-          fontFamily: "'Space Grotesk'",
-          fontSize: 13,
-          fontWeight: 800,
-          letterSpacing: 0,
-          maxWidth: "48%",
-          overflowWrap: "anywhere",
-        }}
-      >
-        {amount}
-      </div>
-    </div>
-  );
-}
-
-function TokenAmountPanel({ label, token, amount, readOnly, onAmount, onToken }: { label: string; token: TokenSymbol; amount: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void }) {
+function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, onToken }: { label: string; token: TokenSymbol; amount: string; balance: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void }) {
   return (
     <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
       <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
@@ -316,6 +270,21 @@ function TokenAmountPanel({ label, token, amount, readOnly, onAmount, onToken }:
           <TokenIcon symbol={token} size={34} />
           <span style={{ fontFamily: "'Space Grotesk'", fontWeight: 900, color: "#f8fbff" }}>{token}</span>
         </button>
+      </div>
+      <div className="mt-3 flex justify-end">
+        <div
+          className="rounded-xl px-3 py-1.5"
+          style={{
+            background: `${TOKEN_META[token].accent}10`,
+            border: `1px solid ${TOKEN_META[token].accent}24`,
+            color: "#9fb2c4",
+            fontSize: 12,
+            fontFamily: "'Space Grotesk'",
+            fontWeight: 700,
+          }}
+        >
+          Balance: <span style={{ color: "#dbeafe" }}>{balance}</span>
+        </div>
       </div>
     </div>
   );
