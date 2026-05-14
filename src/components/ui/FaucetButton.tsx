@@ -39,7 +39,7 @@ export default function FaucetButton({
       }}
     >
       <span className="material-symbols-outlined" style={{ fontSize: compact ? 14 : 16 }}>water_drop</span>
-      {label}
+      <span className="arc-shimmer-text">{label}</span>
     </a>
   );
 }

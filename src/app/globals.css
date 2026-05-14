@@ -192,6 +192,45 @@ body::after {
   animation: arcAuroraBorder 6s ease-in-out infinite, arcTitleAurora4 24s ease-in-out infinite alternate;
 }
 
+.arc-home-shimmer :is(p, h3),
+.arc-home-shimmer .arc-shimmer-text {
+  --home-shimmer-offset: 3ch;
+  background:
+    linear-gradient(
+      105deg,
+      transparent calc(50% - var(--home-shimmer-offset)),
+      #a960ee,
+      #ff333d,
+      #ffcb57,
+      #90e0ff,
+      transparent calc(50% + var(--home-shimmer-offset))
+    ) 0 0 / 300% 100% no-repeat border-box,
+    linear-gradient(currentColor, currentColor) padding-box;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  animation: arcHomeTextShimmer 5.8s ease-in-out infinite both;
+}
+
+.arc-home-shimmer h1,
+.arc-home-shimmer .arc-aurora-title span:not(.arc-title-aurora):not(.arc-title-aurora__item) {
+  animation-duration: 7s;
+}
+
+.arc-home-shimmer .material-symbols-outlined,
+.arc-home-shimmer .arc-floating-orb,
+.arc-home-shimmer .arc-title-aurora,
+.arc-home-shimmer .arc-title-aurora__item {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  animation: none;
+}
+
+.arc-home-shimmer button .material-symbols-outlined {
+  color: #00dce5 !important;
+}
+
 /* Gradient border */
 .gradient-border {
   position: relative;
@@ -1353,6 +1392,11 @@ a.arc-uiverse-button:active,
   25% { border-radius: 47% 29% 39% 49% / 61% 19% 66% 26%; }
   50% { border-radius: 57% 23% 47% 72% / 63% 17% 66% 33%; }
   75% { border-radius: 28% 49% 29% 100% / 93% 20% 64% 25%; }
+}
+
+@keyframes arcHomeTextShimmer {
+  0% { background-position: 100% 0, 0 0; }
+  50%, 100% { background-position: 0% 0, 0 0; }
 }
 
 @keyframes arcFieldDrift {
