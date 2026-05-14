@@ -1435,6 +1435,7 @@ a.arc-uiverse-button:active,
 }
 
 /* Input */
+input:not([type]),
 input[type="text"],
 input[type="number"],
 input[type="datetime-local"],
@@ -1459,6 +1460,7 @@ select option {
   color: #f8fbff;
 }
 
+input:not([type]):focus,
 input[type="text"]:focus,
 input[type="number"]:focus,
 input[type="datetime-local"]:focus,
@@ -1507,6 +1509,7 @@ select:focus {
 }
 
 /* Improved input focus states */
+input:not([type]):focus,
 input[type="text"]:focus,
 input[type="number"]:focus,
 input[type="datetime-local"]:focus,
