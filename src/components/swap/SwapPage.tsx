@@ -43,6 +43,13 @@ export default function SwapPage() {
     if (balancesLoading || item?.isLoading) return "Loading...";
     return item?.displayAmount || `${item?.amount ?? "0"} ${symbol}`;
   };
+  const fromBalanceAmount = balances.find((balance) => balance.token === fromToken.symbol)?.amount ?? "0";
+  const setPercentAmount = (percent: number) => {
+    const numeric = Number(fromBalanceAmount || 0);
+    if (!Number.isFinite(numeric) || numeric <= 0) return;
+    const next = percent === 100 ? numeric : numeric * (percent / 100);
+    updateState({ amountIn: next.toFixed(next >= 1 ? 4 : 6).replace(/\.?0+$/, "") });
+  };
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -145,7 +152,15 @@ export default function SwapPage() {
 
         <div className="grid grid-cols-1 justify-center lg:grid-cols-[minmax(0,760px)] gap-6">
           <section className="arc-card arc-swap-card rounded-[28px] p-6">
-            <TokenAmountPanel label="You Pay" token={fromToken.symbol} amount={state.amountIn} balance={balanceLabel(fromToken.symbol)} onAmount={(amount) => updateState({ amountIn: amount })} onToken={() => setSelector("from")} />
+            <TokenAmountPanel
+              label="You Pay"
+              token={fromToken.symbol}
+              amount={state.amountIn}
+              balance={balanceLabel(fromToken.symbol)}
+              onAmount={(amount) => updateState({ amountIn: amount })}
+              onToken={() => setSelector("from")}
+              onQuickAmount={setPercentAmount}
+            />
             <div className="flex justify-center my-4">
               <button
                 onClick={() => updateState({ fromToken: state.toToken, toToken: state.fromToken })}
@@ -252,7 +267,7 @@ export default function SwapPage() {
   );
 }
 
-function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, onToken }: { label: string; token: TokenSymbol; amount: string; balance: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void }) {
+function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
   return (
     <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
       <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
@@ -297,6 +312,25 @@ function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, o
           Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
         </div>
       </div>
+      {onQuickAmount && (
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {[
+            ["25%", 25],
+            ["50%", 50],
+            ["75%", 75],
+            ["Max", 100],
+          ].map(([label, percent]) => (
+            <button
+              key={label}
+              onClick={() => onQuickAmount(Number(percent))}
+              className="btn-ghost rounded-full py-2"
+              style={{ fontSize: 10, letterSpacing: "0.04em" }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
