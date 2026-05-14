@@ -2,7 +2,7 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-export default function ArcSwapConnectButton() {
+export default function ArcSwapConnectButton({ onProfile }: { onProfile?: () => void }) {
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, authenticationStatus, openAccountModal, openChainModal, openConnectModal }) => {
@@ -45,7 +45,7 @@ export default function ArcSwapConnectButton() {
                   )}
                   {chain.name}
                 </button>
-                <button className="btn-primary px-4 py-2 rounded-2xl" onClick={openAccountModal} type="button">
+                <button className="btn-primary px-4 py-2 rounded-2xl" onClick={onProfile ?? openAccountModal} type="button">
                   {account.displayName}
                   {account.displayBalance ? ` (${account.displayBalance})` : ""}
                 </button>

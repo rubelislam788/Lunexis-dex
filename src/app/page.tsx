@@ -11,13 +11,12 @@ import SwapPage from "@/components/swap/SwapPage";
 import BridgePage from "@/components/bridge/BridgePage";
 import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
-import AdminPage from "@/components/AdminPage";
 import LeaderboardPage from "@/components/LeaderboardPage";
 import StatsPage from "@/components/StatsPage";
 
 export const dynamic = "force-dynamic";
 
-const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile", "admin"];
+const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile"];
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
@@ -96,7 +95,6 @@ export default function Home() {
         {currentPage === "rewards" && <RewardsPage />}
         {currentPage === "stats" && <StatsPage />}
         {currentPage === "profile" && <ProfilePage />}
-        {currentPage === "admin" && <AdminPage />}
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
 

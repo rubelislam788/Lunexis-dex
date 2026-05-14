@@ -1,22 +1,23 @@
 // src/components/QuestDetailPage.tsx
 "use client";
 
-import type { Page, Quest } from "@/types";
+import { useEffect, useState } from "react";
+import type { MissionTask, Page, Quest } from "@/types";
+
+const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
   q2: { label: "Open Bridge", page: "bridge", accent: "#ebb2ff" },
   q3: { label: "Open Swap", page: "swap", accent: "#00dce5" },
   q4: { label: "Start With Swap", page: "swap", accent: "#00dce5" },
-  q5: { label: "Open Faucet", page: "swap", accent: "#b600f8" },
-  q6: { label: "Open Bridge", page: "bridge", accent: "#ebb2ff" },
 };
 
 const QUEST_STEPS: Record<string, string[]> = {
   q1: [
     "Connect a wallet on ARC Chain.",
-    "Open the swap tool and select USDC to EURO.",
-    "Enter an amount and confirm the transaction.",
+    "Select a token pair in Swap.",
+    "Confirm one onchain swap transaction.",
   ],
   q2: [
     "Connect your wallet.",
@@ -32,17 +33,8 @@ const QUEST_STEPS: Record<string, string[]> = {
   q4: [
     "Complete a swap on ARC Chain.",
     "Bridge USDC across supported testnets.",
-    "Finish both actions in the same session.",
-  ],
-  q5: [
-    "Connect a wallet on Arc Testnet.",
-    "Claim native USDC gas from the faucet.",
-    "Verify a positive native balance on Arc.",
-  ],
-  q6: [
-    "Bridge or receive USDC on ARC Chain.",
-    "Keep at least 10 USDC in the connected wallet.",
-    "Hold the balance for 3 days.",
+    "Keep gas available on Arc.",
+    "Verify both actions.",
   ],
 };
 
@@ -52,6 +44,18 @@ interface QuestDetailPageProps {
 }
 
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
+  const [storedTasks, setStoredTasks] = useState<MissionTask[] | null>(null);
+
+  useEffect(() => {
+    if (!quest) return;
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}") as Record<string, MissionTask[]>;
+      setStoredTasks(stored[quest.id] ?? null);
+    } catch {
+      setStoredTasks(null);
+    }
+  }, [quest]);
+
   if (!quest) {
     return (
       <div className="arc-with-sidebar-page flex items-center justify-center arc-page-shell">
@@ -67,9 +71,10 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
     );
   }
 
-  const action = QUEST_ACTIONS[quest.id] ?? { label: "Back to Missions", page: "missions" as Page, accent: "#00dce5" };
-  const steps = QUEST_STEPS[quest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."];
-  const progressPct = quest.totalSteps > 0 ? Math.min(100, (quest.progress / quest.totalSteps) * 100) : 0;
+  const displayQuest = storedTasks?.length ? { ...quest, tasks: storedTasks, totalSteps: storedTasks.length } : quest;
+  const action = QUEST_ACTIONS[displayQuest.id] ?? { label: "Back to Missions", page: "missions" as Page, accent: "#00dce5" };
+  const steps = displayQuest.tasks?.map((task) => task.title) ?? QUEST_STEPS[displayQuest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."];
+  const progressPct = displayQuest.totalSteps > 0 ? Math.min(100, (displayQuest.progress / displayQuest.totalSteps) * 100) : 0;
 
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
@@ -94,7 +99,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <section className="lg:col-span-3 rounded-2xl p-6 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="flex flex-wrap gap-2 mb-5">
-              {quest.tags.map((tag) => (
+              {displayQuest.tags.map((tag) => (
                 <span key={tag} className="px-2 py-1 rounded-md" style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, color: "#849495", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   {tag}
                 </span>
@@ -102,10 +107,10 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
             </div>
 
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, color: "#e9feff", marginBottom: 12 }}>
-              {quest.title}
+              {displayQuest.title}
             </h1>
             <p style={{ color: "#b9caca", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>
-              {quest.description}
+              {displayQuest.description}
             </p>
 
             <div className="rounded-xl p-4 mb-6" style={{ background: "rgba(0,220,229,0.04)", border: "1px solid rgba(0,220,229,0.16)" }}>
@@ -147,17 +152,17 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                 Reward
               </div>
               <div style={{ fontFamily: "'Space Grotesk'", fontSize: 28, fontWeight: 900, color: "#00dce5", marginBottom: 8 }}>
-                {quest.reward}
+                {displayQuest.reward}
               </div>
               <div style={{ color: "#849495", fontSize: 13 }}>
-                +{quest.xp} XP / {quest.difficulty} / {quest.category}
+                +{displayQuest.xp} XP / {displayQuest.difficulty} / {displayQuest.category}
               </div>
             </div>
 
             <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex justify-between mb-2">
                 <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495" }}>Progress</span>
-                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5" }}>{quest.progress}/{quest.totalSteps}</span>
+                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5" }}>{displayQuest.progress}/{displayQuest.totalSteps}</span>
               </div>
               <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
                 <div style={{ width: `${progressPct}%`, height: "100%", background: "#00dce5", borderRadius: 99 }} />

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Page, Quest } from "@/types";
+import type { MissionTask, Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { SOCIAL_LINKS } from "@/lib/constants";
@@ -13,15 +13,28 @@ type VerifyState = "idle" | "checking" | "success" | "failed";
 type SocialProof = Record<string, boolean>;
 
 export const QUESTS: Quest[] = [
-  { id: "q1", title: "Arc Swap Initiation", description: "Complete a confirmed token swap on Arc and activate your operator route.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 1, tags: ["Swap", "Arc Kit"], featured: true },
-  { id: "q2", title: "Bridge the Arc Gate", description: "Move assets through the bridge and confirm a cross-chain transaction on your wallet history.", reward: "800 ARCQ + NFT", rewardAmt: 800, xp: 400, difficulty: "Medium", category: "Bridge", progress: 0, totalSteps: 4, tags: ["Bridge", "CCTP", "USDC"], featured: true },
-  { id: "q3", title: "Stablecoin Pair Operator", description: "Hold both USDC and EURC on Arc Testnet to prove you can operate the live swap route.", reward: "1,200 ARCQ", rewardAmt: 1200, xp: 600, difficulty: "Medium", category: "DeFi", progress: 0, totalSteps: 2, tags: ["USDC", "EURC"] },
-  { id: "q4", title: "Route Pathfinder", description: "Complete both a swap and a bridge to prove multi-route operator capability.", reward: "2,500 ARCQ", rewardAmt: 2500, xp: 1000, difficulty: "Hard", category: "Advanced", progress: 0, totalSteps: 5, tags: ["Swap", "Bridge", "Advanced"] },
-  { id: "q5", title: "Arc Gas Signal", description: "Hold native USDC gas on Arc Testnet so your wallet can execute real Arc transactions.", reward: "3,000 ARCQ + ELITE", rewardAmt: 3000, xp: 1500, difficulty: "Elite", category: "Network", progress: 0, totalSteps: 1, tags: ["Gas", "Elite"] },
-  { id: "q6", title: "USDC Vault Access", description: "Hold at least 10 USDC in your ARC Swap portfolio to unlock stablecoin operator status.", reward: "200 ARCQ", rewardAmt: 200, xp: 100, difficulty: "Easy", category: "Holding", progress: 0, totalSteps: 1, tags: ["USDC", "Hold"] },
-  { id: "social-follow", title: "Community Signal", description: "Join the Arc community pulse by following both Rubel and Arc on X.", reward: "250 ARCQ", rewardAmt: 250, xp: 150, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 2, tags: ["X", "Social"], featured: true },
-  { id: "social-rubel-post", title: "Operator Relay", description: "Boost the operator channel by reacting to Rubel's selected ecosystem post.", reward: "200 ARCQ", rewardAmt: 200, xp: 125, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Signal", "Comment"] },
-  { id: "social-arc-post", title: "ARC Social Pulse", description: "Confirm your network presence by engaging with Arc's selected community post.", reward: "200 ARCQ", rewardAmt: 200, xp: 125, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Pulse", "Comment"] },
+  { id: "q1", title: "Arc Swap Initiation", description: "Complete a confirmed token swap on Arc and activate your operator route.", reward: "500 ARCQ", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 3, tags: ["Swap", "Arc"], featured: true, tasks: [
+    { id: "q1-t1", title: "Connect wallet on Arc Testnet." },
+    { id: "q1-t2", title: "Select a token pair in Swap." },
+    { id: "q1-t3", title: "Confirm one onchain swap transaction." },
+  ] },
+  { id: "q2", title: "Bridge the Arc Gate", description: "Move assets through the bridge and confirm a cross-chain transaction on your wallet history.", reward: "800 ARCQ + NFT", rewardAmt: 800, xp: 400, difficulty: "Medium", category: "Bridge", progress: 0, totalSteps: 4, tags: ["Bridge", "USDC"], featured: true, tasks: [
+    { id: "q2-t1", title: "Connect wallet." },
+    { id: "q2-t2", title: "Open Bridge." },
+    { id: "q2-t3", title: "Bridge USDC from Sepolia to Arc." },
+    { id: "q2-t4", title: "Wait for wallet confirmation." },
+  ] },
+  { id: "q3", title: "Stablecoin Pair Operator", description: "Hold both USDC and EURC on Arc Testnet to prove you can operate the live swap route.", reward: "1,200 ARCQ", rewardAmt: 1200, xp: 600, difficulty: "Medium", category: "DeFi", progress: 0, totalSteps: 3, tags: ["USDC", "EURC"], tasks: [
+    { id: "q3-t1", title: "Hold a positive USDC balance." },
+    { id: "q3-t2", title: "Hold a positive EURC balance." },
+    { id: "q3-t3", title: "Refresh portfolio balances." },
+  ] },
+  { id: "q4", title: "Route Pathfinder", description: "Complete both a swap and a bridge to prove multi-route operator capability.", reward: "2,500 ARCQ", rewardAmt: 2500, xp: 1000, difficulty: "Hard", category: "Advanced", progress: 0, totalSteps: 4, tags: ["Swap", "Bridge"], tasks: [
+    { id: "q4-t1", title: "Complete one swap." },
+    { id: "q4-t2", title: "Complete one bridge." },
+    { id: "q4-t3", title: "Keep gas available on Arc." },
+    { id: "q4-t4", title: "Verify both actions." },
+  ] },
 ];
 
 const DIFF_COLORS: Record<string, string> = {
@@ -44,6 +57,14 @@ const MISSION_ICONS: Record<string, string> = {
 };
 
 const PROOF_KEY = "arcquest.social-proof.v1";
+const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
+
+function mergeStoredTasks(base: Quest[], stored: Record<string, MissionTask[]>): Quest[] {
+  return base.map((quest) => {
+    const tasks = stored[quest.id]?.length ? stored[quest.id] : quest.tasks ?? [];
+    return { ...quest, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
+  });
+}
 
 interface MissionsPageProps {
   onNavigate: (page: Page) => void;
@@ -54,16 +75,29 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const { profile, isConnected, markMissionComplete, claim } = useProfile();
   const { balances } = usePortfolioBalances();
   const [proof, setProof] = useState<SocialProof>({});
+  const [quests, setQuests] = useState<Quest[]>(QUESTS);
+  const [showMissionAdmin, setShowMissionAdmin] = useState(false);
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     try {
       setProof(JSON.parse(window.localStorage.getItem(PROOF_KEY) || "{}"));
+      setQuests(mergeStoredTasks(QUESTS, JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}")));
     } catch {
       setProof({});
     }
   }, []);
+
+  const updateMissionTasks = (questId: string, tasks: MissionTask[]) => {
+    const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, tasks, totalSteps: Math.max(1, tasks.length) } : quest);
+    const stored = nextQuests.reduce<Record<string, MissionTask[]>>((acc, quest) => {
+      acc[quest.id] = quest.tasks ?? [];
+      return acc;
+    }, {});
+    setQuests(nextQuests);
+    window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(stored));
+  };
 
   const saveProof = (key: string) => {
     const next = { ...proof, [key]: true };
@@ -143,24 +177,15 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             <FaucetButton label="Need Test USDC?" compact />
             <button onClick={() => onNavigate("swap")} className="btn-outline-cyan px-4 py-2 rounded-lg text-xs">Swap</button>
             <button onClick={() => onNavigate("bridge")} className="btn-outline-cyan px-4 py-2 rounded-lg text-xs">Bridge</button>
+            <button onClick={() => setShowMissionAdmin((value) => !value)} className="btn-primary px-4 py-2 rounded-full text-xs">Mission Control</button>
           </div>
         </div>
 
-        <MissionSection
-          title="Featured Missions"
-          quests={QUESTS.filter((quest) => quest.featured)}
-          profile={profile}
-          onSelectQuest={onSelectQuest}
-          onVerify={verifyQuest}
-          onClaim={(quest) => claim(quest.id, quest.rewardAmt)}
-          saveProof={saveProof}
-          verifyStates={verifyStates}
-          verifyMessages={verifyMessages}
-        />
+        {showMissionAdmin && <MissionControlPanel quests={quests} onUpdateTasks={updateMissionTasks} />}
 
         <MissionSection
-          title="All Missions"
-          quests={QUESTS.filter((quest) => !quest.featured)}
+          title="Missions"
+          quests={quests}
           profile={profile}
           onSelectQuest={onSelectQuest}
           onVerify={verifyQuest}
@@ -171,6 +196,53 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         />
       </div>
     </div>
+  );
+}
+
+function MissionControlPanel({ quests, onUpdateTasks }: { quests: Quest[]; onUpdateTasks: (questId: string, tasks: MissionTask[]) => void }) {
+  const [selectedId, setSelectedId] = useState(quests[0]?.id ?? "");
+  const selected = quests.find((quest) => quest.id === selectedId) ?? quests[0];
+  if (!selected) return null;
+
+  const tasks = selected?.tasks ?? [];
+
+  const updateTask = (taskId: string, title: string) => {
+    onUpdateTasks(selected.id, tasks.map((task) => task.id === taskId ? { ...task, title } : task));
+  };
+
+  const addTask = () => {
+    if (tasks.length >= 4) return;
+    onUpdateTasks(selected.id, [...tasks, { id: `${selected.id}-task-${Date.now()}`, title: `Task ${tasks.length + 1}` }]);
+  };
+
+  const removeTask = (taskId: string) => {
+    onUpdateTasks(selected.id, tasks.filter((task) => task.id !== taskId));
+  };
+
+  return (
+    <section className="arc-card rounded-[28px] p-5 mb-8 arc-fade-up" style={{ background: "rgba(5,10,20,0.58)" }}>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+        <div>
+          <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission Control</div>
+          <h2 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, marginTop: 6 }}>Task Manager</h2>
+        </div>
+        <select value={selected.id} onChange={(event) => setSelectedId(event.target.value)} className="rounded-2xl px-4 py-3">
+          {quests.map((quest) => <option key={quest.id} value={quest.id}>{quest.title}</option>)}
+        </select>
+      </div>
+      <div className="grid gap-3">
+        {tasks.map((task, index) => (
+          <div key={task.id} className="flex flex-col sm:flex-row gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+            <div className="w-10 h-10 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(56,189,248,0.12)", color: "#38bdf8", fontFamily: "'Space Grotesk'", fontWeight: 900 }}>{index + 1}</div>
+            <input value={task.title} onChange={(event) => updateTask(task.id, event.target.value)} className="flex-1 rounded-2xl px-4 py-3" />
+            <button onClick={() => removeTask(task.id)} className="btn-ghost px-4 py-3 rounded-full">Remove</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={addTask} disabled={tasks.length >= 4} className="btn-primary mt-4 px-5 py-3 rounded-full">
+        Add Task
+      </button>
+    </section>
   );
 }
 
@@ -200,7 +272,7 @@ function MissionSection({
       <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#00dce5", marginBottom: 12, textTransform: "uppercase" }}>
         {title}
       </div>
-      <div className={title === "Featured Missions" ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "flex flex-col gap-3"}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {quests.map((quest) => (
           <QuestCard
             key={quest.id}

@@ -17,14 +17,13 @@ interface SidebarProps {
 }
 
 const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
-  { label: "All Quests", page: "missions", icon: "grid_view" },
-  { label: "Active", page: "quest-detail", icon: "rocket_launch" },
-  { label: "Profile", page: "profile", icon: "account_circle" },
+  { label: "Missions", page: "missions", icon: "grid_view" },
+  { label: "Leaderboard", page: "leaderboard", icon: "leaderboard" },
   { label: "Rewards", page: "rewards", icon: "workspace_premium" },
-  { label: "Completed", page: "stats", icon: "verified" },
+  { label: "Stats", page: "stats", icon: "query_stats" },
+  { label: "Profile", page: "profile", icon: "account_circle" },
   { label: "Swap", page: "swap", icon: "swap_horiz" },
   { label: "Bridge", page: "bridge", icon: "conversion_path" },
-  { label: "Admin", page: "admin", icon: "shield_lock" },
 ];
 
 export default function Sidebar({
@@ -58,7 +57,7 @@ export default function Sidebar({
             <button onClick={() => handleNavigate("landing")} className="text-left bg-transparent border-none p-0 cursor-pointer">
               <ArcLogo size={44} compact={!showLabels} />
             </button>
-            <button onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse} className="arc-icon-action w-10 h-10 rounded-2xl" aria-label={isOverlaySidebar ? "Close sidebar" : "Collapse sidebar"}>
+            <button onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse} className="arc-icon-action w-10 h-10 rounded-full" aria-label={isOverlaySidebar ? "Close sidebar" : "Collapse sidebar"}>
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                 {isOverlaySidebar ? "close" : isCollapsed ? "keyboard_double_arrow_right" : "keyboard_double_arrow_left"}
               </span>
@@ -120,12 +119,14 @@ export default function Sidebar({
           })}
         </nav>
 
-        <div className="p-4">
-          <button className="btn-outline-cyan w-full py-3 rounded-2xl flex items-center justify-center gap-2" onClick={() => handleNavigate("missions")}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>sync</span>
-            {showLabels ? "Sync Quests" : ""}
-          </button>
-        </div>
+        {showLabels && (
+          <div className="p-4">
+            <button className="btn-primary w-full py-3 rounded-full flex items-center justify-center gap-2" onClick={() => handleNavigate("profile")}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>person</span>
+              Profile
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );

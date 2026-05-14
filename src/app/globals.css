@@ -226,6 +226,7 @@ body::after {
 .arc-icon-action {
   display: grid;
   place-items: center;
+  border-radius: 999px;
   color: #f8fbff;
   background:
     radial-gradient(circle at 32% 22%, rgba(255,255,255,0.22), transparent 34%),
@@ -349,7 +350,7 @@ body::after {
   inset: 4rem 0 0 0;
   z-index: 38;
   border: 0;
-  background: rgba(2, 8, 18, 0.64);
+  background: rgba(2, 8, 18, 0.42);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -363,12 +364,14 @@ body::after {
   height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, rgba(3,7,18,0.82), rgba(8,17,34,0.74));
+  background: linear-gradient(180deg, rgba(3,7,18,0.64), rgba(8,17,34,0.5));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(148,217,255,0.16);
-  box-shadow: 18px 0 54px rgba(0,0,0,0.3);
-  transition: width 0.28s ease, transform 0.28s ease, opacity 0.28s ease;
+  border-right: 1px solid rgba(148,217,255,0.14);
+  box-shadow: 18px 0 54px rgba(0,0,0,0.24);
+  transition: width 0.28s ease, transform 0.34s cubic-bezier(.2,.9,.2,1), opacity 0.28s ease;
+  border-top-right-radius: 28px;
+  border-bottom-right-radius: 28px;
 }
 
 .arc-sidebar-shell.is-collapsed {
@@ -385,6 +388,7 @@ body::after {
 .arc-sidebar-shell.arc-sidebar-overlay.is-open {
   transform: translateX(0);
   opacity: 1;
+  animation: arcMenuReveal 0.34s cubic-bezier(.2,.9,.2,1) both;
 }
 
 .arc-wallet-modal-backdrop {
@@ -430,6 +434,15 @@ body::after {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   overflow: hidden;
+  border-radius: 28px;
+}
+
+.arc-swap-card {
+  animation: arcSwapReveal 0.5s cubic-bezier(.2,.9,.2,1) both;
+}
+
+.arc-swap-card > * {
+  animation: arcFadeUp 0.58s ease both;
 }
 
 .arc-card::before {
@@ -735,12 +748,13 @@ select:focus {
 
 /* Enhanced button active states */
 button:active {
-  transform: scale(0.98) !important;
+  transform: scale(0.98);
 }
 
 /* Icon action button enhancements */
 .arc-icon-action {
   transition: all 0.24s ease;
+  border-radius: 999px !important;
 }
 
 .arc-icon-action:hover {
@@ -788,6 +802,28 @@ button:active {
   to {
     opacity: 0;
     transform: translateX(28px);
+  }
+}
+
+@keyframes arcMenuReveal {
+  from {
+    transform: translateX(-24px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes arcSwapReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

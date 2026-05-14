@@ -1,6 +1,12 @@
 // src/types/index.ts
 
-export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge" | "profile" | "admin";
+export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge" | "profile";
+
+export interface MissionTask {
+  id: string;
+  title: string;
+  done?: boolean;
+}
 
 export interface Quest {
   id: string;
@@ -14,6 +20,7 @@ export interface Quest {
   progress: number;
   totalSteps: number;
   tags: string[];
+  tasks?: MissionTask[];
   featured?: boolean;
 }
 

@@ -6,7 +6,7 @@ import Providers from "@/components/layout/Providers";
 
 export const metadata: Metadata = {
   title: "ARC Swap - ARC Chain DEX",
-  description: "A modern decentralized exchange for the ARC Chain ecosystem with swap, liquidity, bridge, portfolio, and admin tooling.",
+  description: "A modern decentralized exchange for the ARC Chain ecosystem with swap, liquidity, bridge, portfolio, and mission tooling.",
   keywords: ["Web3", "ARC Swap", "ARC Chain", "DEX", "DeFi", "RainbowKit", "wagmi"],
 };
 

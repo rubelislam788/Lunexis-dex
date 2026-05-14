@@ -144,7 +144,7 @@ export default function SwapPage() {
         </div>
 
         <div className="grid grid-cols-1 justify-center lg:grid-cols-[minmax(0,760px)] gap-6">
-          <section className="arc-card rounded-3xl p-6">
+          <section className="arc-card arc-swap-card rounded-[28px] p-6">
             <TokenAmountPanel label="You Pay" token={fromToken.symbol} amount={state.amountIn} balance={balanceLabel(fromToken.symbol)} onAmount={(amount) => updateState({ amountIn: amount })} onToken={() => setSelector("from")} />
             <div className="flex justify-center my-4">
               <button

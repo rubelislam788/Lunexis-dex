@@ -1,12 +1,13 @@
 // src/components/layout/Header.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import FaucetButton from "@/components/ui/FaucetButton";
 import ArcLogo from "@/components/ui/ArcLogo";
 import type { Page } from "@/types";
 
-const ArcSwapConnectButton = dynamic(() => import("@/components/arc-swap/ArcSwapConnectButton"), { ssr: false });
+const ArcSwapConnectButton = dynamic<{ onProfile?: () => void }>(() => import("@/components/arc-swap/ArcSwapConnectButton"), { ssr: false });
 
 interface HeaderProps {
   currentPage: Page;
@@ -23,17 +24,34 @@ const NAV_LINKS: Array<{ label: string; page: Page }> = [
   { label: "Leaderboard", page: "leaderboard" },
   { label: "Rewards", page: "rewards" },
   { label: "Stats", page: "stats" },
+  { label: "Profile", page: "profile" },
 ];
 
 export default function Header({ currentPage, onNavigate, showSidebar, isOverlaySidebar, sidebarOpen, sidebarCollapsed, onToggleSidebar }: HeaderProps) {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const nextY = window.scrollY;
+      setHidden(nextY > 90 && nextY > lastY);
+      lastY = nextY;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <header
-      className="fixed top-0 w-full z-50 flex justify-between items-center px-3 sm:px-6 h-16 border-b"
+      className="arc-topbar fixed top-0 w-full z-50 flex justify-between items-center px-3 sm:px-6 h-16 border-b"
       style={{
         background: "linear-gradient(90deg, rgba(2,4,10,0.88), rgba(6,20,40,0.76), rgba(2,4,10,0.88))",
         backdropFilter: "blur(22px)",
         borderColor: "rgba(148,217,255,0.16)",
         boxShadow: "0 14px 44px rgba(0,0,0,0.32)",
+        transform: hidden ? "translateY(-110%)" : "translateY(0)",
+        transition: "transform 0.28s ease, opacity 0.28s ease",
+        opacity: hidden ? 0 : 1,
       }}
     >
       <div className="flex items-center gap-3 lg:gap-8 min-w-0">
@@ -54,7 +72,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
           </div>
         </button>
 
-        <nav className="hidden xl:flex items-center gap-6">
+        <nav className="hidden xl:flex items-center gap-5">
           {NAV_LINKS.map(({ label, page }) => (
             <button
               key={page}
@@ -131,11 +149,31 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
             </svg>
             Bridge
           </button>
+          <button
+            onClick={() => onNavigate("profile")}
+            className="flex items-center gap-2 transition-all"
+            style={{
+              fontFamily: "'Space Grotesk'",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              padding: "5px 14px",
+              borderRadius: 99,
+              background: currentPage === "profile" ? "rgba(56,189,248,0.22)" : "rgba(255,255,255,0.045)",
+              border: `1px solid ${currentPage === "profile" ? "rgba(56,189,248,0.54)" : "rgba(148,217,255,0.14)"}`,
+              color: "#dbeafe",
+              cursor: "pointer",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>account_circle</span>
+            Profile
+          </button>
           <FaucetButton label="Faucet" compact />
         </nav>
       </div>
 
-      <ArcSwapConnectButton />
+      <ArcSwapConnectButton onProfile={() => onNavigate("profile")} />
     </header>
   );
 }
