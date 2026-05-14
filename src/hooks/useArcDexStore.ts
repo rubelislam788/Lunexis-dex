@@ -46,6 +46,15 @@ export function useArcDexStore() {
   };
 
   const addToken = (token: ArcSwapToken) => {
+    if (!token.symbol.trim()) {
+      throw new Error("Token symbol is required.");
+    }
+    if (!token.name.trim()) {
+      throw new Error("Token name is required.");
+    }
+    if (!Number.isFinite(token.decimals) || token.decimals < 0) {
+      throw new Error("Token decimals must be a valid number.");
+    }
     if (token.address && !isAddress(token.address)) {
       throw new Error("Token address is not valid.");
     }

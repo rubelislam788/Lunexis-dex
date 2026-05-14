@@ -4,7 +4,14 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useArcDexStore } from "@/hooks/useArcDexStore";
 import { useToast } from "@/components/ui/Toast";
-import { ARC_CHAIN_ID, DEX_CONTRACTS, type ArcSwapToken } from "@/lib/arc-dex";
+import { ARC_CHAIN_ID, ARC_SWAP_TOKENS, DEX_CONTRACTS, type ArcSwapToken } from "@/lib/arc-dex";
+
+const CONFIG_ROWS = [
+  { label: "ARC token", value: process.env.NEXT_PUBLIC_ARC_TOKEN_ADDRESS || "0x6a801562296A1Dbc9244ca3764981D21A22974d6" },
+  { label: "WETH token", value: process.env.NEXT_PUBLIC_WETH_ARC_ADDRESS || "0x7E24AF6B090871ebbD60f57BA0A09F27db898640" },
+  { label: "USDC token", value: process.env.NEXT_PUBLIC_USDC_ARC_ADDRESS || "0x3600000000000000000000000000000000000000" },
+  { label: "EURC token", value: process.env.NEXT_PUBLIC_EURC_ARC_ADDRESS || "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" },
+];
 
 export default function AdminPage() {
   const { address } = useAccount();
@@ -21,16 +28,18 @@ export default function AdminPage() {
 
   const submit = () => {
     try {
+      const symbol = form.symbol.trim().toUpperCase();
+      const name = form.name.trim();
       addToken({
-        symbol: form.symbol.toUpperCase(),
-        name: form.name,
+        symbol,
+        name,
         address: form.address ? (form.address as `0x${string}`) : undefined,
         decimals: Number(form.decimals),
         accent: form.accent,
         icon: form.icon,
         chainId: ARC_CHAIN_ID,
       } satisfies ArcSwapToken);
-      show(`Added ${form.symbol.toUpperCase()} to token list`, "success");
+      show(`Added ${symbol} to token list`, "success");
       setForm({ symbol: "", name: "", address: "", decimals: "18", accent: "#8b5cf6", icon: "/arc-assets/arc.jpg" });
     } catch (error: any) {
       show(error?.message || "Could not add token", "error");
@@ -62,6 +71,15 @@ export default function AdminPage() {
             </div>
 
             <button className="btn-primary w-full py-3 rounded-xl mt-4" onClick={submit}>Add Token</button>
+
+            <div className="mt-6 rounded-2xl p-4" style={{ background: DEX_CONTRACTS.swapRouter ? "rgba(34,197,94,0.08)" : "rgba(255,45,178,0.08)", border: `1px solid ${DEX_CONTRACTS.swapRouter ? "rgba(34,197,94,0.2)" : "rgba(255,45,178,0.2)"}` }}>
+              <div style={{ color: DEX_CONTRACTS.swapRouter ? "#86efac" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                {DEX_CONTRACTS.swapRouter ? "WETH Router Ready" : "WETH Router Missing"}
+              </div>
+              <p style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                WETH swaps need `NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS` in Vercel. Token addresses are configured, but the router contract and liquidity must exist before WETH pairs can execute.
+              </p>
+            </div>
           </section>
 
           <section className="arc-card rounded-3xl p-6">
@@ -76,14 +94,31 @@ export default function AdminPage() {
             </div>
 
             <div className="mt-6">
-              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Token Registry</h3>
+              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Configured Token Addresses</h3>
+              <div className="grid gap-2 mb-5">
+                {CONFIG_ROWS.map((row) => (
+                  <InfoRow key={row.label} label={row.label} value={row.value} />
+                ))}
+              </div>
+
+              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Visible Swap Tokens</h3>
+              <div className="grid gap-2 mb-5">
+                {ARC_SWAP_TOKENS.filter((token) => token.address || token.isNative).map((token) => (
+                  <div key={token.symbol} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{token.symbol} - {token.name}</div>
+                    <div style={{ color: "#849495", fontSize: 12, wordBreak: "break-all" }}>{token.address ?? "Native gas token"}</div>
+                  </div>
+                ))}
+              </div>
+
+              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900, color: "#f8fbff", marginBottom: 12 }}>Admin-Added Tokens</h3>
               <div className="grid gap-2">
                 {store.customTokens.length === 0 && (
                   <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.08)", color: "#849495", fontSize: 13 }}>
                     No admin-added tokens yet.
                   </div>
                 )}
-                {store.customTokens.map((token) => (
+                {store.customTokens.filter((token) => token.symbol && token.name).map((token) => (
                   <div key={token.symbol} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                     <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{token.symbol}</div>
                     <div style={{ color: "#849495", fontSize: 12 }}>{token.address}</div>
