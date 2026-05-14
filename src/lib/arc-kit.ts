@@ -15,6 +15,10 @@ export function normalizeRpcUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
 }
 
+function isArcTestnetViemChain(chain: any) {
+  return chain?.id === ARC_TESTNET_CHAIN_ID || chain?.chainId === ARC_TESTNET_CHAIN_ID;
+}
+
 export const SUPPORTED_CHAINS = {
   ARC_TESTNET: "Arc_Testnet",
   ETH_SEPOLIA: "Ethereum_Sepolia",
@@ -76,7 +80,7 @@ export async function getBrowserViemAdapter(): Promise<any> {
       createPublicClient({
         chain,
         transport: http(
-          chain?.chainId === ARC_TESTNET_CHAIN_ID
+          isArcTestnetViemChain(chain)
             ? normalizeRpcUrl(ARC_TESTNET_RPC_URL)
             : process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"
         ),

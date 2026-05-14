@@ -222,7 +222,7 @@ export function useArcSwap() {
             tokenIn: fromToken,
             tokenOut: toToken,
             amountIn: state.amountIn,
-            config: { kitKey: appKitKey },
+            config: { kitKey: appKitKey, allowanceStrategy: "approve" },
           })
         );
 
