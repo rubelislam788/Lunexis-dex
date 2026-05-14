@@ -46,8 +46,7 @@ export default function ArcSwapConnectButton({ onProfile }: { onProfile?: () => 
                   {chain.name}
                 </button>
                 <button className="btn-primary px-4 py-2 rounded-2xl" onClick={onProfile ?? openAccountModal} type="button">
-                  {account.displayName}
-                  {account.displayBalance ? ` (${account.displayBalance})` : ""}
+                  Profile
                 </button>
               </div>
             )}
