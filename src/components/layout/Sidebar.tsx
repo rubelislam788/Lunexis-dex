@@ -58,10 +58,7 @@ export default function Sidebar({
         className={`arc-sidebar-shell ${isOverlaySidebar ? "arc-sidebar-overlay" : ""} ${isOpen ? "is-open" : ""} ${isCollapsed && !isOverlaySidebar ? "is-collapsed" : ""}`}
       >
         <div className="arc-sidebar-header">
-          <div className="arc-sidebar-brand-row">
-            <button onClick={() => handleNavigate("landing")} className="arc-sidebar-plain arc-sidebar-brand" aria-label="Go home">
-              {showLabels ? "Arcly" : "A"}
-            </button>
+          <div className="arc-sidebar-brand-row arc-sidebar-control-row">
             <button onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse} className="arc-sidebar-plain arc-sidebar-menu" aria-label={isOverlaySidebar ? "Close sidebar" : "Collapse sidebar"}>
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                 {isOverlaySidebar ? "close" : "menu"}

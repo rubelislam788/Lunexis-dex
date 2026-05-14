@@ -559,7 +559,7 @@ a.arc-uiverse-button:active,
 }
 
 .arc-sidebar-header {
-  padding: 1rem 1rem 0.85rem;
+  padding: 0.85rem 1rem 0.85rem;
 }
 
 .arc-sidebar-brand-row {
@@ -569,23 +569,9 @@ a.arc-uiverse-button:active,
   gap: 0.75rem;
 }
 
-.arc-sidebar-brand {
-  color: #fff;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1.3rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  text-align: left;
-}
-
-.arc-sidebar-shell.is-collapsed .arc-sidebar-brand {
-  width: 2.4rem;
-  height: 2.4rem;
-  display: grid;
-  place-items: center;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #00dce5, #ff2db2);
-  box-shadow: 0 0 22px rgba(0,220,229,0.24);
+.arc-sidebar-control-row {
+  justify-content: flex-end;
+  min-height: 2rem;
 }
 
 .arc-sidebar-menu,
