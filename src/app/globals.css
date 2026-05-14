@@ -81,7 +81,7 @@ body::after {
 .glass-panel {
   background:
     linear-gradient(145deg, rgba(0, 0, 0, 0.86), rgba(16, 18, 34, 0.78)) padding-box,
-    linear-gradient(163deg, #00ff75 0%, #3700ff 100%) border-box;
+    linear-gradient(163deg, #00dce5 0%, #7c3aed 52%, #ff2db2 100%) border-box;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid transparent;
@@ -92,7 +92,7 @@ body::after {
 .glass-panel:hover {
   transform: scale(0.98);
   border-radius: 20px;
-  box-shadow: 0 0 30px 1px rgba(0, 255, 117, 0.3), 0 24px 80px rgba(0, 0, 0, 0.48);
+  box-shadow: 0 0 30px 1px rgba(0, 220, 229, 0.26), 0 0 24px rgba(255, 45, 178, 0.14), 0 24px 80px rgba(0, 0, 0, 0.48);
 }
 
 /* Glow effects */
@@ -585,7 +585,7 @@ a.arc-uiverse-button:active,
   position: relative;
   background:
     linear-gradient(145deg, rgba(0, 0, 0, 0.86), rgba(20, 22, 42, 0.78)) padding-box,
-    linear-gradient(163deg, #00ff75 0%, #3700ff 100%) border-box !important;
+    linear-gradient(163deg, #00dce5 0%, #7c3aed 52%, #ff2db2 100%) border-box !important;
   border: 1px solid transparent !important;
   box-shadow: 0 22px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(20px);
@@ -607,7 +607,7 @@ a.arc-uiverse-button:active,
   content: "";
   position: absolute;
   inset: -1px;
-  background: linear-gradient(163deg, rgba(0, 255, 117, 0.18) 0%, transparent 38%, rgba(55, 0, 255, 0.2) 100%);
+  background: linear-gradient(163deg, rgba(0, 220, 229, 0.2) 0%, transparent 38%, rgba(255, 45, 178, 0.18) 100%);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -620,7 +620,7 @@ a.arc-uiverse-button:active,
 .arc-card:hover {
   transform: scale(0.98);
   border-radius: 20px;
-  box-shadow: 0 0 30px 1px rgba(0, 255, 117, 0.3), 0 22px 80px rgba(0, 0, 0, 0.52);
+  box-shadow: 0 0 30px 1px rgba(0, 220, 229, 0.26), 0 0 24px rgba(255, 45, 178, 0.14), 0 22px 80px rgba(0, 0, 0, 0.52);
 }
 
 .arc-fade-up {
