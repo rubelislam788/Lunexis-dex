@@ -208,6 +208,13 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     persistMissions(nextQuests);
   };
 
+  const saveMission = (questId: string) => {
+    if (!isMissionAdmin) return;
+    const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest } : quest);
+    setQuests(nextQuests);
+    persistMissions(nextQuests);
+  };
+
   const createMission = () => {
     if (!isMissionAdmin) return quests[0] ?? QUESTS[0];
     const nextNumber = quests.length + 1;
@@ -339,6 +346,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             onUpdateTasks={updateMissionTasks}
             onCreateMission={createMission}
             onRemoveMission={removeMission}
+            onSaveMission={saveMission}
             onConfirmMission={(quest) => {
               if (isMissionAdmin) markMissionComplete(quest.id, quest.xp);
             }}
@@ -373,6 +381,7 @@ function MissionControlPanel({
   onUpdateTasks,
   onCreateMission,
   onRemoveMission,
+  onSaveMission,
   onConfirmMission,
 }: {
   quests: Quest[];
@@ -384,9 +393,11 @@ function MissionControlPanel({
   onUpdateTasks: (questId: string, tasks: MissionTask[]) => void;
   onCreateMission: () => Quest;
   onRemoveMission: (questId: string) => void;
+  onSaveMission: (questId: string) => void;
   onConfirmMission: (quest: Quest) => void;
 }) {
   const [selectedId, setSelectedId] = useState(selectedQuestId || quests[0]?.id || "");
+  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const selected = quests.find((quest) => quest.id === selectedId) ?? quests[0];
 
   useEffect(() => {
@@ -454,6 +465,12 @@ function MissionControlPanel({
     onRemoveMission(selected.id);
   };
 
+  const saveSelectedMission = () => {
+    onSaveMission(selected.id);
+    setSaveState("saved");
+    window.setTimeout(() => setSaveState("idle"), 1600);
+  };
+
   return (
     <section id="mission-control-panel" className="arc-card rounded-[28px] p-5 mb-8 arc-fade-up" style={{ background: "rgba(5,10,20,0.58)" }}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
@@ -474,11 +491,19 @@ function MissionControlPanel({
           <button onClick={createAndSelectMission} className="btn-primary px-5 py-3 rounded-full">
             Create Mission
           </button>
+          <button onClick={saveSelectedMission} className="btn-primary px-5 py-3 rounded-full">
+            {saveState === "saved" ? "Saved" : "Save Mission"}
+          </button>
           <button onClick={removeSelectedMission} disabled={!canRemoveMission} className="btn-ghost px-5 py-3 rounded-full">
             Remove Mission
           </button>
         </div>
       </div>
+      {saveState === "saved" && (
+        <div className="mb-5 rounded-2xl px-4 py-3" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.24)", color: "#86efac", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800 }}>
+          Mission saved and published.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
         <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
