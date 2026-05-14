@@ -85,7 +85,7 @@ export async function getBrowserViemAdapter(): Promise<any> {
       addressContext: "user-controlled",
       supportedChains: [ArcTestnet, EthereumSepolia],
     },
-  });
+  } as any);
 }
 
 export function getArcKitKey(): string {
