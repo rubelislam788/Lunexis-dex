@@ -3,6 +3,7 @@
 
 import type { Page } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
+import FaucetButton from "@/components/ui/FaucetButton";
 
 interface SidebarProps {
   currentPage: Page;
@@ -22,13 +23,6 @@ const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
   { label: "Rewards", page: "rewards", icon: "workspace_premium" },
   { label: "Swap", page: "swap", icon: "swap_horiz" },
   { label: "Profile", page: "profile", icon: "account_circle" },
-];
-
-const PROJECT_LINKS: Array<{ label: string; page: Page; count: string }> = [
-  { label: "Arc Swap", page: "swap", count: "4" },
-  { label: "Missions", page: "missions", count: "4" },
-  { label: "Rewards", page: "rewards", count: "3" },
-  { label: "Stats", page: "stats", count: "8" },
 ];
 
 export default function Sidebar({
@@ -65,12 +59,6 @@ export default function Sidebar({
               </span>
             </button>
           </div>
-          {showLabels && (
-            <div className="arc-sidebar-search">
-              <span>Search</span>
-              <span className="material-symbols-outlined">search</span>
-            </div>
-          )}
         </div>
 
         <nav className="arc-sidebar-nav">
@@ -87,30 +75,13 @@ export default function Sidebar({
           })}
         </nav>
 
+        <div className="arc-sidebar-spacer" />
+
         {showLabels && (
-          <div className="arc-sidebar-projects">
-            <div className="arc-sidebar-section-title">
-              <span>Projects</span>
-              <button className="arc-sidebar-plain arc-sidebar-add" aria-label="Add project">
-                <span className="material-symbols-outlined">add</span>
-              </button>
-            </div>
-            <div className="arc-sidebar-project-list">
-              {PROJECT_LINKS.map(({ label, page, count }) => (
-                <button key={label} className="arc-sidebar-plain arc-sidebar-project" onClick={() => handleNavigate(page)}>
-                  <span className="arc-sidebar-project-dot" />
-                  <span>{label}</span>
-                  <span className="arc-sidebar-project-count">{count}</span>
-                </button>
-              ))}
-            </div>
-            <button className="arc-sidebar-plain arc-sidebar-view-all" onClick={() => handleNavigate("missions")}>
-              View All
-            </button>
+          <div className="arc-sidebar-faucet">
+            <FaucetButton label="Faucet" compact />
           </div>
         )}
-
-        <div className="arc-sidebar-spacer" />
 
         <button className="arc-sidebar-plain arc-sidebar-profile" onClick={() => handleNavigate("profile")}>
           <div className="arc-sidebar-avatar">
