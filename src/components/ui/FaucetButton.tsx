@@ -15,7 +15,7 @@ export default function FaucetButton({
       target="_blank"
       rel="noreferrer"
       title="Get test USDC and testnet tokens from the Circle faucet."
-      className="inline-flex items-center justify-center gap-2 rounded-full transition-all"
+      className="arc-uiverse-button inline-flex items-center justify-center gap-2 transition-all"
       style={{
         padding: compact ? "7px 12px" : "10px 16px",
         background: "linear-gradient(135deg, rgba(56,189,248,0.16), rgba(255,45,178,0.12))",

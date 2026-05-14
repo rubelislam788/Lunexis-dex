@@ -305,6 +305,85 @@ body::after {
   transition: box-shadow 0.2s ease-in !important;
 }
 
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.bg-transparent),
+a.arc-uiverse-button,
+.btn-primary,
+.btn-ghost,
+.btn-outline-cyan,
+.arc-topbar-button {
+  position: relative !important;
+  padding: 10px 20px !important;
+  border-radius: 7px !important;
+  border: 1px solid rgb(61, 106, 255) !important;
+  font-size: 14px !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px !important;
+  background: transparent !important;
+  color: #fff !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 0 0 transparent !important;
+  transition: all 0.2s ease-in !important;
+}
+
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.bg-transparent):hover,
+a.arc-uiverse-button:hover,
+.btn-primary:hover,
+.btn-ghost:hover,
+.btn-outline-cyan:hover,
+.arc-topbar-button:hover {
+  background: rgb(61, 106, 255) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
+  transition: all 0.2s ease-out !important;
+}
+
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.bg-transparent)::before,
+a.arc-uiverse-button::before,
+.btn-primary::before,
+.btn-ghost::before,
+.btn-outline-cyan::before,
+.arc-topbar-button::before {
+  content: "" !important;
+  display: block !important;
+  width: 0 !important;
+  height: 86% !important;
+  position: absolute !important;
+  top: 7% !important;
+  left: 0% !important;
+  opacity: 0;
+  background: #fff !important;
+  box-shadow: 0 0 50px 30px #fff !important;
+  transform: skewX(-20deg) !important;
+}
+
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.bg-transparent):hover::before,
+a.arc-uiverse-button:hover::before,
+.btn-primary:hover::before,
+.btn-ghost:hover::before,
+.btn-outline-cyan:hover::before,
+.arc-topbar-button:hover::before {
+  animation: sh02 0.5s 0s linear !important;
+}
+
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.bg-transparent)::after,
+a.arc-uiverse-button::after,
+.btn-primary::after,
+.btn-ghost::after,
+.btn-outline-cyan::after,
+.arc-topbar-button::after {
+  content: none !important;
+}
+
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.bg-transparent):active,
+a.arc-uiverse-button:active,
+.btn-primary:active,
+.btn-ghost:active,
+.btn-outline-cyan:active,
+.arc-topbar-button:active {
+  box-shadow: 0 0 0 0 transparent !important;
+  transition: box-shadow 0.2s ease-in !important;
+}
+
 .arc-mission-card {
   transition: transform 0.26s ease, box-shadow 0.26s ease, border-color 0.26s ease;
 }
