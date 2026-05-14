@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import type { MissionTask, Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
@@ -60,6 +61,7 @@ const PROOF_KEY = "arcquest.social-proof.v1";
 const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
 const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
+const MISSION_ADMIN_ADDRESS = "0x01176d7052A51471a43E01A467fC572a8e23260c".toLowerCase();
 
 type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags">>;
 
@@ -80,12 +82,14 @@ interface MissionsPageProps {
 
 export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
   const { profile, isConnected, markMissionComplete, claim } = useProfile();
+  const { address } = useAccount();
   const { balances } = usePortfolioBalances();
   const [proof, setProof] = useState<SocialProof>({});
   const [quests, setQuests] = useState<Quest[]>(QUESTS);
   const [showMissionAdmin, setShowMissionAdmin] = useState(false);
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
+  const isMissionAdmin = Boolean(address && address.toLowerCase() === MISSION_ADMIN_ADDRESS);
 
   useEffect(() => {
     try {
@@ -100,6 +104,12 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       setProof({});
     }
   }, []);
+
+  useEffect(() => {
+    if (!isMissionAdmin) {
+      setShowMissionAdmin(false);
+    }
+  }, [isMissionAdmin]);
 
   const persistMissions = (nextQuests: Quest[]) => {
     const stored = nextQuests.reduce<Record<string, EditableQuestPatch>>((acc, quest) => {
@@ -127,18 +137,21 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   };
 
   const updateMission = (questId: string, patch: EditableQuestPatch) => {
+    if (!isMissionAdmin) return;
     const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, ...patch } : quest);
     setQuests(nextQuests);
     persistMissions(nextQuests);
   };
 
   const updateMissionTasks = (questId: string, tasks: MissionTask[]) => {
+    if (!isMissionAdmin) return;
     const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, tasks, totalSteps: Math.max(1, tasks.length) } : quest);
     setQuests(nextQuests);
     persistMissions(nextQuests);
   };
 
   const createMission = () => {
+    if (!isMissionAdmin) return quests[0] ?? QUESTS[0];
     const nextNumber = quests.length + 1;
     const mission: Quest = {
       id: `custom-${Date.now()}`,
@@ -237,11 +250,13 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           <div className="flex gap-3">
             <FaucetButton label="Need Test USDC?" compact />
             <button onClick={() => onNavigate("swap")} className="btn-outline-cyan px-4 py-2 rounded-lg text-xs">Swap</button>
-            <button onClick={() => setShowMissionAdmin((value) => !value)} className="btn-primary px-4 py-2 rounded-full text-xs">Mission Control</button>
+            {isMissionAdmin && (
+              <button onClick={() => setShowMissionAdmin((value) => !value)} className="btn-primary px-4 py-2 rounded-full text-xs">Mission Control</button>
+            )}
           </div>
         </div>
 
-        {showMissionAdmin && (
+        {isMissionAdmin && showMissionAdmin && (
           <MissionControlPanel
             quests={quests}
             completedIds={profile?.completedMissionIds ?? []}
@@ -249,7 +264,9 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             onUpdateMission={updateMission}
             onUpdateTasks={updateMissionTasks}
             onCreateMission={createMission}
-            onConfirmMission={(quest) => markMissionComplete(quest.id, quest.xp)}
+            onConfirmMission={(quest) => {
+              if (isMissionAdmin) markMissionComplete(quest.id, quest.xp);
+            }}
           />
         )}
 
