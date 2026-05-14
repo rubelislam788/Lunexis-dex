@@ -194,18 +194,17 @@ body::after {
 
 .arc-home-shimmer :is(p, h3),
 .arc-home-shimmer .arc-shimmer-text {
-  --home-shimmer-offset: 3ch;
-  background:
-    linear-gradient(
-      105deg,
-      transparent calc(50% - var(--home-shimmer-offset)),
-      #a960ee,
-      #ff333d,
-      #ffcb57,
-      #90e0ff,
-      transparent calc(50% + var(--home-shimmer-offset))
-    ) 0 0 / 300% 100% no-repeat border-box,
-    linear-gradient(currentColor, currentColor) padding-box;
+  background: linear-gradient(
+    105deg,
+    #dff8ff 0%,
+    #dff8ff 34%,
+    #a960ee 43%,
+    #ff333d 50%,
+    #ffcb57 57%,
+    #90e0ff 66%,
+    #dff8ff 76%,
+    #dff8ff 100%
+  ) 0 0 / 300% 100% no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
