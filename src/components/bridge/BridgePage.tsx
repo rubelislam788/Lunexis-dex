@@ -69,7 +69,7 @@ export default function BridgePage() {
   const handleSwitchNetwork = async () => {
     try {
       await switchChainAsync({ chainId: requiredChainId });
-      show("Wallet switched to Ethereum Sepolia", "success");
+      show("Wallet switched to Ethereum", "success");
     } catch (err: any) {
       show(err?.message || "Network switch failed", "error");
     }
@@ -88,7 +88,7 @@ export default function BridgePage() {
               <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#ffb7eb" }}>ARC BRIDGE ROUTER</span>
             </div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Cross-Chain Bridge</h1>
-            <p style={{ color: "#849495", fontSize: 16 }}>Bridge ARC or USDC from Sepolia into ARC Chain with real wallet confirmations.</p>
+            <p style={{ color: "#849495", fontSize: 16 }}>Bridge USDC into ARC Chain with real wallet confirmations.</p>
           </div>
           <FaucetButton label="Open Arc Faucet" />
         </div>
@@ -146,7 +146,7 @@ export default function BridgePage() {
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Source Network</span>
                 <span style={{ color: currentChainId === requiredChainId ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === requiredChainId ? "Ethereum Sepolia" : "Switch to Sepolia"}
+                  {currentChainId === requiredChainId ? "Ethereum" : "Switch Network"}
                 </span>
               </div>
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -162,13 +162,13 @@ export default function BridgePage() {
                   Bridge Path Not Available
                 </div>
                 <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  Live bridging currently supports USDC from Ethereum Sepolia to ARC Chain by default. ARC bridging still needs a Sepolia ARC token address and bridge contract address.
+                  Live bridging currently supports USDC into ARC Chain by default.
                 </p>
               </div>
             )}
             {currentChainId !== requiredChainId && isConnected && (
               <button disabled={isSwitchingNetwork} onClick={handleSwitchNetwork} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
-                {isSwitchingNetwork ? "Switching Network..." : "Switch to Ethereum Sepolia"}
+                {isSwitchingNetwork ? "Switching Network..." : "Switch Network"}
               </button>
             )}
             {needsApproval && currentChainId === requiredChainId && (
@@ -192,7 +192,7 @@ export default function BridgePage() {
               </div>
             )}
             {state.txHash && (
-              <a href={`https://sepolia.etherscan.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+              <a href={`https://testnet.arcscan.app/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
               </a>
             )}
@@ -245,7 +245,7 @@ export default function BridgePage() {
         txHash={successTx?.hash}
         gasFee={successTx?.gasFee}
         timestamp={successTx?.timestamp}
-        explorerBaseUrl="https://sepolia.etherscan.io/tx/"
+        explorerBaseUrl="https://testnet.arcscan.app/tx/"
         onClose={() => setSuccessTx(null)}
       />
     </div>

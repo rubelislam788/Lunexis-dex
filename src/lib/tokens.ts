@@ -13,7 +13,7 @@ export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
   ETH: {
     symbol: "ETH",
     label: "Ethereum",
-    chain: "Ethereum Sepolia",
+    chain: "Ethereum",
     logoSrc: "/arc-assets/ethereum.png",
     accent: "#a5b4fc",
   },
@@ -27,7 +27,7 @@ export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
   USDC: {
     symbol: "USDC",
     label: "USD Coin",
-    chain: "Arc / Sepolia",
+    chain: "Arc Chain",
     logoSrc: "/arc-assets/usdc.png",
     accent: "#2775ca",
   },

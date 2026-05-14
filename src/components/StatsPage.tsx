@@ -8,7 +8,6 @@ export default function StatsPage() {
 
   const cards = [
     ["Arc Block", stats.arcBlock, "Latest Arc Testnet block from RPC"],
-    ["Sepolia Block", stats.sepoliaBlock, "Latest Ethereum Sepolia block from RPC"],
     ["Arc Gas", stats.arcGasPrice, "Current Arc native USDC gas price"],
     ["Operators", stats.profiles.toLocaleString(), "Wallet profiles created locally in this app"],
     ["Verified Missions", stats.missionsCompleted.toLocaleString(), "Completed mission verifications"],
@@ -24,7 +23,7 @@ export default function StatsPage() {
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 34, fontWeight: 900, color: "#f8fbff" }}>Network Stats</h1>
             <p style={{ color: "#849495", marginTop: 8 }}>
-              {stats.lastSynced ? `Live sync ${stats.lastSynced}` : "Reading live Arc and Sepolia data"}
+              {stats.lastSynced ? `Live sync ${stats.lastSynced}` : "Reading live Arc data"}
             </p>
           </div>
           <div className="flex gap-3">
