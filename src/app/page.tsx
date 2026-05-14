@@ -29,8 +29,8 @@ const SOCIAL_LINKS = [
     ),
   },
   {
-    label: "Discord",
-    href: "https://discord.com",
+    label: "Discord @tufan020",
+    href: "https://discord.com/channels/@me",
     social: "discord",
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -39,8 +39,8 @@ const SOCIAL_LINKS = [
     ),
   },
   {
-    label: "X",
-    href: "https://x.com",
+    label: "X @rubelislam2023",
+    href: "https://x.com/rubelislam2023",
     social: "x",
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -49,8 +49,8 @@ const SOCIAL_LINKS = [
     ),
   },
   {
-    label: "Telegram",
-    href: "https://telegram.org",
+    label: "Telegram @robinkhan565",
+    href: "https://t.me/robinkhan565",
     social: "telegram",
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
