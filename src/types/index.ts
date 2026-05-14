@@ -8,6 +8,12 @@ export interface MissionTask {
   done?: boolean;
 }
 
+export interface MissionSocialLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
 export interface Quest {
   id: string;
   title: string;
@@ -24,6 +30,7 @@ export interface Quest {
   featured?: boolean;
   startsAt?: string;
   endsAt?: string;
+  socialLinks?: MissionSocialLink[];
 }
 
 export interface LeaderboardEntry {

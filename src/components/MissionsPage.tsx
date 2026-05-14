@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import type { MissionTask, Page, Quest } from "@/types";
+import type { MissionSocialLink, MissionTask, Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { SOCIAL_LINKS } from "@/lib/constants";
@@ -41,7 +41,7 @@ const MISSION_REMOVED_KEY = "arcquest.mission-removed.v1";
 const MISSION_ADMIN_ADDRESS = "0x01176d7052A51471a43E01A467fC572a8e23260c".toLowerCase();
 const DEFAULT_MISSION_DAYS = 7;
 
-type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt">>;
+type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt" | "socialLinks">>;
 
 const addDaysIso = (date: Date, days: number) => {
   const next = new Date(date);
@@ -71,6 +71,8 @@ const formatMissionDate = (value?: string) => {
   if (!value) return "No time limit";
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 };
+
+const normalizeExternalUrl = (url: string) => /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
 
 function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>, storedCreated: Quest[], removedIds: string[]): Quest[] {
   const baseIds = new Set(base.map((quest) => quest.id));
@@ -165,6 +167,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         tags: quest.tags,
         startsAt: quest.startsAt,
         endsAt: quest.endsAt,
+        socialLinks: quest.socialLinks ?? [],
       };
       return acc;
     }, {});
@@ -221,6 +224,10 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       totalSteps: 1,
       tags: ["Custom"],
       tasks: [{ id: `custom-task-${Date.now()}`, title: "Add the first task." }],
+      socialLinks: [
+        { id: `custom-link-${Date.now()}-1`, label: "X", url: "" },
+        { id: `custom-link-${Date.now()}-2`, label: "Telegram", url: "" },
+      ],
       startsAt,
       endsAt: addDaysIso(new Date(startsAt), DEFAULT_MISSION_DAYS),
     };
@@ -377,6 +384,7 @@ function MissionControlPanel({
   const tasks = selected?.tasks ?? [];
   const completed = completedIds.includes(selected.id);
   const tagsValue = selected.tags.join(", ");
+  const socialLinks = selected.socialLinks ?? [];
   const canRemoveMission = quests.length > 1;
   const timeState = getMissionTimeState(selected);
 
@@ -391,6 +399,24 @@ function MissionControlPanel({
 
   const removeTask = (taskId: string) => {
     onUpdateTasks(selected.id, tasks.filter((task) => task.id !== taskId));
+  };
+
+  const updateSocialLink = (linkId: string, patch: Partial<MissionSocialLink>) => {
+    onUpdateMission(selected.id, {
+      socialLinks: socialLinks.map((link) => link.id === linkId ? { ...link, ...patch } : link),
+    });
+  };
+
+  const addSocialLink = () => {
+    if (socialLinks.length >= 4) return;
+    onUpdateMission(selected.id, {
+      socialLinks: [...socialLinks, { id: `${selected.id}-social-${Date.now()}`, label: `Link ${socialLinks.length + 1}`, url: "" }],
+    });
+  };
+
+  const removeSocialLink = (linkId: string) => {
+    if (socialLinks.length <= 2) return;
+    onUpdateMission(selected.id, { socialLinks: socialLinks.filter((link) => link.id !== linkId) });
   };
 
   const createAndSelectMission = () => {
@@ -506,6 +532,32 @@ function MissionControlPanel({
       <button onClick={addTask} disabled={tasks.length >= 4} className="btn-primary mt-4 px-5 py-3 rounded-full">
         Add Task
       </button>
+
+      <div className="mt-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Social Links</div>
+          <p style={{ color: "#849495", fontSize: 12, marginTop: 4 }}>Add 2-4 links for X, Discord, Telegram, GitHub, or custom actions.</p>
+        </div>
+        <button onClick={addSocialLink} disabled={socialLinks.length >= 4} className="btn-primary px-5 py-3 rounded-full">
+          Add Link
+        </button>
+      </div>
+      <div className="mt-3 grid gap-3">
+        {socialLinks.length === 0 && (
+          <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)", color: "#849495", fontSize: 13 }}>
+            No social links yet. Add at least 2 links for social missions.
+          </div>
+        )}
+        {socialLinks.map((link, index) => (
+          <div key={link.id} className="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+            <input value={link.label} onChange={(event) => updateSocialLink(link.id, { label: event.target.value })} className="rounded-2xl px-4 py-3" placeholder={`Link ${index + 1}`} />
+            <input value={link.url} onChange={(event) => updateSocialLink(link.id, { url: event.target.value })} className="rounded-2xl px-4 py-3" placeholder="https://..." />
+            <button onClick={() => removeSocialLink(link.id)} disabled={socialLinks.length <= 2} className="btn-ghost px-4 py-3 rounded-full">
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -583,6 +635,7 @@ function QuestCard({
   const progressPct = completed ? 100 : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
   const socialHref = quest.id === "social-rubel-post" ? SOCIAL_LINKS.rubelPost : quest.id === "social-arc-post" ? SOCIAL_LINKS.arcPost : SOCIAL_LINKS.rubel;
+  const missionSocialLinks = (quest.socialLinks ?? []).filter((link) => link.label.trim() && link.url.trim());
   const timeState = getMissionTimeState(quest);
   const isTimeLocked = timeState !== "Live";
 
@@ -661,6 +714,19 @@ function QuestCard({
               {quest.id === "social-follow" ? "Open Rubel" : "Open Signal"}
             </a>
           )}
+          {missionSocialLinks.map((link) => (
+            <a
+              key={link.id}
+              href={normalizeExternalUrl(link.url)}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => saveProof(`${quest.id}-${link.id}`)}
+              className="btn-ghost px-3 py-2 rounded-lg"
+              style={{ fontSize: 10 }}
+            >
+              {link.label}
+            </a>
+          ))}
           <button disabled={completed || isChecking || isTimeLocked} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
             {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
           </button>
