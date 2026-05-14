@@ -53,9 +53,16 @@ export default function Sidebar({
       >
         <div className="arc-sidebar-header">
           <div className="arc-sidebar-brand-row arc-sidebar-control-row">
-            <button onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse} className="arc-sidebar-plain arc-sidebar-menu" aria-label={isOverlaySidebar ? "Close sidebar" : "Collapse sidebar"}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                {isOverlaySidebar ? "close" : "menu"}
+            <button
+              onClick={isOverlaySidebar ? onCloseMobile : onToggleCollapse}
+              className={`arc-sidebar-plain arc-sidebar-menu ${isOpen && !isCollapsed ? "is-active" : ""}`}
+              aria-label={isOverlaySidebar ? "Close sidebar" : "Collapse sidebar"}
+              aria-pressed={isOpen && !isCollapsed}
+            >
+              <span className="hamburger-label" aria-hidden="true">
+                <span className="line1" />
+                <span className="line2" />
+                <span className="line3" />
               </span>
             </button>
           </div>

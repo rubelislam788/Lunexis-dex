@@ -583,14 +583,70 @@ a.arc-uiverse-button:active,
 }
 
 .arc-sidebar-menu {
-  width: 2rem;
-  height: 2rem;
+  width: 2.35rem;
+  height: 2.05rem;
+  position: relative;
+  overflow: visible;
 }
 
 .arc-sidebar-menu:hover {
-  background: rgba(255,255,255,0.08);
+  background: transparent;
   color: #00dce5;
   transform: translateY(-1px);
+}
+
+.arc-sidebar-menu .hamburger-label {
+  position: relative;
+  width: 2.15rem;
+  height: 1.8rem;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.arc-sidebar-menu .hamburger-label span {
+  width: 2.15rem;
+  height: 0.18rem;
+  background-color: #fff;
+  position: absolute;
+  left: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 14px rgba(0,220,229,0.24);
+}
+
+.arc-sidebar-menu .line1 {
+  top: 0;
+  transition: all 0.3s ease;
+}
+
+.arc-sidebar-menu .line2 {
+  top: 0.68rem;
+  transition: all 0.3s ease;
+}
+
+.arc-sidebar-menu .line3 {
+  top: 1.36rem;
+  transition: all 0.3s ease;
+}
+
+.arc-sidebar-menu.is-active .hamburger-label {
+  transform: rotate(90deg);
+}
+
+.arc-sidebar-menu.is-active .line1 {
+  transform: rotate(35deg) scaleX(0.55) translate(1.2rem, -0.15rem);
+  border-radius: 50px 50px 50px 0;
+}
+
+.arc-sidebar-menu.is-active .line2 {
+  width: 1.42rem;
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
+}
+
+.arc-sidebar-menu.is-active .line3 {
+  transform: rotate(-35deg) scaleX(0.55) translate(1.2rem, 0.15rem);
+  border-radius: 0 50px 50px 50px;
 }
 
 .arc-sidebar-nav {
