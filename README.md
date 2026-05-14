@@ -13,6 +13,7 @@ A Next.js 15 web3 questing platform integrated with [Circle Arc App Kit](https:/
 | Styling | Tailwind CSS + custom CSS |
 | Wallet | wagmi v2 + viem |
 | Swap | Circle Arc App Kit (`@circle-fin/app-kit`) |
+| DEX Router | Uniswap V2 Factory + Router02 on Arc Testnet |
 | Bridge | Circle CCTP v2 via Arc App Kit |
 | Adapter | `@circle-fin/adapter-viem-v2` |
 
@@ -60,6 +61,37 @@ NEXT_PUBLIC_ARC_EXPLORER_URL=https://testnet.arcscan.app
 \`\`\`
 
 > **Note**: Bridge works without a kit key. Swap requires \`NEXT_PUBLIC_ARC_KIT_KEY\`.
+
+### 2.1. Deploy the ARC/WETH router
+
+ARC/WETH, WETH/USDC, and WETH/EURC swaps use a Uniswap V2 compatible router. The deploy script uses WETH:
+
+```env
+NEXT_PUBLIC_WETH_ARC_ADDRESS=0x7E24AF6B090871ebbD60f57BA0A09F27db898640
+```
+
+Run locally with a funded deployer wallet:
+
+```powershell
+$env:ARC_DEPLOYER_PRIVATE_KEY="0x..."
+$env:MINT_WETH="10"
+$env:LIQUIDITY_ARC_WETH_ARC="1000"
+$env:LIQUIDITY_ARC_WETH_WETH="1"
+$env:LIQUIDITY_WETH_USDC_WETH="1"
+$env:LIQUIDITY_WETH_USDC_USDC="3000"
+$env:LIQUIDITY_WETH_EURC_WETH="1"
+$env:LIQUIDITY_WETH_EURC_EURC="2800"
+npm run deploy:arc-uniswap
+```
+
+Add the printed values to Vercel:
+
+```env
+NEXT_PUBLIC_ARC_SWAP_FACTORY_ADDRESS=<deployed factory>
+NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS=<deployed router>
+```
+
+The swap hook calls Router02 `getAmountsOut` for quotes and `swapExactTokensForTokens` for real wallet-confirmed swaps.
 
 ### 3. Run the dev server
 

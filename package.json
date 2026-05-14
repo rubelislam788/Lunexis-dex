@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "deploy:arc-uniswap": "node scripts/deploy-arc-uniswap-v2.mjs"
   },
   "dependencies": {
     "next": "^15.2.0",
@@ -30,6 +31,8 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "typescript": "^5.7.2",
     "tailwindcss": "^3.4.17",
     "postcss": "^8",

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { erc20Abi, formatEther, formatUnits, isAddressEqual, maxUint256, parseUnits, zeroAddress, type Address } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState, TokenSymbol } from "@/types";
-import { DEX_CONTRACTS, SWAP_ROUTER_ABI } from "@/lib/arc-dex";
+import { DEX_CONTRACTS, UNISWAP_V2_ROUTER_ABI } from "@/lib/arc-dex";
 import { ARC_TESTNET_CHAIN_ID, getAppKit, getAppKitResultHash, getArcKitKey, getBrowserViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
@@ -48,6 +48,7 @@ export function useArcSwap() {
   });
   const [allowance, setAllowance] = useState<bigint>(BigInt(0));
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quotePath, setQuotePath] = useState<Address[]>([]);
 
   const updateState = useCallback((patch: Partial<SwapState>) => {
     setState((prev) => ({ ...prev, ...patch }));
@@ -59,6 +60,7 @@ export function useArcSwap() {
   const currentChainId = chainId ?? publicClient?.chain?.id ?? ARC_CHAIN_ID;
   const fromTokenAddress = TOKEN_CONTRACTS[fromToken]?.[ARC_CHAIN_ID];
   const toTokenAddress = TOKEN_CONTRACTS[toToken]?.[ARC_CHAIN_ID];
+  const wethAddress = TOKEN_CONTRACTS.WETH?.[ARC_CHAIN_ID];
   const amountIn = parseTokenAmount(state.amountIn, TOKEN_DECIMALS[fromToken]);
   const canUseAppKitSwap = (fromToken === "USDC" && toToken === "EURC") || (fromToken === "EURC" && toToken === "USDC");
   const appKitKey = getArcKitKey();
@@ -80,6 +82,15 @@ export function useArcSwap() {
 
   const estimatedOut = useMemo(() => state.amountOut, [state.amountOut]);
 
+  const buildCandidatePaths = useCallback(() => {
+    if (!fromTokenAddress || !toTokenAddress) return [];
+    const direct = [fromTokenAddress, toTokenAddress] as Address[];
+    if (wethAddress && !isAddressEqual(wethAddress, zeroAddress) && !isAddressEqual(fromTokenAddress, wethAddress) && !isAddressEqual(toTokenAddress, wethAddress)) {
+      return [direct, [fromTokenAddress, wethAddress, toTokenAddress] as Address[]];
+    }
+    return [direct];
+  }, [fromTokenAddress, toTokenAddress, wethAddress]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -95,6 +106,7 @@ export function useArcSwap() {
       if (routeMode !== "router" || !router || !publicClient || currentChainId !== ARC_CHAIN_ID || !fromTokenAddress || !toTokenAddress) {
         if (!cancelled) {
           setQuoteLoading(false);
+          setQuotePath([]);
           setState((prev) => ({ ...prev, amountOut: "" }));
         }
         return;
@@ -102,19 +114,35 @@ export function useArcSwap() {
 
       try {
         if (!cancelled) setQuoteLoading(true);
-        const { result } = await publicClient.simulateContract({
-          address: router,
-          abi: SWAP_ROUTER_ABI,
-          functionName: "swapExactInput",
-          args: [fromTokenAddress as Address, toTokenAddress as Address, amountIn, BigInt(0), (address ?? zeroAddress) as Address],
-          account: (address ?? zeroAddress) as Address,
-        });
+        let amounts: readonly bigint[] | undefined;
+        let nextPath: Address[] = [];
+
+        for (const path of buildCandidatePaths()) {
+          try {
+            amounts = await publicClient.readContract({
+              address: router,
+              abi: UNISWAP_V2_ROUTER_ABI,
+              functionName: "getAmountsOut",
+              args: [amountIn, path],
+            });
+            nextPath = path;
+            break;
+          } catch {
+            // Try the next available path. Direct pairs and WETH-routed pairs are both supported.
+          }
+        }
+
+        if (!amounts?.length) {
+          throw new Error("No Uniswap V2 route found for this pair.");
+        }
 
         if (!cancelled) {
-          setState((prev) => ({ ...prev, amountOut: cleanAmount(result as bigint, TOKEN_DECIMALS[toToken]) }));
+          setQuotePath(nextPath);
+          setState((prev) => ({ ...prev, amountOut: cleanAmount(amounts[amounts.length - 1], TOKEN_DECIMALS[toToken]) }));
         }
       } catch {
         if (!cancelled) {
+          setQuotePath([]);
           setState((prev) => ({ ...prev, amountOut: "" }));
         }
       } finally {
@@ -126,7 +154,7 @@ export function useArcSwap() {
     return () => {
       cancelled = true;
     };
-  }, [address, amountIn, currentChainId, fromToken, fromTokenAddress, publicClient, routeMode, router, state.amountIn, toToken, toTokenAddress]);
+  }, [amountIn, buildCandidatePaths, currentChainId, fromToken, fromTokenAddress, publicClient, routeMode, router, state.amountIn, toToken, toTokenAddress]);
 
   useEffect(() => {
     let cancelled = false;
@@ -239,6 +267,8 @@ export function useArcSwap() {
       if (needsApproval) throw new Error(`Approve ${fromToken} before swapping.`);
       const account = walletClient.account;
       if (!account) throw new Error("Wallet signer account is not available.");
+      const path = quotePath.length > 0 ? quotePath : buildCandidatePaths()[0];
+      if (!path?.length) throw new Error("No Uniswap V2 route is available for this pair.");
 
       const quotedOut = Number(estimatedOut || "0");
       const minOut = quotedOut > 0
@@ -247,12 +277,13 @@ export function useArcSwap() {
             TOKEN_DECIMALS[toToken]
           )
         : BigInt(0);
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20);
 
       const { request } = await publicClient.simulateContract({
         address: router,
-        abi: SWAP_ROUTER_ABI,
-        functionName: "swapExactInput",
-        args: [fromTokenAddress as Address, toTokenAddress as Address, amountIn, minOut, address],
+        abi: UNISWAP_V2_ROUTER_ABI,
+        functionName: "swapExactTokensForTokens",
+        args: [amountIn, minOut, path, address, deadline],
         account,
       });
       const hash = await walletClient.writeContract(request);
@@ -265,7 +296,7 @@ export function useArcSwap() {
       updateState({ status: "error", error: err?.message || "Swap failed" });
       throw err;
     }
-  }, [address, amountIn, appKitKey, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
+  }, [address, amountIn, appKitKey, buildCandidatePaths, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, quotePath, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });

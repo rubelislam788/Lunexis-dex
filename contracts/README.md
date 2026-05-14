@@ -1,30 +1,49 @@
-# Arc Testnet WETH Swap Contracts
+# Arc Testnet Uniswap V2 Router
 
-These contracts are for enabling router-backed WETH swaps in the dApp on Arc Testnet.
+The dApp swap flow is wired for a Uniswap V2 compatible `Router02` on Arc Testnet.
 
-The app already calls:
-
-```solidity
-swapExactInput(address tokenIn, address tokenOut, uint256 amountIn, uint256 minAmountOut, address recipient)
-```
-
-Deploy flow:
-
-1. Deploy `ArcMockWETH.sol` on Arc Testnet.
-2. Deploy `ArcConstantProductRouter.sol` on Arc Testnet.
-3. Call `ArcMockWETH.faucet(...)` from the deployer wallet to mint test WETH.
-4. Approve the router to spend WETH and any paired token you want to seed.
-5. Call `setPairEnabled(WETH, USDC, true)` on the router.
-6. Call `addLiquidity(WETH, USDC, wethAmount, usdcAmount)` on the router.
-7. Add these Vercel env vars:
+Default token addresses:
 
 ```env
-NEXT_PUBLIC_WETH_ARC_ADDRESS=<ArcMockWETH address>
-NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS=<ArcConstantProductRouter address>
+NEXT_PUBLIC_ARC_TOKEN_ADDRESS=0x6a801562296A1Dbc9244ca3764981D21A22974d6
+NEXT_PUBLIC_WETH_ARC_ADDRESS=0x7E24AF6B090871ebbD60f57BA0A09F27db898640
+NEXT_PUBLIC_USDC_ARC_ADDRESS=0x3600000000000000000000000000000000000000
+NEXT_PUBLIC_EURC_ARC_ADDRESS=0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a
+```
+
+Deploy and seed liquidity:
+
+```bash
+npm install
+
+$env:ARC_DEPLOYER_PRIVATE_KEY="0x..."
+$env:MINT_WETH="10"
+$env:LIQUIDITY_ARC_WETH_ARC="1000"
+$env:LIQUIDITY_ARC_WETH_WETH="1"
+$env:LIQUIDITY_WETH_USDC_WETH="1"
+$env:LIQUIDITY_WETH_USDC_USDC="3000"
+$env:LIQUIDITY_WETH_EURC_WETH="1"
+$env:LIQUIDITY_WETH_EURC_EURC="2800"
+npm run deploy:arc-uniswap
+```
+
+The script deploys:
+
+- `UniswapV2Factory`
+- `UniswapV2Router02`, using WETH `0x7E24AF6B090871ebbD60f57BA0A09F27db898640`
+- `ARC/WETH`, `WETH/USDC`, and `WETH/EURC` pairs
+- optional initial liquidity when the `LIQUIDITY_*` values are greater than zero
+
+After deployment, add the printed values to Vercel:
+
+```env
+NEXT_PUBLIC_ARC_SWAP_FACTORY_ADDRESS=<deployed factory>
+NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS=<deployed router>
+NEXT_PUBLIC_WETH_ARC_ADDRESS=0x7E24AF6B090871ebbD60f57BA0A09F27db898640
 ```
 
 Notes:
 
-- This is a testnet router, not audited production DEX code.
-- The router must hold real test liquidity before swaps return quotes.
-- WETH is not an Arc App Kit stablecoin route; the dApp will only expose WETH once this router and WETH address are configured.
+- The deployer wallet must hold ARC, WETH, USDC, EURC, and Arc native gas before liquidity can be added.
+- `MINT_WETH` only works if the configured WETH contract exposes `faucet(uint256)`.
+- Do not commit `ARC_DEPLOYER_PRIVATE_KEY`.

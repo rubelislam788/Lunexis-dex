@@ -74,10 +74,10 @@ export default function AdminPage() {
 
             <div className="mt-6 rounded-2xl p-4" style={{ background: DEX_CONTRACTS.swapRouter ? "rgba(34,197,94,0.08)" : "rgba(255,45,178,0.08)", border: `1px solid ${DEX_CONTRACTS.swapRouter ? "rgba(34,197,94,0.2)" : "rgba(255,45,178,0.2)"}` }}>
               <div style={{ color: DEX_CONTRACTS.swapRouter ? "#86efac" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                {DEX_CONTRACTS.swapRouter ? "WETH Router Ready" : "WETH Router Missing"}
+                {DEX_CONTRACTS.swapRouter ? "Uniswap V2 Router Ready" : "Uniswap V2 Router Missing"}
               </div>
               <p style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                WETH swaps need `NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS` in Vercel. Token addresses are configured, but the router contract and liquidity must exist before WETH pairs can execute.
+                ARC/WETH, WETH/USDC, and WETH/EURC swaps need `NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS` in Vercel. Token addresses are configured, but the Uniswap V2 router and liquidity must exist before WETH pairs can execute.
               </p>
             </div>
           </section>
@@ -86,9 +86,10 @@ export default function AdminPage() {
             <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Analytics Overview</h2>
             <div className="grid gap-3">
               <InfoRow label="Connected wallet" value={address || "Not connected"} />
+              <InfoRow label="Factory configured" value={DEX_CONTRACTS.swapFactory || "Missing"} />
               <InfoRow label="Router configured" value={DEX_CONTRACTS.swapRouter || "Missing"} />
               <InfoRow label="Bridge configured" value={DEX_CONTRACTS.bridge || "Missing"} />
-              <InfoRow label="LP manager configured" value={DEX_CONTRACTS.lpManager || "Missing"} />
+              <InfoRow label="Liquidity manager" value={DEX_CONTRACTS.swapRouter ? "Uniswap V2 Router02" : DEX_CONTRACTS.lpManager || "Missing"} />
               <InfoRow label="Custom tokens" value={`${store.customTokens.length}`} />
               <InfoRow label="Swap status" value={store.swapPaused ? "Paused" : "Active"} />
             </div>

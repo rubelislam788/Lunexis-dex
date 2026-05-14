@@ -83,6 +83,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
 ];
 
 export const DEX_CONTRACTS = {
+  swapFactory: parseAddress(process.env.NEXT_PUBLIC_ARC_SWAP_FACTORY_ADDRESS),
   swapRouter: parseAddress(process.env.NEXT_PUBLIC_ARC_SWAP_ROUTER_ADDRESS),
   bridge: parseAddress(process.env.NEXT_PUBLIC_ARC_BRIDGE_CONTRACT_ADDRESS),
   lpManager: parseAddress(process.env.NEXT_PUBLIC_ARC_LP_MANAGER_ADDRESS),
@@ -116,6 +117,59 @@ export const SWAP_ROUTER_ABI = [
       { name: "recipient", type: "address" },
     ],
     outputs: [{ name: "amountOut", type: "uint256" }],
+  },
+] as const;
+
+export const UNISWAP_V2_FACTORY_ABI = [
+  { type: "function", name: "getPair", stateMutability: "view", inputs: [{ name: "tokenA", type: "address" }, { name: "tokenB", type: "address" }], outputs: [{ name: "pair", type: "address" }] },
+  { type: "function", name: "createPair", stateMutability: "nonpayable", inputs: [{ name: "tokenA", type: "address" }, { name: "tokenB", type: "address" }], outputs: [{ name: "pair", type: "address" }] },
+] as const;
+
+export const UNISWAP_V2_ROUTER_ABI = [
+  { type: "function", name: "factory", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address" }] },
+  { type: "function", name: "WETH", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address" }] },
+  {
+    type: "function",
+    name: "getAmountsOut",
+    stateMutability: "view",
+    inputs: [
+      { name: "amountIn", type: "uint256" },
+      { name: "path", type: "address[]" },
+    ],
+    outputs: [{ name: "amounts", type: "uint256[]" }],
+  },
+  {
+    type: "function",
+    name: "swapExactTokensForTokens",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "amountIn", type: "uint256" },
+      { name: "amountOutMin", type: "uint256" },
+      { name: "path", type: "address[]" },
+      { name: "to", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [{ name: "amounts", type: "uint256[]" }],
+  },
+  {
+    type: "function",
+    name: "addLiquidity",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tokenA", type: "address" },
+      { name: "tokenB", type: "address" },
+      { name: "amountADesired", type: "uint256" },
+      { name: "amountBDesired", type: "uint256" },
+      { name: "amountAMin", type: "uint256" },
+      { name: "amountBMin", type: "uint256" },
+      { name: "to", type: "address" },
+      { name: "deadline", type: "uint256" },
+    ],
+    outputs: [
+      { name: "amountA", type: "uint256" },
+      { name: "amountB", type: "uint256" },
+      { name: "liquidity", type: "uint256" },
+    ],
   },
 ] as const;
 
