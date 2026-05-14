@@ -258,7 +258,8 @@ function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, o
       <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
       <div className="flex items-center gap-4">
         <input
-          type={readOnly ? "text" : "number"}
+          type="text"
+          inputMode={readOnly ? undefined : "decimal"}
           value={amount}
           readOnly={readOnly}
           onChange={(event) => onAmount?.(event.target.value)}
@@ -266,24 +267,34 @@ function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, o
           className="flex-1 bg-transparent border-none outline-none"
           style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#f8fbff", background: "transparent", border: "none", boxShadow: "none" }}
         />
-        <button onClick={onToken} className="btn-ghost flex items-center gap-2 px-4 py-3 rounded-2xl" style={{ borderColor: `${TOKEN_META[token].accent}66` }}>
-          <TokenIcon symbol={token} size={34} />
-          <span style={{ fontFamily: "'Space Grotesk'", fontWeight: 900, color: "#f8fbff" }}>{token}</span>
+        <button
+          onClick={onToken}
+          className="flex items-center gap-2 px-3 py-2 rounded-full transition-all"
+          style={{
+            background: `linear-gradient(135deg, ${TOKEN_META[token].accent}18, rgba(255,255,255,0.045))`,
+            border: `1px solid ${TOKEN_META[token].accent}44`,
+            boxShadow: `0 0 22px ${TOKEN_META[token].accent}18`,
+            minWidth: 112,
+          }}
+        >
+          <TokenIcon symbol={token} size={30} />
+          <span style={{ fontFamily: "'Space Grotesk'", fontSize: 15, fontWeight: 900, color: "#f8fbff" }}>{token}</span>
         </button>
       </div>
       <div className="mt-3 flex justify-end">
         <div
-          className="rounded-xl px-3 py-1.5"
+          className="rounded-full px-2.5 py-1"
           style={{
-            background: `${TOKEN_META[token].accent}10`,
-            border: `1px solid ${TOKEN_META[token].accent}24`,
+            background: "rgba(255,255,255,0.035)",
+            border: `1px solid ${TOKEN_META[token].accent}18`,
             color: "#9fb2c4",
-            fontSize: 12,
+            fontSize: 10,
             fontFamily: "'Space Grotesk'",
             fontWeight: 700,
+            letterSpacing: 0,
           }}
         >
-          Balance: <span style={{ color: "#dbeafe" }}>{balance}</span>
+          Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
         </div>
       </div>
     </div>

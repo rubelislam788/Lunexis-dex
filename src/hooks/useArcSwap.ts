@@ -103,6 +103,15 @@ export function useArcSwap() {
         return;
       }
 
+      if (canUseAppKitSwap && routeMode !== "router") {
+        if (!cancelled) {
+          setQuoteLoading(false);
+          setQuotePath([]);
+          setState((prev) => ({ ...prev, amountOut: state.amountIn }));
+        }
+        return;
+      }
+
       if (routeMode !== "router" || !router || !publicClient || currentChainId !== ARC_CHAIN_ID || !fromTokenAddress || !toTokenAddress) {
         if (!cancelled) {
           setQuoteLoading(false);
@@ -154,7 +163,7 @@ export function useArcSwap() {
     return () => {
       cancelled = true;
     };
-  }, [amountIn, buildCandidatePaths, currentChainId, fromToken, fromTokenAddress, publicClient, routeMode, router, state.amountIn, toToken, toTokenAddress]);
+  }, [amountIn, buildCandidatePaths, canUseAppKitSwap, currentChainId, fromToken, fromTokenAddress, publicClient, routeMode, router, state.amountIn, toToken, toTokenAddress]);
 
   useEffect(() => {
     let cancelled = false;
