@@ -77,11 +77,20 @@ body::after {
 
 /* Glass panel */
 .glass-panel {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.32), rgba(52, 35, 118, 0.2));
+  background:
+    linear-gradient(145deg, rgba(26, 26, 26, 0.72), rgba(48, 38, 101, 0.68)) padding-box,
+    linear-gradient(163deg, #00ff75 0%, #3700ff 100%) border-box;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.36);
-  box-shadow: 0 24px 80px rgba(57, 38, 138, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  border: 1px solid transparent;
+  box-shadow: 0 24px 80px rgba(57, 38, 138, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 0.2s ease, border-radius 0.2s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+  transform: scale(0.98);
+  border-radius: 20px;
+  box-shadow: 0 0 30px 1px rgba(0, 255, 117, 0.3), 0 24px 80px rgba(57, 38, 138, 0.2);
 }
 
 /* Glow effects */
@@ -567,13 +576,16 @@ a.arc-uiverse-button:active,
 
 .arc-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(7, 18, 54, 0.82), rgba(31, 19, 82, 0.7)) !important;
-  border: 1px solid rgba(255, 255, 255, 0.32) !important;
-  box-shadow: 0 22px 80px rgba(69, 45, 154, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  background:
+    linear-gradient(145deg, rgba(26, 26, 26, 0.78), rgba(65, 54, 126, 0.74)) padding-box,
+    linear-gradient(163deg, #00ff75 0%, #3700ff 100%) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 22px 80px rgba(69, 45, 154, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
   border-radius: 28px;
+  transition: transform 0.2s ease, border-radius 0.2s ease, box-shadow 0.3s ease;
 }
 
 .arc-swap-card {
@@ -588,7 +600,7 @@ a.arc-uiverse-button:active,
   content: "";
   position: absolute;
   inset: -1px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), transparent 34%, rgba(102, 51, 238, 0.2));
+  background: linear-gradient(163deg, rgba(0, 255, 117, 0.18) 0%, transparent 38%, rgba(55, 0, 255, 0.2) 100%);
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -596,6 +608,12 @@ a.arc-uiverse-button:active,
 
 .arc-card:hover::before {
   opacity: 1;
+}
+
+.arc-card:hover {
+  transform: scale(0.98);
+  border-radius: 20px;
+  box-shadow: 0 0 30px 1px rgba(0, 255, 117, 0.3), 0 22px 80px rgba(69, 45, 154, 0.28);
 }
 
 .arc-fade-up {
