@@ -59,11 +59,14 @@ const MISSION_ICONS: Record<string, string> = {
 const PROOF_KEY = "arcquest.social-proof.v1";
 const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
+const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
 
 type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags">>;
 
-function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>): Quest[] {
-  return base.map((quest) => {
+function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>, storedCreated: Quest[]): Quest[] {
+  const baseIds = new Set(base.map((quest) => quest.id));
+  const created = storedCreated.filter((quest) => !baseIds.has(quest.id));
+  return [...base, ...created].map((quest) => {
     const custom = storedCustom[quest.id] ?? {};
     const tasks = storedTasks[quest.id]?.length ? storedTasks[quest.id] : quest.tasks ?? [];
     return { ...quest, ...custom, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
@@ -91,14 +94,14 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         QUESTS,
         JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}"),
         JSON.parse(window.localStorage.getItem(MISSION_CUSTOM_KEY) || "{}"),
+        JSON.parse(window.localStorage.getItem(MISSION_CREATED_KEY) || "[]"),
       ));
     } catch {
       setProof({});
     }
   }, []);
 
-  const updateMission = (questId: string, patch: EditableQuestPatch) => {
-    const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, ...patch } : quest);
+  const persistMissions = (nextQuests: Quest[]) => {
     const stored = nextQuests.reduce<Record<string, EditableQuestPatch>>((acc, quest) => {
       acc[quest.id] = {
         title: quest.title,
@@ -112,18 +115,49 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       };
       return acc;
     }, {});
-    setQuests(nextQuests);
+    const storedTasks = nextQuests.reduce<Record<string, MissionTask[]>>((acc, quest) => {
+      acc[quest.id] = quest.tasks ?? [];
+      return acc;
+    }, {});
+    const baseIds = new Set(QUESTS.map((quest) => quest.id));
+    const created = nextQuests.filter((quest) => !baseIds.has(quest.id));
     window.localStorage.setItem(MISSION_CUSTOM_KEY, JSON.stringify(stored));
+    window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(storedTasks));
+    window.localStorage.setItem(MISSION_CREATED_KEY, JSON.stringify(created));
+  };
+
+  const updateMission = (questId: string, patch: EditableQuestPatch) => {
+    const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, ...patch } : quest);
+    setQuests(nextQuests);
+    persistMissions(nextQuests);
   };
 
   const updateMissionTasks = (questId: string, tasks: MissionTask[]) => {
     const nextQuests = quests.map((quest) => quest.id === questId ? { ...quest, tasks, totalSteps: Math.max(1, tasks.length) } : quest);
-    const stored = nextQuests.reduce<Record<string, MissionTask[]>>((acc, quest) => {
-      acc[quest.id] = quest.tasks ?? [];
-      return acc;
-    }, {});
     setQuests(nextQuests);
-    window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(stored));
+    persistMissions(nextQuests);
+  };
+
+  const createMission = () => {
+    const nextNumber = quests.length + 1;
+    const mission: Quest = {
+      id: `custom-${Date.now()}`,
+      title: `Custom Mission ${nextNumber}`,
+      description: "Describe the mission requirement here.",
+      reward: "500 ARCQ",
+      rewardAmt: 500,
+      xp: 250,
+      difficulty: "Easy",
+      category: "Custom",
+      progress: 0,
+      totalSteps: 1,
+      tags: ["Custom"],
+      tasks: [{ id: `custom-task-${Date.now()}`, title: "Add the first task." }],
+    };
+    const nextQuests = [...quests, mission];
+    setQuests(nextQuests);
+    persistMissions(nextQuests);
+    return mission;
   };
 
   const saveProof = (key: string) => {
@@ -214,6 +248,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             isConnected={isConnected}
             onUpdateMission={updateMission}
             onUpdateTasks={updateMissionTasks}
+            onCreateMission={createMission}
             onConfirmMission={(quest) => markMissionComplete(quest.id, quest.xp)}
           />
         )}
@@ -240,6 +275,7 @@ function MissionControlPanel({
   isConnected,
   onUpdateMission,
   onUpdateTasks,
+  onCreateMission,
   onConfirmMission,
 }: {
   quests: Quest[];
@@ -247,6 +283,7 @@ function MissionControlPanel({
   isConnected: boolean;
   onUpdateMission: (questId: string, patch: EditableQuestPatch) => void;
   onUpdateTasks: (questId: string, tasks: MissionTask[]) => void;
+  onCreateMission: () => Quest;
   onConfirmMission: (quest: Quest) => void;
 }) {
   const [selectedId, setSelectedId] = useState(quests[0]?.id ?? "");
@@ -270,6 +307,11 @@ function MissionControlPanel({
     onUpdateTasks(selected.id, tasks.filter((task) => task.id !== taskId));
   };
 
+  const createAndSelectMission = () => {
+    const mission = onCreateMission();
+    setSelectedId(mission.id);
+  };
+
   return (
     <section className="arc-card rounded-[28px] p-5 mb-8 arc-fade-up" style={{ background: "rgba(5,10,20,0.58)" }}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
@@ -277,9 +319,14 @@ function MissionControlPanel({
           <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission Control</div>
           <h2 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, marginTop: 6 }}>Mission Manager</h2>
         </div>
-        <select value={selected.id} onChange={(event) => setSelectedId(event.target.value)} className="rounded-2xl px-4 py-3">
-          {quests.map((quest) => <option key={quest.id} value={quest.id}>{quest.title}</option>)}
-        </select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <select value={selected.id} onChange={(event) => setSelectedId(event.target.value)} className="rounded-2xl px-4 py-3">
+            {quests.map((quest) => <option key={quest.id} value={quest.id}>{quest.title}</option>)}
+          </select>
+          <button onClick={createAndSelectMission} className="btn-primary px-5 py-3 rounded-full">
+            Create Mission
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
