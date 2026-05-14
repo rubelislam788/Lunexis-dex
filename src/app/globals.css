@@ -27,14 +27,17 @@ html {
 }
 
 body {
+  min-height: 100vh;
+  background: white;
   background:
-    radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.18), transparent 28rem),
-    radial-gradient(circle at 82% 12%, rgba(255, 45, 178, 0.16), transparent 30rem),
-    linear-gradient(135deg, #02040a 0%, #061428 42%, #02040a 100%);
+    radial-gradient(125% 125% at 50% 10%, #fff 40%, #63e 100%);
+  background-attachment: fixed;
+  background-size: 140% 140%;
   color: #e5e2e3;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  animation: arcLightBackground 12s ease-in-out infinite alternate;
 }
 
 body::before,
@@ -47,20 +50,21 @@ body::after {
 }
 
 body::before {
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1px),
-    linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 45, 178, 0.035) 1px, transparent 1px);
-  background-size: 120px 120px, 72px 72px, 72px 72px;
-  animation: arcFieldDrift 22s linear infinite;
-  opacity: 0.42;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.9), transparent 13rem),
+    radial-gradient(circle at 82% 22%, rgba(126,87,255,0.24), transparent 18rem),
+    radial-gradient(circle at 42% 86%, rgba(0,220,229,0.18), transparent 20rem);
+  animation: arcAuroraDrift 16s ease-in-out infinite alternate;
+  opacity: 0.8;
 }
 
 body::after {
   background:
-    radial-gradient(circle at 22% 72%, rgba(0, 220, 229, 0.13), transparent 18rem),
-    radial-gradient(circle at 78% 72%, rgba(255, 45, 178, 0.12), transparent 18rem);
-  filter: blur(8px);
+    linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.22) 44%, transparent 58%),
+    radial-gradient(circle, rgba(102,51,238,0.1) 1px, transparent 1px);
+  background-size: 220% 220%, 78px 78px;
+  animation: arcGlassSweep 10s linear infinite;
+  opacity: 0.42;
   z-index: -3;
 }
 
@@ -73,11 +77,11 @@ body::after {
 
 /* Glass panel */
 .glass-panel {
-  background: linear-gradient(145deg, rgba(13, 25, 48, 0.72), rgba(3, 7, 18, 0.58));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.32), rgba(52, 35, 118, 0.2));
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(148, 217, 255, 0.14);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  box-shadow: 0 24px 80px rgba(57, 38, 138, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 /* Glow effects */
@@ -374,17 +378,13 @@ body::after {
 /* Hero gradient */
 .hero-bg {
   background:
-    radial-gradient(ellipse 70% 50% at 50% 8%, rgba(56, 189, 248, 0.16) 0%, transparent 70%),
-    radial-gradient(ellipse 55% 40% at 75% 55%, rgba(255, 45, 178, 0.13) 0%, transparent 70%),
-    linear-gradient(135deg, #02040a 0%, #061428 48%, #02040a 100%);
+    radial-gradient(125% 125% at 50% 10%, #fff 40%, #63e 100%);
 }
 
 .arc-page-shell {
   position: relative;
   background:
-    radial-gradient(circle at 20% 14%, rgba(56, 189, 248, 0.14), transparent 24rem),
-    radial-gradient(circle at 82% 28%, rgba(255, 45, 178, 0.11), transparent 28rem),
-    linear-gradient(135deg, #02040a 0%, #07152b 52%, #03050b 100%) !important;
+    radial-gradient(125% 125% at 50% 10%, #fff 40%, #63e 100%) !important;
   overflow: hidden;
 }
 
@@ -409,7 +409,7 @@ body::after {
   inset: 4rem 0 0 0;
   z-index: 38;
   border: 0;
-  background: rgba(2, 8, 18, 0.42);
+  background: rgba(80, 55, 180, 0.2);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -423,11 +423,11 @@ body::after {
   height: calc(100vh - 4rem);
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, rgba(3,7,18,0.64), rgba(8,17,34,0.5));
+  background: linear-gradient(180deg, rgba(255,255,255,0.34), rgba(78,54,170,0.22));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(148,217,255,0.14);
-  box-shadow: 18px 0 54px rgba(0,0,0,0.24);
+  border-right: 1px solid rgba(255,255,255,0.36);
+  box-shadow: 18px 0 54px rgba(70,45,140,0.22);
   transition: width 0.28s ease, transform 0.34s cubic-bezier(.2,.9,.2,1), opacity 0.28s ease;
   border-top-right-radius: 28px;
   border-bottom-right-radius: 28px;
@@ -477,21 +477,22 @@ body::after {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
-    linear-gradient(rgba(56, 189, 248, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+    radial-gradient(circle, rgba(255, 255, 255, 0.55) 1px, transparent 1px),
+    linear-gradient(rgba(102, 51, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(102, 51, 238, 0.045) 1px, transparent 1px);
   background-size: 110px 110px, 76px 76px, 76px 76px;
-  opacity: 0.36;
+  animation: arcFieldDrift 24s linear infinite;
+  opacity: 0.48;
   pointer-events: none;
 }
 
 .arc-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(12, 23, 44, 0.82), rgba(5, 8, 17, 0.76)) !important;
-  border: 1px solid rgba(148, 217, 255, 0.14) !important;
-  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: linear-gradient(145deg, rgba(7, 18, 54, 0.82), rgba(31, 19, 82, 0.7)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  box-shadow: 0 22px 80px rgba(69, 45, 154, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
   border-radius: 28px;
 }
@@ -508,7 +509,7 @@ body::after {
   content: "";
   position: absolute;
   inset: -1px;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), transparent 34%, rgba(255, 45, 178, 0.18));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), transparent 34%, rgba(102, 51, 238, 0.2));
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -682,6 +683,21 @@ body::after {
 @keyframes arcTokenFloat {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -8px; }
+}
+
+@keyframes arcLightBackground {
+  0% { background-position: 50% 0%; }
+  100% { background-position: 50% 16%; }
+}
+
+@keyframes arcAuroraDrift {
+  0% { transform: translate3d(-1.5rem, -0.5rem, 0) scale(1); }
+  100% { transform: translate3d(1.5rem, 1rem, 0) scale(1.04); }
+}
+
+@keyframes arcGlassSweep {
+  from { background-position: -160% 0, 0 0; }
+  to { background-position: 160% 0, 78px 78px; }
 }
 
 @keyframes sh02 {
