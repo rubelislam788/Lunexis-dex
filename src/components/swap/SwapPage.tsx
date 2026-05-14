@@ -2,14 +2,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
+import { parseEther, zeroAddress, isAddressEqual, type Address } from "viem";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
 import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, getArcKitKey, setArcKitKey } from "@/lib/arc-kit";
+import { MOCK_WETH_ABI } from "@/lib/arc-dex";
 import { createActivity } from "@/lib/profile";
-import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
+import { SWAP_TOKENS, TOKEN_CONTRACTS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
@@ -19,6 +21,8 @@ const APP_KIT_SWAP_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
   const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, routeMode, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
@@ -32,6 +36,8 @@ export default function SwapPage() {
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
   const selectableSwapTokens = routerConfigured ? SWAP_TOKENS : APP_KIT_SWAP_TOKENS;
+  const wethAddress = TOKEN_CONTRACTS.WETH?.[ARC_TESTNET_CHAIN_ID];
+  const wethFaucetReady = Boolean(routerConfigured && wethAddress && !isAddressEqual(wethAddress, zeroAddress));
   const swapIntro = routerConfigured
     ? "Swap ARC, USDC, EURO, and WETH through your configured Arc router."
     : "Swap USDC and EURO through Arc App Kit. WETH needs a deployed Arc router contract.";
@@ -85,6 +91,32 @@ export default function SwapPage() {
     show(kitKeyInput.trim() ? "Arc App Kit key saved in this browser" : "Arc App Kit key removed", "success");
   };
 
+  const mintWeth = async () => {
+    if (!walletClient || !publicClient || !wethAddress || isAddressEqual(wethAddress, zeroAddress)) {
+      show("Configure NEXT_PUBLIC_WETH_ARC_ADDRESS first", "error");
+      return;
+    }
+
+    try {
+      const account = walletClient.account;
+      if (!account) throw new Error("Wallet signer account is not available.");
+
+      const { request } = await publicClient.simulateContract({
+        address: wethAddress as Address,
+        abi: MOCK_WETH_ABI,
+        functionName: "faucet",
+        args: [parseEther("1")],
+        account,
+      });
+      const hash = await walletClient.writeContract(request);
+      await publicClient.waitForTransactionReceipt({ hash });
+      refresh();
+      show("Minted 1 test WETH", "success");
+    } catch (err: any) {
+      show(err?.message || "WETH faucet failed", "error");
+    }
+  };
+
   const pickToken = (symbol: TokenSymbol) => {
     if (selector === "from") {
       updateState(symbol === state.toToken ? { fromToken: symbol, toToken: state.fromToken } : { fromToken: symbol });
@@ -124,7 +156,14 @@ export default function SwapPage() {
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 40, fontWeight: 900, color: "#f8fbff" }}>Token Swap</h1>
             <p style={{ color: "#849495", fontSize: 16 }}>{swapIntro}</p>
           </div>
-          <FaucetButton label="Need Test USDC?" />
+          <div className="flex gap-3">
+            <FaucetButton label="Need Test USDC?" />
+            {wethFaucetReady && (
+              <button onClick={mintWeth} className="btn-outline-cyan px-4 py-3 rounded-xl" style={{ fontSize: 11 }}>
+                Mint Test WETH
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

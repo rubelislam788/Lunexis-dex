@@ -96,6 +96,10 @@ export const ERC20_ABI = [
   { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] },
 ] as const;
 
+export const MOCK_WETH_ABI = [
+  { type: "function", name: "faucet", stateMutability: "nonpayable", inputs: [{ name: "value", type: "uint256" }], outputs: [] },
+] as const;
+
 export const SWAP_ROUTER_ABI = [
   {
     type: "function",
