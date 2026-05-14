@@ -51,7 +51,7 @@ export default function Home() {
 
   const showSidebar = PAGES_WITH_SIDEBAR.includes(currentPage);
   const selectedQuest = QUESTS.find((quest) => quest.id === selectedQuestId);
-  const sidebarOffset = showSidebar && !isOverlaySidebar ? (sidebarCollapsed ? "5.75rem" : "16rem") : "0rem";
+  const sidebarOffset = showSidebar && !isOverlaySidebar ? (sidebarCollapsed ? "5.75rem" : "15rem") : "0rem";
   const appShellStyle = { ["--arc-sidebar-offset" as any]: sidebarOffset } as CSSProperties;
 
   const toggleSidebar = () => {
