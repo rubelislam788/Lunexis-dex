@@ -1,7 +1,7 @@
 import { getDefaultConfig, type Chain } from "@rainbow-me/rainbowkit";
-import { http } from "wagmi";
+import { fallback, http } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URL, normalizeRpcUrl } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URL, ETHEREUM_SEPOLIA_RPC_URLS, normalizeRpcUrl } from "@/lib/arc-kit";
 
 export const arcChain = {
   id: ARC_TESTNET_CHAIN_ID,
@@ -29,6 +29,6 @@ export const wagmiConfig = getDefaultConfig({
   ssr: true,
   transports: {
     [arcChain.id]: http(normalizeRpcUrl(ARC_TESTNET_RPC_URL)),
-    [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"),
+    [sepolia.id]: fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url)))),
   },
 });

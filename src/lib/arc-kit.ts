@@ -2,7 +2,7 @@
 // Arc App Kit SDK configuration
 // Docs: https://docs.arc.network/app-kit
 
-import { createPublicClient, http, type PublicClient, type WalletClient } from "viem";
+import { createPublicClient, fallback, http, type PublicClient, type WalletClient } from "viem";
 
 const ARC_KIT_KEY_STORAGE = "arc-kit-public-key";
 
@@ -10,6 +10,12 @@ export const ARC_TESTNET_CHAIN_ID = 5042002;
 export const ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
 export const ARC_TESTNET_RPC_URL = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
 export const ARC_TESTNET_EXPLORER_URL = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app";
+export const ETHEREUM_SEPOLIA_RPC_URLS = [
+  process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
+  "https://ethereum-sepolia-rpc.publicnode.com",
+  "https://1rpc.io/sepolia",
+  "https://sepolia.drpc.org",
+];
 
 export function normalizeRpcUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -79,11 +85,9 @@ export async function getBrowserViemAdapter(): Promise<any> {
     getPublicClient: ({ chain }: any) =>
       createPublicClient({
         chain,
-        transport: http(
-          isArcTestnetViemChain(chain)
-            ? normalizeRpcUrl(ARC_TESTNET_RPC_URL)
-            : process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://rpc.sepolia.org"
-        ),
+        transport: isArcTestnetViemChain(chain)
+          ? http(normalizeRpcUrl(ARC_TESTNET_RPC_URL))
+          : fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url)))),
       }),
     capabilities: {
       addressContext: "user-controlled",
