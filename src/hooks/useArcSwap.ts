@@ -37,8 +37,8 @@ export function useArcSwap() {
   const { address, chainId, isConnected } = useAccount();
 
   const [state, setState] = useState<SwapState>({
-    fromToken: "ARC",
-    toToken: "WETH",
+    fromToken: "USDC",
+    toToken: "EURC",
     fromChain: "Arc_Testnet",
     toChain: "Arc_Testnet",
     amountIn: "",
@@ -60,7 +60,6 @@ export function useArcSwap() {
   const currentChainId = chainId ?? publicClient?.chain?.id ?? ARC_CHAIN_ID;
   const fromTokenAddress = TOKEN_CONTRACTS[fromToken]?.[ARC_CHAIN_ID];
   const toTokenAddress = TOKEN_CONTRACTS[toToken]?.[ARC_CHAIN_ID];
-  const wethAddress = TOKEN_CONTRACTS.WETH?.[ARC_CHAIN_ID];
   const amountIn = parseTokenAmount(state.amountIn, TOKEN_DECIMALS[fromToken]);
   const canUseAppKitSwap = (fromToken === "USDC" && toToken === "EURC") || (fromToken === "EURC" && toToken === "USDC");
   const appKitKey = getArcKitKey();
@@ -85,11 +84,8 @@ export function useArcSwap() {
   const buildCandidatePaths = useCallback(() => {
     if (!fromTokenAddress || !toTokenAddress) return [];
     const direct = [fromTokenAddress, toTokenAddress] as Address[];
-    if (wethAddress && !isAddressEqual(wethAddress, zeroAddress) && !isAddressEqual(fromTokenAddress, wethAddress) && !isAddressEqual(toTokenAddress, wethAddress)) {
-      return [direct, [fromTokenAddress, wethAddress, toTokenAddress] as Address[]];
-    }
     return [direct];
-  }, [fromTokenAddress, toTokenAddress, wethAddress]);
+  }, [fromTokenAddress, toTokenAddress]);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,7 +133,7 @@ export function useArcSwap() {
             nextPath = path;
             break;
           } catch {
-            // Try the next available path. Direct pairs and WETH-routed pairs are both supported.
+            // Try the direct stablecoin route first.
           }
         }
 

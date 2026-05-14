@@ -2,16 +2,14 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, usePublicClient, useSwitchChain, useWalletClient } from "wagmi";
-import { parseEther, zeroAddress, isAddressEqual, type Address } from "viem";
+import { useAccount, useSwitchChain } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL } from "@/lib/arc-kit";
-import { MOCK_WETH_ABI } from "@/lib/arc-dex";
+import { ARC_TESTNET_EXPLORER_URL } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
-import { SWAP_TOKENS, TOKEN_CONTRACTS, TOKEN_META } from "@/lib/tokens";
+import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
@@ -19,8 +17,6 @@ import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
   const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
@@ -33,10 +29,8 @@ export default function SwapPage() {
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
   const selectableSwapTokens = SWAP_TOKENS;
-  const wethAddress = TOKEN_CONTRACTS.WETH?.[ARC_TESTNET_CHAIN_ID];
-  const wethFaucetReady = Boolean(routerConfigured && wethAddress && !isAddressEqual(wethAddress, zeroAddress));
   const swapIntro = routerConfigured
-    ? "Swap ARC, USDC, EURC, and WETH with live wallet balances and onchain execution."
+    ? "Swap USDC and EURC with live wallet balances and onchain execution."
     : "Swap tokens on Arc Testnet with a clean wallet-first trading experience.";
   const balanceLabel = (symbol: TokenSymbol) => {
     const item = balances.find((balance) => balance.token === symbol);
@@ -88,32 +82,6 @@ export default function SwapPage() {
     }
   };
 
-  const mintWeth = async () => {
-    if (!walletClient || !publicClient || !wethAddress || isAddressEqual(wethAddress, zeroAddress)) {
-      show("WETH faucet is unavailable right now.", "error");
-      return;
-    }
-
-    try {
-      const account = walletClient.account;
-      if (!account) throw new Error("Wallet signer account is not available.");
-
-      const { request } = await publicClient.simulateContract({
-        address: wethAddress as Address,
-        abi: MOCK_WETH_ABI,
-        functionName: "faucet",
-        args: [parseEther("1")],
-        account,
-      });
-      const hash = await walletClient.writeContract(request);
-      await publicClient.waitForTransactionReceipt({ hash });
-      refresh();
-      show("Minted 1 test WETH", "success");
-    } catch (err: any) {
-      show(err?.message || "WETH faucet failed", "error");
-    }
-  };
-
   const pickToken = (symbol: TokenSymbol) => {
     if (selector === "from") {
       updateState(symbol === state.toToken ? { fromToken: symbol, toToken: state.fromToken } : { fromToken: symbol });
@@ -142,11 +110,6 @@ export default function SwapPage() {
           </div>
           <div className="flex gap-3">
             <FaucetButton label="Need Test USDC?" />
-            {wethFaucetReady && (
-              <button onClick={mintWeth} className="btn-outline-cyan px-4 py-3 rounded-xl" style={{ fontSize: 11 }}>
-                Mint Test WETH
-              </button>
-            )}
           </div>
         </div>
 

@@ -102,7 +102,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               {
                 icon: "swap_horiz",
                 title: "Swap Tokens",
-                desc: "Exchange ARC, USDC, EURO, and WETH with live balances, approvals, and wallet-confirmed execution.",
+                desc: "Exchange USDC and EURC with live balances, approvals, and wallet-confirmed execution.",
                 color: "#00dce5",
                 page: "swap" as Page,
                 cta: "Open Swap",

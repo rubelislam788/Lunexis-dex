@@ -27,7 +27,7 @@ const NAV_LINKS: Array<{ label: string; page: Page }> = [
   { label: "Profile", page: "profile" },
 ];
 
-export default function Header({ currentPage, onNavigate, showSidebar, isOverlaySidebar, sidebarOpen, sidebarCollapsed, onToggleSidebar }: HeaderProps) {
+export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -55,14 +55,6 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
       }}
     >
       <div className="flex items-center gap-3 lg:gap-8 min-w-0">
-        {showSidebar && (
-          <button onClick={onToggleSidebar} className="arc-icon-action w-10 h-10 rounded-2xl flex-shrink-0" aria-label="Toggle sidebar">
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-              {isOverlaySidebar ? (sidebarOpen ? "close" : "menu") : sidebarCollapsed ? "menu_open" : "dock_to_left"}
-            </span>
-          </button>
-        )}
-
         <button onClick={() => onNavigate("landing")} className="bg-transparent border-none p-0 cursor-pointer min-w-0">
           <div className="hidden sm:block">
             <ArcLogo size={40} />
