@@ -7,6 +7,7 @@ import type { MissionSocialLink, MissionTask, Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { SOCIAL_LINKS } from "@/lib/constants";
+import { isAdminWallet } from "@/lib/admin";
 import { QUESTS } from "@/lib/missions";
 import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchain";
 import FaucetButton from "@/components/ui/FaucetButton";
@@ -38,7 +39,6 @@ const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
 const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
 const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
 const MISSION_REMOVED_KEY = "arcquest.mission-removed.v1";
-const MISSION_ADMIN_ADDRESS = "0x01176d7052A51471a43E01A467fC572a8e23260c".toLowerCase();
 const DEFAULT_MISSION_DAYS = 7;
 
 type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt" | "socialLinks">>;
@@ -118,7 +118,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
   const [missionClock, setMissionClock] = useState(() => Date.now());
-  const isMissionAdmin = Boolean(address && address.toLowerCase() === MISSION_ADMIN_ADDRESS);
+  const isMissionAdmin = isAdminWallet(address);
 
   useEffect(() => {
     try {
