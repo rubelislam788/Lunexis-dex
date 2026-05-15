@@ -20,12 +20,14 @@ export default function ThemeSwitcher() {
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeId | null;
     const next = THEMES.some((item) => item.id === stored) ? stored! : "dark";
     setTheme(next);
+    document.body.dataset.lunexisTheme = next;
     document.documentElement.dataset.lunexisTheme = next;
   }, []);
 
   const selectTheme = (next: ThemeId) => {
     setTheme(next);
     window.localStorage.setItem(STORAGE_KEY, next);
+    document.body.dataset.lunexisTheme = next;
     document.documentElement.dataset.lunexisTheme = next;
     setOpen(false);
   };
