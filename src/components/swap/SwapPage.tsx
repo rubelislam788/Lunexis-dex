@@ -296,7 +296,25 @@ export default function SwapPage() {
 function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; price: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
   return (
     <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
-      <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase" }}>{label}</div>
+        <div
+          className="rounded-full px-3 py-1"
+          style={{
+            background: `${TOKEN_META[token].accent}12`,
+            border: `1px solid ${TOKEN_META[token].accent}26`,
+            boxShadow: `0 0 18px ${TOKEN_META[token].accent}10`,
+            color: "#d9fbff",
+            fontSize: 10,
+            fontFamily: "'Space Grotesk'",
+            fontWeight: 900,
+            letterSpacing: 0,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {price}
+        </div>
+      </div>
       <div className="flex items-center gap-4">
         <input
           type="text"
@@ -336,20 +354,6 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
             }}
           >
             Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
-          </div>
-          <div
-            className="rounded-full px-2.5 py-1"
-            style={{
-              background: `${TOKEN_META[token].accent}10`,
-              border: `1px solid ${TOKEN_META[token].accent}22`,
-              color: "#c9f3ff",
-              fontSize: 10,
-              fontFamily: "'Space Grotesk'",
-              fontWeight: 800,
-              letterSpacing: 0,
-            }}
-          >
-            {price}
           </div>
         </div>
       </div>
