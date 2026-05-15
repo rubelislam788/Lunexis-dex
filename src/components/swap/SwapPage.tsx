@@ -152,7 +152,7 @@ export default function SwapPage() {
                 className="arc-icon-action w-12 h-12 rounded-full"
                 aria-label="Switch swap direction"
               >
-                <span className="material-symbols-outlined">swap_vert</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 25, fontWeight: 700 }}>swap_vert</span>
               </button>
             </div>
             <TokenAmountPanel
