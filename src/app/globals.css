@@ -524,6 +524,69 @@ body::after {
   box-shadow: 0 0 24px rgba(61,106,255,0.3), inset 0 1px 0 rgba(255,255,255,0.18) !important;
 }
 
+.arc-floating-menu-button {
+  width: 36px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px !important;
+  background:
+    linear-gradient(180deg, rgba(15, 50, 122, 0.88) 0%, rgba(6, 21, 70, 0.94) 56%, rgba(3, 10, 34, 0.94) 100%) !important;
+  border: 1px solid rgba(90, 145, 255, 0.58) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 18px rgba(61,106,255,0.14) !important;
+  overflow: hidden;
+}
+
+.arc-floating-menu-button::before,
+.arc-floating-menu-button::after {
+  content: none !important;
+}
+
+.arc-floating-menu-button:hover,
+.arc-floating-menu-button.is-active {
+  background:
+    linear-gradient(180deg, rgba(21, 67, 149, 0.94) 0%, rgba(8, 29, 91, 0.98) 56%, rgba(3, 12, 42, 0.98) 100%) !important;
+  border-color: rgba(148,217,255,0.7) !important;
+  box-shadow: 0 0 24px rgba(61,106,255,0.3), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+
+.arc-floating-menu-button .hamburger-label {
+  width: 18px;
+  height: 14px;
+  position: relative;
+  transform: none !important;
+}
+
+.arc-floating-menu-button .hamburger-label span {
+  display: block;
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  border-radius: 99px;
+  background: #ffffff;
+  transition: transform 0.22s ease, width 0.22s ease, top 0.22s ease, opacity 0.22s ease;
+}
+
+.arc-floating-menu-button .line1 { top: 0; }
+.arc-floating-menu-button .line2 { top: 6px; margin: 0; }
+.arc-floating-menu-button .line3 { top: 12px; margin: 0; }
+
+.arc-floating-menu-button.is-active .line1 {
+  top: 6px;
+  transform: rotate(45deg);
+}
+
+.arc-floating-menu-button.is-active .line2 {
+  opacity: 0;
+  width: 0;
+}
+
+.arc-floating-menu-button.is-active .line3 {
+  top: 6px;
+  transform: rotate(-45deg);
+}
+
 .arc-floating-action {
   min-height: 34px;
   display: inline-flex;
@@ -580,6 +643,10 @@ body::after {
 .arc-floating-topbar .btn-outline-cyan:hover {
   background: linear-gradient(180deg, rgba(21, 67, 149, 0.94), rgba(3, 12, 42, 0.98)) !important;
   transform: translateY(-1px);
+}
+
+.arc-topbar-wallet-only .btn-primary {
+  display: none !important;
 }
 
 @media (max-width: 1023px) {

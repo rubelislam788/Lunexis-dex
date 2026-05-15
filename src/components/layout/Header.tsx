@@ -25,7 +25,7 @@ const NAV_LINKS: Array<{ label: string; page: Page }> = [
   { label: "Stats", page: "stats" },
 ];
 
-export default function Header({ currentPage, onNavigate }: HeaderProps) {
+export default function Header({ currentPage, onNavigate, showSidebar, isOverlaySidebar, sidebarOpen, sidebarCollapsed, onToggleSidebar }: HeaderProps) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -50,6 +50,21 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
     >
       <div className="arc-floating-topbar pointer-events-auto">
         <nav className="arc-topbar-left hidden lg:flex items-center gap-2">
+          {showSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className={`arc-floating-menu-button ${sidebarOpen && !sidebarCollapsed ? "is-active" : ""}`}
+              aria-label={isOverlaySidebar ? "Open menu" : "Toggle sidebar"}
+              aria-pressed={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
+            >
+              <span className="hamburger-label" aria-hidden="true">
+                <span className="line1" />
+                <span className="line2" />
+                <span className="line3" />
+              </span>
+            </button>
+          )}
           {NAV_LINKS.map(({ label, page }) => (
             <button
               key={page}
@@ -87,7 +102,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>account_circle</span>
             <span className="hidden sm:inline">Profile</span>
           </button>
-          <div className="hidden xl:block">
+          <div className="hidden xl:block arc-topbar-wallet-only">
             <ArcSwapConnectButton onProfile={() => onNavigate("profile")} />
           </div>
         </div>
