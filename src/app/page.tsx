@@ -14,10 +14,49 @@ import LeaderboardPage from "@/components/LeaderboardPage";
 import StatsPage from "@/components/StatsPage";
 import LunexisIntro from "@/components/ui/LunexisIntro";
 import type { Quest } from "@/types";
+import { QUESTS } from "@/lib/missions";
 
 export const dynamic = "force-dynamic";
 
 const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "profile"];
+const NAV_STORAGE_KEY = "lunexis.current-page.v1";
+const QUEST_HASH_PREFIX = "quest/";
+const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "profile"];
+
+function findQuestById(questId?: string) {
+  if (!questId) return undefined;
+  return QUESTS.find((quest) => quest.id === questId);
+}
+
+function readNavigationFromLocation() {
+  if (typeof window === "undefined") return { page: "landing" as Page, quest: undefined as Quest | undefined };
+  const hash = window.location.hash.replace(/^#\/?/, "");
+
+  if (hash.startsWith(QUEST_HASH_PREFIX)) {
+    const quest = findQuestById(decodeURIComponent(hash.slice(QUEST_HASH_PREFIX.length)));
+    return { page: quest ? "quest-detail" as Page : "missions" as Page, quest };
+  }
+
+  if ((NAV_PAGES as string[]).includes(hash)) {
+    return { page: hash as Page, quest: undefined };
+  }
+
+  const stored = window.localStorage.getItem(NAV_STORAGE_KEY) as Page | null;
+  if (stored && (NAV_PAGES as string[]).includes(stored)) {
+    return { page: stored, quest: undefined };
+  }
+
+  return { page: "landing" as Page, quest: undefined };
+}
+
+function writeNavigation(page: Page, quest?: Quest) {
+  if (typeof window === "undefined") return;
+  const hash = page === "quest-detail" && quest ? `#${QUEST_HASH_PREFIX}${encodeURIComponent(quest.id)}` : `#${page}`;
+  if (window.location.hash !== hash) {
+    window.history.pushState(null, "", hash);
+  }
+  window.localStorage.setItem(NAV_STORAGE_KEY, page === "quest-detail" ? "missions" : page);
+}
 
 const SOCIAL_LINKS = [
   {
@@ -65,6 +104,7 @@ const SOCIAL_LINKS = [
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
   const [selectedQuest, setSelectedQuest] = useState<Quest | undefined>();
+  const [navReady, setNavReady] = useState(false);
   const [isOverlaySidebar, setIsOverlaySidebar] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -83,14 +123,34 @@ export default function Home() {
     return () => window.removeEventListener("resize", syncLayout);
   }, []);
 
+  useEffect(() => {
+    const syncNavigation = () => {
+      const next = readNavigationFromLocation();
+      setCurrentPage(next.page);
+      setSelectedQuest(next.quest);
+      setNavReady(true);
+    };
+
+    syncNavigation();
+    window.addEventListener("hashchange", syncNavigation);
+    window.addEventListener("popstate", syncNavigation);
+    return () => {
+      window.removeEventListener("hashchange", syncNavigation);
+      window.removeEventListener("popstate", syncNavigation);
+    };
+  }, []);
+
   const navigate = (page: Page) => {
     setCurrentPage(page);
+    if (page !== "quest-detail") setSelectedQuest(undefined);
+    writeNavigation(page);
     if (isOverlaySidebar) setSidebarOpen(false);
   };
 
   const selectQuest = (quest: Quest) => {
     setSelectedQuest(quest);
     setCurrentPage("quest-detail");
+    writeNavigation("quest-detail", quest);
     if (isOverlaySidebar) setSidebarOpen(false);
   };
 
@@ -106,6 +166,10 @@ export default function Home() {
     }
     setSidebarCollapsed((value) => !value);
   };
+
+  if (!navReady) {
+    return <div className="arc-app-root" style={{ minHeight: "100vh", background: "#000" }} />;
+  }
 
   return (
     <div className="arc-app-root" style={appShellStyle}>
