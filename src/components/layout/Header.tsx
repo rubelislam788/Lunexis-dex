@@ -51,6 +51,21 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
       }}
     >
       <div className="arc-floating-topbar pointer-events-auto">
+        {showSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className={`arc-floating-menu-button arc-mobile-menu-trigger ${sidebarOpen && !sidebarCollapsed ? "is-active" : ""}`}
+            aria-label={isOverlaySidebar ? "Open menu" : "Toggle sidebar"}
+            aria-pressed={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
+          >
+            <span className="hamburger-label" aria-hidden="true">
+              <span className="line1" />
+              <span className="line2" />
+              <span className="line3" />
+            </span>
+          </button>
+        )}
         <nav className="arc-topbar-left hidden lg:flex items-center gap-2">
           {showSidebar && (
             <button

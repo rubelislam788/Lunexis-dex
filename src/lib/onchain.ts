@@ -1,13 +1,13 @@
 import { createPublicClient, fallback, http, type Address, type Hash } from "viem";
 import { sepolia } from "viem/chains";
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URL, ETHEREUM_SEPOLIA_RPC_URLS, normalizeRpcUrl } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URLS, ETHEREUM_SEPOLIA_RPC_URLS, createArcFallbackTransport, normalizeRpcUrl } from "@/lib/arc-kit";
 
 export const arcTestnetChain = {
   id: ARC_TESTNET_CHAIN_ID,
   name: "Arc Testnet",
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   rpcUrls: {
-    default: { http: [normalizeRpcUrl(ARC_TESTNET_RPC_URL)] },
+    default: { http: ARC_TESTNET_RPC_URLS },
   },
   blockExplorers: {
     default: { name: "ArcScan", url: ARC_TESTNET_EXPLORER_URL },
@@ -17,7 +17,7 @@ export const arcTestnetChain = {
 
 export const arcPublicClient = createPublicClient({
   chain: arcTestnetChain,
-  transport: http(normalizeRpcUrl(ARC_TESTNET_RPC_URL)),
+  transport: createArcFallbackTransport(),
 });
 
 export const sepoliaPublicClient = createPublicClient({

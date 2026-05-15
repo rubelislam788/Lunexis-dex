@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
@@ -8,6 +9,13 @@ export const metadata: Metadata = {
   title: "Lunexis - ARC TESTNET DEX",
   description: "Lunexis is a modern decentralized exchange for the ARC Chain ecosystem with swap, liquidity, portfolio, and mission tooling.",
   keywords: ["Web3", "Lunexis", "ARC Chain", "DEX", "DeFi", "RainbowKit", "wagmi"],
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

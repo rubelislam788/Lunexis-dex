@@ -9,6 +9,17 @@ const ARC_KIT_KEY_STORAGE = "arc-kit-public-key";
 export const ARC_TESTNET_CHAIN_ID = 5042002;
 export const ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
 export const ARC_TESTNET_RPC_URL = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
+export const ARC_TESTNET_RPC_URLS = Array.from(new Set([
+  ...(process.env.NEXT_PUBLIC_ARC_RPC_URLS || "")
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean),
+  ARC_TESTNET_RPC_URL,
+  "https://rpc.testnet.arc.network",
+  "https://rpc.blockdaemon.testnet.arc.network",
+  "https://rpc.drpc.testnet.arc.network",
+  "https://rpc.quicknode.testnet.arc.network",
+])).map(normalizeRpcUrl);
 export const ARC_TESTNET_EXPLORER_URL = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL || "https://testnet.arcscan.app";
 export const ETHEREUM_SEPOLIA_RPC_URLS = [
   process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
@@ -19,6 +30,19 @@ export const ETHEREUM_SEPOLIA_RPC_URLS = [
 
 export function normalizeRpcUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
+
+export function getArcBrowserRpcUrls() {
+  if (typeof window === "undefined") return ARC_TESTNET_RPC_URLS;
+  return [`${window.location.origin}/api/rpc/arc`, ...ARC_TESTNET_RPC_URLS];
+}
+
+export function createArcFallbackTransport(includeProxy = false) {
+  const urls = includeProxy ? getArcBrowserRpcUrls() : ARC_TESTNET_RPC_URLS;
+  return fallback(urls.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
+    rank: true,
+    retryCount: 2,
+  });
 }
 
 function isArcTestnetViemChain(chain: any) {
@@ -86,7 +110,7 @@ export async function getBrowserViemAdapter(): Promise<any> {
       createPublicClient({
         chain,
         transport: isArcTestnetViemChain(chain)
-          ? http(normalizeRpcUrl(ARC_TESTNET_RPC_URL))
+          ? createArcFallbackTransport(true)
           : fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url)))),
       }),
     capabilities: {

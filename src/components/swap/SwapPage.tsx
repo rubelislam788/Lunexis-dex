@@ -348,11 +348,11 @@ export default function SwapPage() {
 
 function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; price: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
   return (
-    <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
+    <div className="arc-token-amount-panel rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
       <div className="mb-3">
         <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase" }}>{label}</div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="arc-token-amount-row flex items-center gap-4">
         <div className="flex-1 min-w-0">
           <input
             type="text"
@@ -401,7 +401,7 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
             )}
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 self-start pt-8">
+        <div className="arc-token-selector-column flex flex-col items-end gap-2 self-start pt-8">
           <button
             onClick={onToken}
             className="flex items-center gap-2 px-3 py-2 rounded-full transition-all"

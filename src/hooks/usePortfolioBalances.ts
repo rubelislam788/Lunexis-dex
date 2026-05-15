@@ -6,7 +6,7 @@ import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
 import type { PortfolioBalance, TokenSymbol } from "@/types";
 import { arcChain } from "@/lib/wagmi";
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URL, ETHEREUM_SEPOLIA_CHAIN_ID, ETHEREUM_SEPOLIA_RPC_URLS, normalizeRpcUrl } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, ETHEREUM_SEPOLIA_RPC_URLS, createArcFallbackTransport, normalizeRpcUrl } from "@/lib/arc-kit";
 import { PORTFOLIO_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS, TOKEN_META } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
@@ -15,7 +15,7 @@ const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 const chainClients: Record<number, PublicClient> = {
   [ARC_CHAIN_ID]: createPublicClient({
     chain: arcChain,
-    transport: http(normalizeRpcUrl(ARC_TESTNET_RPC_URL)),
+    transport: createArcFallbackTransport(true),
   }),
   [SEPOLIA_CHAIN_ID]: createPublicClient({
     chain: sepolia,
@@ -193,7 +193,14 @@ export function usePortfolioBalances(refreshMs = 12000) {
     refresh();
     if (!isConnected) return;
     const timer = window.setInterval(refresh, refreshMs);
-    return () => window.clearInterval(timer);
+    const refreshWhenOnline = () => refresh();
+    window.addEventListener("online", refreshWhenOnline);
+    window.addEventListener("focus", refreshWhenOnline);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("online", refreshWhenOnline);
+      window.removeEventListener("focus", refreshWhenOnline);
+    };
   }, [isConnected, refresh, refreshMs]);
 
   return { balances, isLoading, lastUpdated, refresh };

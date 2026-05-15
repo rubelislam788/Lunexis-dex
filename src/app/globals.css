@@ -894,6 +894,321 @@ html[data-lunexis-theme="space"] body {
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
+.arc-mobile-menu-trigger {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .arc-mobile-menu-trigger {
+    display: grid;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 768px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+    touch-action: pan-y;
+  }
+
+  body {
+    background-size: 180% 180%;
+  }
+
+  .arc-topbar {
+    padding-inline: 0.7rem !important;
+    padding-top: max(0.6rem, env(safe-area-inset-top)) !important;
+  }
+
+  .arc-floating-topbar {
+    width: min(100%, calc(100vw - 1rem)) !important;
+    min-height: 54px;
+    grid-template-columns: 42px 1fr auto !important;
+    gap: 0.45rem !important;
+    padding: 0.45rem !important;
+    border-radius: 999px !important;
+  }
+
+  .arc-floating-brand {
+    justify-self: center !important;
+    padding: 0.2rem !important;
+  }
+
+  .arc-floating-brand :where(span, strong, p, small) {
+    display: none !important;
+  }
+
+  .arc-topbar-right {
+    gap: 0.25rem !important;
+  }
+
+  .arc-floating-action,
+  .arc-floating-menu-button,
+  .lunexis-icon-button {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+  }
+
+  .arc-floating-action span:not(.material-symbols-outlined),
+  .lunexis-icon-button span:not(.material-symbols-outlined):not(.lunexis-unread-dot) {
+    display: none !important;
+  }
+
+  .arc-topbar-wallet-only {
+    display: none !important;
+  }
+
+  .arc-with-sidebar-page {
+    padding-top: 4.8rem !important;
+    padding-left: 0 !important;
+    padding-bottom: 6.5rem !important;
+  }
+
+  .arc-with-sidebar-page > .relative,
+  .arc-page-shell > .relative,
+  .arc-with-sidebar-page .max-w-7xl,
+  .arc-with-sidebar-page .max-w-4xl {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .arc-sidebar-backdrop {
+    inset: 0;
+    z-index: 56;
+  }
+
+  .arc-sidebar-shell.arc-sidebar-overlay {
+    top: max(4.5rem, calc(env(safe-area-inset-top) + 4rem));
+    left: 0.75rem;
+    z-index: 57;
+    width: min(82vw, 18rem);
+    height: min(72vh, calc(100dvh - 6rem));
+    max-height: calc(100dvh - 6rem);
+    overflow-y: auto;
+    border-radius: 26px;
+  }
+
+  .arc-sidebar-nav-item,
+  .arc-sidebar-profile,
+  .arc-sidebar-faucet .arc-uiverse-button {
+    min-height: 44px !important;
+  }
+
+  .arc-card,
+  .lunexis-premium-card,
+  .lunexis-profile-card,
+  .glass-panel {
+    border-radius: 22px !important;
+  }
+
+  .arc-card:hover,
+  .lunexis-premium-card:hover,
+  .lunexis-profile-card:hover,
+  .glass-panel:hover,
+  .arc-page-shell :where(
+    section[class*="rounded"],
+    div[class*="rounded-"],
+    article[class*="rounded"],
+    aside[class*="rounded"]
+  ):not(.arc-sidebar-avatar):not(.arc-token-orb):not(.arc-token-ring):not(.arc-social-icons):not(.icon-content):hover {
+    transform: none !important;
+  }
+
+  .arc-token-amount-panel {
+    padding: 1rem !important;
+    border-radius: 24px !important;
+  }
+
+  .arc-token-amount-row {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 0.85rem !important;
+  }
+
+  .arc-token-selector-column {
+    width: 100%;
+    padding-top: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .arc-token-selector-column > button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    border-radius: 18px !important;
+  }
+
+  .arc-token-selector-column > div {
+    align-self: center;
+  }
+
+  .arc-swap-amount-input {
+    min-height: 58px;
+    font-size: clamp(28px, 10vw, 38px) !important;
+    border-radius: 20px !important;
+  }
+
+  .arc-swap-card {
+    padding: 1rem !important;
+  }
+
+  .arc-swap-card .grid.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+
+  .arc-swap-card button,
+  .lunexis-premium-card button,
+  .arc-card button {
+    min-height: 42px;
+  }
+
+  .arc-icon-action {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+
+  .lunexis-price-chart {
+    min-height: auto;
+    padding: 1rem !important;
+  }
+
+  .lunexis-token-chart-tabs,
+  .lunexis-timeframe-row,
+  .lunexis-analysis-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lunexis-token-chart-tabs button,
+  .lunexis-timeframe-row button,
+  .lunexis-analysis-tabs button {
+    flex: 0 0 auto;
+    min-height: 40px;
+  }
+
+  .lunexis-chart-canvas {
+    margin-inline: -0.25rem;
+    padding: 0.65rem 0 0;
+  }
+
+  .lunexis-insight-grid,
+  .lunexis-security-grid,
+  .lunexis-profile-stats,
+  .lunexis-chart-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lunexis-allocation-row {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .lunexis-share-preview {
+    min-height: 210px;
+    border-radius: 22px;
+  }
+
+  .lunexis-share-preview h3,
+  .lunexis-share-stats strong {
+    font-size: 1.45rem;
+    overflow-wrap: anywhere;
+  }
+
+  .lunexis-notification-panel,
+  .lunexis-theme-menu {
+    position: fixed;
+    top: max(4.5rem, calc(env(safe-area-inset-top) + 4rem));
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    max-height: min(72vh, 560px);
+    overflow: hidden;
+  }
+
+  .lunexis-notification-list {
+    max-height: calc(72vh - 6rem);
+  }
+
+  .fixed.inset-0.z-50 {
+    padding: 1rem;
+    align-items: flex-end !important;
+  }
+
+  .fixed.inset-0.z-50 > .arc-card,
+  .fixed.inset-0.z-50 > div.arc-card {
+    width: min(100%, 30rem) !important;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    border-radius: 28px !important;
+  }
+
+  .fixed.inset-0.z-50 input,
+  .fixed.inset-0.z-50 select,
+  .fixed.inset-0.z-50 textarea {
+    min-height: 46px;
+    font-size: 16px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .example-2 {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .example-2 .icon-content a {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+  }
+
+  .lunexis-bg-orb {
+    width: 22rem;
+    filter: blur(46px);
+    opacity: 0.2;
+  }
+
+  .lunexis-bg-particles span:nth-child(n + 15) {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1180px) {
+  .arc-floating-topbar {
+    width: min(960px, calc(100vw - 1.4rem));
+  }
+
+  .arc-floating-nav-link,
+  .arc-floating-action {
+    padding-inline: 0.65rem !important;
+  }
+
+  .arc-with-sidebar-page > .relative {
+    padding-inline: 1.25rem !important;
+  }
+}
+
+@supports (height: 100dvh) {
+  .arc-app-root {
+    min-height: 100dvh;
+  }
+}
+
 /* Gradient border */
 .gradient-border {
   position: relative;

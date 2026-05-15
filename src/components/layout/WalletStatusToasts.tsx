@@ -31,5 +31,17 @@ export default function WalletStatusToasts() {
     previousChainId.current = chain?.id;
   }, [chain?.id, chain?.name, isConnected, show]);
 
+  useEffect(() => {
+    const online = () => show("Network restored. Reconnecting wallet data...", "success");
+    const offline = () => show("Mobile network is offline. Lunexis will reconnect automatically.", "error");
+
+    window.addEventListener("online", online);
+    window.addEventListener("offline", offline);
+    return () => {
+      window.removeEventListener("online", online);
+      window.removeEventListener("offline", offline);
+    };
+  }, [show]);
+
   return <ToastContainer />;
 }

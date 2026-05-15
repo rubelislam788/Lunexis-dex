@@ -1,6 +1,6 @@
 import { getDefaultConfig, type Chain } from "@rainbow-me/rainbowkit";
-import { http } from "wagmi";
-import { ARC_TESTNET_RPC_URL, normalizeRpcUrl } from "@/lib/arc-kit";
+import { fallback, http } from "wagmi";
+import { ARC_TESTNET_RPC_URLS, getArcBrowserRpcUrls } from "@/lib/arc-kit";
 import { arcTestnetChain } from "@/lib/onchain";
 
 export const arcChain = {
@@ -10,6 +10,7 @@ export const arcChain = {
 } satisfies Chain;
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "lunexis";
+const arcTransportUrls = typeof window === "undefined" ? ARC_TESTNET_RPC_URLS : getArcBrowserRpcUrls();
 
 export const wagmiChains: readonly [Chain, ...Chain[]] = [arcChain];
 
@@ -19,6 +20,9 @@ export const wagmiConfig = getDefaultConfig({
   chains: wagmiChains,
   ssr: true,
   transports: {
-    [arcChain.id]: http(normalizeRpcUrl(ARC_TESTNET_RPC_URL)),
+    [arcChain.id]: fallback(arcTransportUrls.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
+      rank: true,
+      retryCount: 2,
+    }),
   },
 });

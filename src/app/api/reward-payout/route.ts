@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createPublicClient, createWalletClient, erc20Abi, http, isAddress, parseUnits, type Address } from "viem";
+import { createPublicClient, createWalletClient, erc20Abi, fallback, http, isAddress, parseUnits, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnetChain } from "@/lib/onchain";
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URL, normalizeRpcUrl } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URLS } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 
@@ -67,7 +67,10 @@ export async function POST(request: Request) {
   }
 
   const account = privateKeyToAccount(privateKey);
-  const transport = http(normalizeRpcUrl(ARC_TESTNET_RPC_URL));
+  const transport = fallback(ARC_TESTNET_RPC_URLS.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
+    rank: true,
+    retryCount: 2,
+  });
   const publicClient = createPublicClient({ chain: arcTestnetChain, transport });
   const walletClient = createWalletClient({ account, chain: arcTestnetChain, transport });
   const decimals = TOKEN_DECIMALS[token];
