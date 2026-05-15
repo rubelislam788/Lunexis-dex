@@ -223,7 +223,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       id: `custom-${Date.now()}`,
       title: `Custom Mission ${nextNumber}`,
       description: "Describe the mission requirement here.",
-      reward: "500 ARCQ",
+      reward: "500 points",
       rewardAmt: 500,
       xp: 250,
       difficulty: "Easy",

@@ -92,7 +92,7 @@ export default function ProfilePage() {
           <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               ["XP", profile.xp.toLocaleString()],
-              ["Rewards", `${profile.rewardsEarned.toLocaleString()} ARCQ`],
+              ["Rewards", `${profile.rewardsEarned.toLocaleString()} points`],
               ["Missions", `${profile.completedMissionIds.length} done`],
             ].map(([label, value]) => (
               <div key={label} className="arc-card rounded-2xl p-5">

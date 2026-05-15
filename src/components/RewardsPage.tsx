@@ -20,7 +20,7 @@ export default function RewardsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 34, fontWeight: 900, color: "#f8fbff" }}>Rewards Command</h1>
-            <p style={{ color: "#849495" }}>Claim ARCQ rewards, monitor XP, and track achievements.</p>
+            <p style={{ color: "#849495" }}>Claim points, monitor XP, and track achievements.</p>
           </div>
           <FaucetButton label="Get Test Tokens" />
         </div>
@@ -28,7 +28,7 @@ export default function RewardsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[
             ["Total XP", profile?.xp ?? 0],
-            ["Rewards Earned", `${profile?.rewardsEarned ?? 0} ARCQ`],
+            ["Rewards Earned", `${profile?.rewardsEarned ?? 0} points`],
             ["Completed", profile?.completedMissionIds.length ?? 0],
           ].map(([label, value]) => (
             <div key={label} className="arc-card rounded-2xl p-5">
@@ -49,7 +49,7 @@ export default function RewardsPage() {
                 <p style={{ color: eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
                   {eligible ? "Eligible from verified missions" : "Verify required missions first"}
                 </p>
-                <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{reward.amount} ARCQ</div>
+                <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{reward.amount} points</div>
                 <button
                   disabled={!eligible || claimed}
                   onClick={() => claim(reward.id, reward.amount)}

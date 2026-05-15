@@ -11,7 +11,7 @@ export default function StatsPage() {
     ["Arc Gas", stats.arcGasPrice, "Current Arc native USDC gas price"],
     ["Operators", stats.profiles.toLocaleString(), "Wallet profiles created locally in this app"],
     ["Verified Missions", stats.missionsCompleted.toLocaleString(), "Completed mission verifications"],
-    ["Rewards Claimed", `${stats.rewardsClaimed.toLocaleString()} ARCQ`, "Claimed mission reward points"],
+    ["Rewards Claimed", `${stats.rewardsClaimed.toLocaleString()} points`, "Claimed mission reward points"],
     ["Confirmed Swaps", stats.swaps.toLocaleString(), "Wallet-confirmed swap activities"],
   ];
 

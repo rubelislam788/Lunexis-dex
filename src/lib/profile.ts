@@ -142,7 +142,7 @@ export function claimReward(address: string, rewardId: string, amount: number): 
     rewardsEarned: current.rewardsEarned + amount,
     claimedRewardIds: [...current.claimedRewardIds, rewardId],
     activities: [
-      createActivity("reward", "Reward claimed", `${amount} ARCQ claimed from mission rewards.`),
+      createActivity("reward", "Reward claimed", `${amount} points claimed from mission rewards.`),
       ...current.activities,
     ],
   });

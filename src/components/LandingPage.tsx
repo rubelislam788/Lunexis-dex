@@ -13,7 +13,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   const stats = useAppStats();
   const liveStats = [
     { icon: "rocket_launch", color: "#00dce5", label: "Verified Missions", value: stats.missionsCompleted.toLocaleString(), tag: "LIVE_01" },
-    { icon: "currency_exchange", color: "#3d6aff", label: "Rewards Claimed", value: `${stats.rewardsClaimed.toLocaleString()} ARCQ`, tag: "LIVE_02" },
+    { icon: "currency_exchange", color: "#3d6aff", label: "Rewards Claimed", value: `${stats.rewardsClaimed.toLocaleString()} points`, tag: "LIVE_02" },
     { icon: "shield_person", color: "#8b5cf6", label: "Arc Block", value: stats.arcBlock, tag: "LIVE_03" },
   ];
 
@@ -124,7 +124,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               {
                 icon: "military_tech",
                 title: "Quest & Earn",
-                desc: "Complete on-chain missions, earn ARCQ rewards, and climb the leaderboard.",
+                desc: "Complete on-chain missions, earn points, and climb the leaderboard.",
                 color: "#8b5cf6",
                 page: "missions" as Page,
                 cta: "View Quests",
