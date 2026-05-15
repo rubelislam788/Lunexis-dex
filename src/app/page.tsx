@@ -149,7 +149,7 @@ export default function Home() {
         }}
       >
         <p style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "#444" }}>
-          (C) 2026 LUNEXIS. ARC CHAIN OPERATOR SURFACE.
+          2026 LUNEXIS - ARC TESTNET DEX
         </p>
         <ul className="example-2 arc-social-icons" aria-label="Social links">
           {SOCIAL_LINKS.map((link) => (
