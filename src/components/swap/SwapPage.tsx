@@ -1,7 +1,7 @@
 // src/components/swap/SwapPage.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
@@ -15,6 +15,21 @@ import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 
+type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
+
+function formatUsd(value: number) {
+  if (!Number.isFinite(value)) return "Price syncing";
+  return `$${value.toLocaleString(undefined, {
+    minimumFractionDigits: value >= 1 ? 2 : 4,
+    maximumFractionDigits: value >= 1 ? 2 : 6,
+  })}`;
+}
+
+function parseDisplayAmount(value: string) {
+  const numeric = Number(value.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 export default function SwapPage() {
   const { isConnected } = useAccount();
   const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
@@ -26,6 +41,7 @@ export default function SwapPage() {
   const [showFaucetHint, setShowFaucetHint] = useState(false);
   const [showNetworkSwitchModal, setShowNetworkSwitchModal] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
+  const [tokenPrices, setTokenPrices] = useState<TokenPriceMap>({ USDC: 1, EURC: 1 });
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
@@ -43,6 +59,12 @@ export default function SwapPage() {
     if (balancesLoading || item?.isLoading) return "Price syncing";
     return item?.unitPrice || "Price syncing";
   };
+  const amountValueLabel = (symbol: TokenSymbol, value: string) => {
+    const amount = parseDisplayAmount(value);
+    const price = tokenPrices[symbol];
+    if (!amount || !Number.isFinite(price)) return priceLabel(symbol);
+    return `≈ ${formatUsd(amount * Number(price))}`;
+  };
   const quoteRate = (() => {
     const amountIn = Number(state.amountIn || 0);
     const amountOut = Number(estimatedOut || 0);
@@ -59,6 +81,28 @@ export default function SwapPage() {
     const next = percent === 100 ? numeric : numeric * (percent / 100);
     updateState({ amountIn: next.toFixed(next >= 1 ? 4 : 6).replace(/\.?0+$/, "") });
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/token-prices")
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (cancelled) return;
+        setTokenPrices({
+          USDC: 1,
+          EURC: Number(data?.prices?.EURC) || 1,
+          WETH: Number(data?.prices?.WETH) || undefined,
+          ETH: Number(data?.prices?.ETH) || undefined,
+          ARC: Number(data?.prices?.ARC) || undefined,
+        });
+      })
+      .catch(() => null);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -141,7 +185,7 @@ export default function SwapPage() {
               token={fromToken.symbol}
               amount={state.amountIn}
               balance={balanceLabel(fromToken.symbol)}
-              price={priceLabel(fromToken.symbol)}
+              price={amountValueLabel(fromToken.symbol, state.amountIn)}
               onAmount={(amount) => updateState({ amountIn: amount })}
               onToken={() => setSelector("from")}
               onQuickAmount={setPercentAmount}
@@ -160,7 +204,7 @@ export default function SwapPage() {
               token={toToken.symbol}
               amount={quoteLoading ? "Loading..." : estimatedOut ? `~ ${estimatedOut}` : ""}
               balance={balanceLabel(toToken.symbol)}
-              price={priceLabel(toToken.symbol)}
+              price={amountValueLabel(toToken.symbol, estimatedOut)}
               readOnly
               onToken={() => setSelector("to")}
             />
