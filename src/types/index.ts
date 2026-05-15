@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "profile";
+export type Page = "landing" | "missions" | "quest-detail" | "leaderboard" | "rewards" | "stats" | "swap" | "bridge" | "profile";
 
 export interface MissionTask {
   id: string;

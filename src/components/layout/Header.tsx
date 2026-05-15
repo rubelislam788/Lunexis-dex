@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import ArcLogo from "@/components/ui/ArcLogo";
+import NotificationCenter from "@/components/ui/NotificationCenter";
+import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
 import type { Page } from "@/types";
 
 const ArcSwapConnectButton = dynamic<{ onProfile?: () => void }>(() => import("@/components/arc-swap/ArcSwapConnectButton"), { ssr: false });
@@ -84,6 +86,8 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
         </button>
 
         <div className="arc-topbar-right flex items-center gap-2">
+          <NotificationCenter />
+          <ThemeSwitcher />
           <button
             onClick={() => onNavigate("swap")}
             className={`arc-floating-action ${currentPage === "swap" ? "is-active" : ""}`}

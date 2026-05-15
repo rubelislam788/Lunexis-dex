@@ -1,0 +1,45 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+export default function InteractiveBackground() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const root = document.documentElement;
+    const move = (event: PointerEvent) => {
+      root.style.setProperty("--lunexis-pointer-x", `${(event.clientX / window.innerWidth) * 100}%`);
+      root.style.setProperty("--lunexis-pointer-y", `${(event.clientY / window.innerHeight) * 100}%`);
+      root.style.setProperty("--lunexis-pointer-dx", `${(event.clientX / window.innerWidth - 0.5) * 26}px`);
+      root.style.setProperty("--lunexis-pointer-dy", `${(event.clientY / window.innerHeight - 0.5) * 26}px`);
+    };
+
+    window.addEventListener("pointermove", move, { passive: true });
+    return () => window.removeEventListener("pointermove", move);
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <div className="lunexis-interactive-bg" aria-hidden="true">
+      <div className="lunexis-bg-orb lunexis-bg-orb-a" />
+      <div className="lunexis-bg-orb lunexis-bg-orb-b" />
+      <div className="lunexis-bg-orb lunexis-bg-orb-c" />
+      <div className="lunexis-bg-grid" />
+      <div className="lunexis-bg-particles">
+        {Array.from({ length: 28 }).map((_, index) => (
+          <span
+            key={index}
+            style={{
+              left: `${(index * 37) % 100}%`,
+              top: `${(index * 19) % 100}%`,
+              animationDuration: `${8 + index * 0.22}s`,
+              animationDelay: `${index * -0.18}s`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -230,6 +230,670 @@ body::after {
   color: #00dce5 !important;
 }
 
+html {
+  transition: background 0.45s ease, color 0.45s ease;
+}
+
+html[data-lunexis-theme="cyber"] {
+  --arc-cyan: #00fff0;
+  --arc-purple: #7c3cff;
+  --arc-pink: #00ff88;
+}
+
+html[data-lunexis-theme="neon"] {
+  --arc-cyan: #45f3ff;
+  --arc-purple: #f04cff;
+  --arc-pink: #ff2db2;
+}
+
+html[data-lunexis-theme="space"] {
+  --arc-cyan: #8fe8ff;
+  --arc-purple: #7b61ff;
+  --arc-pink: #b49cff;
+}
+
+html[data-lunexis-theme="cyber"] body {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(0, 255, 240, 0.18), transparent 25rem),
+    radial-gradient(circle at 82% 18%, rgba(0, 255, 136, 0.12), transparent 28rem),
+    linear-gradient(135deg, #000 0%, #001211 50%, #000 100%);
+}
+
+html[data-lunexis-theme="neon"] body {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(240, 76, 255, 0.18), transparent 26rem),
+    radial-gradient(circle at 80% 22%, rgba(69, 243, 255, 0.16), transparent 30rem),
+    linear-gradient(135deg, #030006 0%, #110019 48%, #000 100%);
+}
+
+html[data-lunexis-theme="space"] body {
+  background:
+    radial-gradient(circle at 16% 14%, rgba(143, 232, 255, 0.14), transparent 28rem),
+    radial-gradient(circle at 82% 12%, rgba(123, 97, 255, 0.2), transparent 32rem),
+    linear-gradient(135deg, #000 0%, #050316 52%, #000 100%);
+}
+
+.lunexis-interactive-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lunexis-bg-orb {
+  position: absolute;
+  width: 34rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  filter: blur(58px);
+  opacity: 0.28;
+  transform: translate3d(var(--lunexis-pointer-dx, 0), var(--lunexis-pointer-dy, 0), 0);
+  animation: lunexisOrbFloat 14s ease-in-out infinite alternate;
+}
+
+.lunexis-bg-orb-a {
+  top: 8%;
+  left: 4%;
+  background: #00dce5;
+}
+
+.lunexis-bg-orb-b {
+  top: 16%;
+  right: 8%;
+  background: #7c3cff;
+  animation-delay: -4s;
+}
+
+.lunexis-bg-orb-c {
+  bottom: -14%;
+  left: 40%;
+  background: #ff2db2;
+  animation-delay: -8s;
+}
+
+.lunexis-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(circle at var(--lunexis-pointer-x, 50%) var(--lunexis-pointer-y, 50%), #000 0, transparent 70%);
+}
+
+.lunexis-bg-particles span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(143, 232, 255, 0.9);
+  box-shadow: 0 0 16px rgba(56,189,248,0.8);
+  animation-name: lunexisParticleDrift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.lunexis-premium-card,
+.lunexis-profile-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 1.5rem;
+  background:
+    linear-gradient(145deg, rgba(0, 20, 24, 0.76), rgba(18, 22, 64, 0.72)) padding-box,
+    linear-gradient(135deg, rgba(0,220,229,0.9), rgba(61,106,255,0.72), rgba(255,45,178,0.65)) border-box;
+  border: 1px solid transparent;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.42), 0 0 30px rgba(0,220,229,0.1);
+  backdrop-filter: blur(18px);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.lunexis-premium-card:hover,
+.lunexis-profile-card:hover {
+  transform: translateY(-3px) scale(0.992);
+  box-shadow: 0 0 30px rgba(0,220,229,0.22), 0 26px 90px rgba(0,0,0,0.52);
+}
+
+.lunexis-premium-card::before,
+.lunexis-profile-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,0.09), transparent);
+  transform: translateX(-60%) rotate(8deg);
+  animation: lunexisCardSweep 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lunexis-kicker {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--arc-cyan);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lunexis-premium-card h2,
+.lunexis-profile-card h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: #f8fbff;
+  font-size: 1.35rem;
+  font-weight: 900;
+  margin-top: 0.25rem;
+}
+
+.lunexis-ai-assistant {
+  display: grid;
+  gap: 1rem;
+}
+
+.lunexis-ai-core {
+  width: 4.2rem;
+  height: 4.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1.4rem;
+  background: radial-gradient(circle, rgba(0,220,229,0.32), rgba(255,45,178,0.12));
+  border: 1px solid rgba(56,189,248,0.34);
+  color: var(--arc-cyan);
+  box-shadow: 0 0 32px rgba(0,220,229,0.26);
+  animation: lunexisAiPulse 2.8s ease-in-out infinite;
+}
+
+.lunexis-typing {
+  color: #b8c6d6;
+  max-width: 56rem;
+  overflow: hidden;
+  border-right: 1px solid rgba(143,232,255,0.85);
+  white-space: nowrap;
+  animation: lunexisTyping 5s steps(90, end), lunexisCaret 0.9s step-end infinite;
+}
+
+.lunexis-insight-grid,
+.lunexis-security-grid,
+.lunexis-profile-stats,
+.lunexis-chart-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.lunexis-insight-grid > div,
+.lunexis-security-grid > div,
+.lunexis-profile-stats > div,
+.lunexis-chart-summary > div {
+  border-radius: 18px;
+  padding: 0.9rem;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.075);
+}
+
+.lunexis-insight-grid span,
+.lunexis-security-grid span,
+.lunexis-profile-stats span,
+.lunexis-chart-summary span {
+  display: block;
+  color: #7f93a6;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.lunexis-insight-grid strong,
+.lunexis-security-grid strong,
+.lunexis-profile-stats strong,
+.lunexis-chart-summary strong {
+  display: block;
+  color: #38bdf8;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 900;
+  margin-top: 0.35rem;
+}
+
+.lunexis-analysis-tabs,
+.lunexis-token-chart-tabs,
+.lunexis-timeframe-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lunexis-analysis-tabs button,
+.lunexis-token-chart-tabs button,
+.lunexis-timeframe-row button,
+.lunexis-premium-card > .flex button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  background: rgba(255,255,255,0.04);
+  color: #dbeafe;
+  border: 1px solid rgba(255,255,255,0.08);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lunexis-analysis-tabs button:hover,
+.lunexis-token-chart-tabs button:hover,
+.lunexis-timeframe-row button:hover,
+.lunexis-premium-card > .flex button:hover,
+.lunexis-analysis-tabs button.is-active,
+.lunexis-token-chart-tabs button.is-active,
+.lunexis-timeframe-row button.is-active,
+.lunexis-premium-card > .flex button.is-active {
+  background: rgb(61, 106, 255);
+  box-shadow: 0 0 24px rgba(0,142,236,0.62);
+  color: #fff;
+}
+
+.lunexis-analysis-body {
+  min-height: 7rem;
+  border-radius: 22px;
+  padding: 1rem;
+  background: rgba(0,0,0,0.23);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #b8c6d6;
+}
+
+.lunexis-allocation-row {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) minmax(120px, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.lunexis-allocation-row > div:nth-child(2) {
+  background: rgba(255,255,255,0.07);
+}
+
+.lunexis-allocation-row i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: 0 0 18px rgba(56,189,248,0.45);
+}
+
+.lunexis-share-preview {
+  min-height: 230px;
+  border-radius: 28px;
+  padding: 1.4rem;
+  display: grid;
+  align-content: space-between;
+  border: 1px solid rgba(56,189,248,0.28);
+  background:
+    radial-gradient(circle at 78% 18%, rgba(0,220,229,0.22), transparent 16rem),
+    linear-gradient(135deg, rgba(0,20,24,0.95), rgba(25,26,72,0.92), rgba(80,0,55,0.7));
+  animation: lunexisPreviewFloat 5s ease-in-out infinite alternate;
+}
+
+.lunexis-share-preview.is-cyber {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(0,255,136,0.19), transparent 18rem),
+    linear-gradient(135deg, rgba(0,0,0,0.98), rgba(0,45,56,0.9), rgba(36,0,80,0.72));
+}
+
+.lunexis-share-preview span,
+.lunexis-share-preview small {
+  color: #8fe8ff;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lunexis-share-preview h3 {
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+  margin-top: 0.5rem;
+}
+
+.lunexis-share-preview p {
+  color: #9fb2c4;
+}
+
+.lunexis-share-stats strong {
+  display: block;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.lunexis-profile-card img,
+.lunexis-profile-card > .flex > span {
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 1.5rem;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #38bdf8, #ff2db2);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  box-shadow: 0 0 30px rgba(56,189,248,0.3);
+}
+
+.lunexis-profile-card p,
+.lunexis-security-card p {
+  color: #9fb2c4;
+}
+
+.lunexis-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.lunexis-badge-row span,
+.lunexis-risk-pill {
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.18);
+  color: #dff8ff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.lunexis-risk-pill.is-low {
+  color: #53ffa2;
+  border-color: rgba(83,255,162,0.32);
+  background: rgba(83,255,162,0.09);
+}
+
+.lunexis-risk-pill.is-review,
+.lunexis-risk-pill.is-medium {
+  color: #ffcf5c;
+  border-color: rgba(255,207,92,0.32);
+  background: rgba(255,207,92,0.09);
+}
+
+.lunexis-security-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.lunexis-security-list > div {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  border-radius: 18px;
+  padding: 0.8rem;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.lunexis-security-list button {
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  opacity: 0.42;
+}
+
+.lunexis-price-chart {
+  min-height: 470px;
+}
+
+.lunexis-token-chart-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.lunexis-chart-summary strong.is-up {
+  color: #53ffa2;
+}
+
+.lunexis-chart-summary strong.is-down {
+  color: #ff5f98;
+}
+
+.lunexis-chart-canvas {
+  margin-top: 1rem;
+  border-radius: 24px;
+  padding: 1rem 0.4rem 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(255,255,255,0.025));
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.lunexis-animated-balance {
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.lunexis-animated-balance.is-up {
+  color: #53ffa2;
+  text-shadow: 0 0 16px rgba(83,255,162,0.55);
+}
+
+.lunexis-animated-balance.is-down {
+  color: #ff7ab8;
+  text-shadow: 0 0 16px rgba(255,45,178,0.45);
+}
+
+.lunexis-notification-center,
+.lunexis-theme-switcher {
+  position: relative;
+}
+
+.lunexis-icon-button {
+  min-width: 42px;
+  padding-inline: 0.75rem !important;
+}
+
+.lunexis-unread-dot {
+  position: absolute;
+  right: -5px;
+  top: -6px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #ff2db2;
+  color: white;
+  font-size: 10px;
+}
+
+.lunexis-notification-panel,
+.lunexis-theme-menu {
+  position: absolute;
+  top: calc(100% + 0.7rem);
+  right: 0;
+  width: min(360px, 88vw);
+  border-radius: 24px;
+  padding: 1rem;
+  background: rgba(4, 8, 18, 0.84);
+  border: 1px solid rgba(56,189,248,0.22);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 30px rgba(56,189,248,0.12);
+  backdrop-filter: blur(20px);
+  animation: lunexisPanelIn 0.22s ease both;
+}
+
+.lunexis-theme-menu {
+  width: 180px;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lunexis-theme-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255,255,255,0.04);
+  color: #dbeafe;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.lunexis-theme-menu button span {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #00dce5, #ff2db2);
+}
+
+.lunexis-theme-menu button.is-active {
+  background: rgba(61,106,255,0.34);
+}
+
+.lunexis-notification-panel h3 {
+  color: #f8fbff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+}
+
+.lunexis-notification-panel p {
+  color: #849495;
+  font-size: 0.78rem;
+}
+
+.lunexis-notification-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.lunexis-notification-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  border-radius: 18px;
+  padding: 0.8rem;
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.14);
+}
+
+.lunexis-notification-card.is-read {
+  background: rgba(255,255,255,0.03);
+  opacity: 0.72;
+}
+
+.lunexis-notification-card .material-symbols-outlined {
+  color: #38bdf8;
+}
+
+.lunexis-notification-card strong {
+  color: #f8fbff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+}
+
+.lunexis-notification-card small {
+  color: #5f778b;
+  font-size: 0.68rem;
+}
+
+.lunexis-mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .lunexis-mobile-bottom-nav {
+    position: fixed;
+    left: 50%;
+    bottom: 1rem;
+    z-index: 55;
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    width: min(94vw, 430px);
+    padding: 0.5rem;
+    border-radius: 999px;
+    background: rgba(2, 7, 17, 0.78);
+    border: 1px solid rgba(56,189,248,0.22);
+    box-shadow: 0 20px 70px rgba(0,0,0,0.55), 0 0 28px rgba(0,220,229,0.16);
+    backdrop-filter: blur(20px);
+  }
+
+  .lunexis-mobile-bottom-nav button {
+    display: grid;
+    place-items: center;
+    gap: 0.12rem;
+    border-radius: 999px;
+    padding: 0.48rem 0.2rem;
+    color: #8da2b5;
+    background: transparent;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .lunexis-mobile-bottom-nav button.is-active {
+    color: #fff;
+    background: rgba(61,106,255,0.6);
+    box-shadow: 0 0 24px rgba(61,106,255,0.42);
+  }
+
+  .lunexis-mobile-bottom-nav small {
+    font-size: 0.58rem;
+    font-weight: 900;
+  }
+
+  .arc-footer-shell {
+    padding-bottom: 6rem !important;
+  }
+
+  .lunexis-typing {
+    white-space: normal;
+    border-right: 0;
+    animation: none;
+  }
+}
+
+@keyframes lunexisOrbFloat {
+  from { transform: translate3d(-1rem, -0.5rem, 0) scale(0.96); }
+  to { transform: translate3d(1.2rem, 1rem, 0) scale(1.06); }
+}
+
+@keyframes lunexisParticleDrift {
+  from { transform: translateY(0); opacity: 0.3; }
+  to { transform: translateY(-38px); opacity: 1; }
+}
+
+@keyframes lunexisCardSweep {
+  0%, 55% { transform: translateX(-65%) rotate(8deg); opacity: 0; }
+  70% { opacity: 1; }
+  100% { transform: translateX(65%) rotate(8deg); opacity: 0; }
+}
+
+@keyframes lunexisAiPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 26px rgba(0,220,229,0.18); }
+  50% { transform: scale(1.04); box-shadow: 0 0 44px rgba(0,220,229,0.36); }
+}
+
+@keyframes lunexisTyping {
+  from { max-width: 0; }
+  to { max-width: 100%; }
+}
+
+@keyframes lunexisCaret {
+  50% { border-color: transparent; }
+}
+
+@keyframes lunexisPreviewFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px); }
+}
+
+@keyframes lunexisPanelIn {
+  from { transform: translateY(10px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
 /* Gradient border */
 .gradient-border {
   position: relative;

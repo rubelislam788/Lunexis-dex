@@ -14,6 +14,7 @@ import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
+import TokenPriceChart from "@/components/swap/TokenPriceChart";
 
 type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
 
@@ -264,6 +265,7 @@ export default function SwapPage() {
               <button onClick={reset} className="btn-ghost w-full py-3 rounded-2xl mt-3">Swap Again</button>
             )}
           </section>
+          <TokenPriceChart activeToken={fromToken.symbol} />
         </div>
       </div>
 

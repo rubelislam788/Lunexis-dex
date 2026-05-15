@@ -8,6 +8,11 @@ import { formatRewardTotals } from "@/lib/rewards";
 import { TOKEN_META } from "@/lib/tokens";
 import TokenIcon from "@/components/ui/TokenIcon";
 import ActivityTimeline from "@/components/ActivityTimeline";
+import AnimatedBalance from "@/components/ui/AnimatedBalance";
+import SmartPortfolioAssistant from "@/components/portfolio/SmartPortfolioAssistant";
+import PortfolioShareCard from "@/components/portfolio/PortfolioShareCard";
+import AiProfileCard from "@/components/profile/AiProfileCard";
+import WalletSecurityChecker from "@/components/security/WalletSecurityChecker";
 
 export default function ProfilePage() {
   const { profile, address, isConnected, update } = useProfile();
@@ -119,7 +124,7 @@ export default function ProfilePage() {
                   <div key={balance.token} className="p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${TOKEN_META[balance.token].accent}44` }}>
                     <TokenIcon symbol={balance.token} size={42} />
                     <div style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginTop: 10 }}>
-                      {balance.isLoading ? <span className="arc-skeleton inline-block w-16 h-4 rounded-full" /> : `${balance.amount} ${balance.token}`}
+                      {balance.isLoading ? <span className="arc-skeleton inline-block w-16 h-4 rounded-full" /> : <AnimatedBalance value={balance.amount} suffix={balance.token} />}
                     </div>
                     <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900 }}>{balance.value}</div>
                     <div style={{ color: "#849495", fontSize: 10 }}>{balance.unitPrice}</div>
@@ -134,6 +139,12 @@ export default function ProfilePage() {
               <ActivityTimeline activities={profile.activities} />
             </div>
           </section>
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+          <SmartPortfolioAssistant />
+          <AiProfileCard />
+          <PortfolioShareCard />
+          <WalletSecurityChecker />
         </div>
       </div>
       {isEditing && (

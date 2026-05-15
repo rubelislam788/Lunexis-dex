@@ -8,20 +8,23 @@ import LandingPage from "@/components/LandingPage";
 import MissionsPage from "@/components/MissionsPage";
 import QuestDetailPage from "@/components/QuestDetailPage";
 import SwapPage from "@/components/swap/SwapPage";
+import BridgePage from "@/components/bridge/BridgePage";
 import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
 import LeaderboardPage from "@/components/LeaderboardPage";
 import StatsPage from "@/components/StatsPage";
 import LunexisIntro from "@/components/ui/LunexisIntro";
+import InteractiveBackground from "@/components/ui/InteractiveBackground";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import type { Quest } from "@/types";
 import { QUESTS } from "@/lib/missions";
 
 export const dynamic = "force-dynamic";
 
-const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "profile"];
+const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "profile"];
 const NAV_STORAGE_KEY = "lunexis.current-page.v1";
 const QUEST_HASH_PREFIX = "quest/";
-const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "profile"];
+const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "bridge", "profile"];
 
 function findQuestById(questId?: string) {
   if (!questId) return undefined;
@@ -173,6 +176,7 @@ export default function Home() {
 
   return (
     <div className="arc-app-root" style={appShellStyle}>
+      <InteractiveBackground />
       {currentPage === "landing" && <LunexisIntro />}
       <Header
         currentPage={currentPage}
@@ -198,12 +202,15 @@ export default function Home() {
         {currentPage === "landing" && <LandingPage onNavigate={navigate} />}
         {currentPage === "missions" && <MissionsPage onNavigate={navigate} onSelectQuest={selectQuest} />}
         {currentPage === "swap" && <SwapPage />}
+        {currentPage === "bridge" && <BridgePage />}
         {currentPage === "leaderboard" && <LeaderboardPage />}
         {currentPage === "rewards" && <RewardsPage />}
         {currentPage === "stats" && <StatsPage />}
         {currentPage === "profile" && <ProfilePage />}
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
+
+      <MobileBottomNav currentPage={currentPage} onNavigate={navigate} />
 
       <footer
         className="arc-footer-shell py-8 px-6 md:px-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-center border-t"
