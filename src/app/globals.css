@@ -529,7 +529,7 @@ body::after {
   padding: 7px 12px !important;
   border-radius: 8px !important;
   background: transparent !important;
-  border: 1px solid rgb(61, 106, 255) !important;
+  border: 1px solid transparent !important;
   color: #ffffff !important;
   font-size: 10px !important;
   font-weight: 900 !important;
@@ -557,7 +557,7 @@ body::after {
   place-items: center;
   border-radius: 8px !important;
   background: transparent !important;
-  border: 1px solid rgb(61, 106, 255) !important;
+  border: 1px solid transparent !important;
   box-shadow: none !important;
   overflow: hidden !important;
   transition: all 0.2s ease-in !important;
@@ -622,7 +622,7 @@ body::after {
   border-radius: 8px !important;
   background: transparent !important;
   color: #ffffff !important;
-  border: 1px solid rgb(61, 106, 255) !important;
+  border: 1px solid transparent !important;
   font-family: "Space Grotesk", sans-serif;
   font-size: 10px !important;
   font-weight: 900 !important;
@@ -650,7 +650,7 @@ body::after {
   border-radius: 8px !important;
   padding: 7px 12px !important;
   background: transparent !important;
-  border: 1px solid rgb(61, 106, 255) !important;
+  border: 1px solid transparent !important;
   color: #ffffff !important;
   font-size: 10px !important;
   box-shadow: none !important;
