@@ -1,7 +1,7 @@
 // src/components/swap/SwapPage.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
@@ -9,7 +9,7 @@ import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
 import { ARC_TESTNET_EXPLORER_URL } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
-import { SWAP_TOKENS, TOKEN_META } from "@/lib/tokens";
+import { SWAP_TOKENS, TOKEN_CONTRACTS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
@@ -17,6 +17,8 @@ import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 import TokenPriceChart from "@/components/swap/TokenPriceChart";
 
 type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
+type SmartError = { title: string; message: string; action: string; tone?: "warning" | "error" };
+const RECENT_SWAP_TOKEN_KEY = "lunexis.recent-swap-tokens.v1";
 
 function formatUsd(value: number) {
   if (!Number.isFinite(value)) return "Price syncing";
@@ -31,6 +33,45 @@ function parseDisplayAmount(value: string) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
+function normalizeSwapError(error: any): SmartError {
+  const raw = String(error?.shortMessage || error?.message || error || "Swap failed");
+  const message = raw.toLowerCase();
+
+  if (/user rejected|rejected|denied|cancel/i.test(raw)) {
+    return { title: "Wallet rejected transaction", message: "You cancelled the wallet confirmation. No funds were moved.", action: "Open the wallet prompt again when you are ready." };
+  }
+  if (/insufficient|exceeds balance|funds|balance/i.test(raw)) {
+    return { title: "Insufficient balance", message: "Your wallet does not have enough test USDC/EURC for this swap and gas.", action: "Use the Circle faucet, then refresh balances.", tone: "warning" };
+  }
+  if (/network|chain|switch/i.test(raw)) {
+    return { title: "Wrong network selected", message: "Stablecoin swaps run on ARC Testnet only.", action: "Switch your wallet to ARC Chain and try again.", tone: "warning" };
+  }
+  if (/slippage|amountoutmin|price impact/i.test(raw)) {
+    return { title: "Slippage too high", message: "The quote moved before the transaction could confirm.", action: "Try 0.5% or 1% slippage, or reduce the amount.", tone: "warning" };
+  }
+  if (/liquidity|route|amounts out|pair/i.test(raw)) {
+    return { title: "Not enough liquidity", message: "The USDC/EURC route could not return a valid onchain quote.", action: "Try a smaller amount or wait for route liquidity." };
+  }
+  if (/timeout|timed out|deadline/i.test(raw)) {
+    return { title: "Transaction timeout", message: "The wallet or RPC connection took too long to respond.", action: "Check mobile data/WiFi and submit again." };
+  }
+  if (/rpc|fetch|connection|network error|failed to fetch/i.test(raw)) {
+    return { title: "RPC connection failed", message: "The mobile network could not reach the ARC RPC endpoint.", action: "Lunexis will retry through fallback RPC. Refresh and try again." };
+  }
+
+  return { title: "Swap could not complete", message: raw.slice(0, 160), action: "Review amount, balance, and network, then try again." };
+}
+
+function loadRecentTokens(): TokenSymbol[] {
+  if (typeof window === "undefined") return SWAP_TOKENS;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(RECENT_SWAP_TOKEN_KEY) || "[]") as TokenSymbol[];
+    return [...parsed.filter((symbol) => SWAP_TOKENS.includes(symbol)), ...SWAP_TOKENS].filter((symbol, index, list) => list.indexOf(symbol) === index);
+  } catch {
+    return SWAP_TOKENS;
+  }
+}
+
 export default function SwapPage() {
   const { isConnected } = useAccount();
   const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
@@ -43,10 +84,24 @@ export default function SwapPage() {
   const [showNetworkSwitchModal, setShowNetworkSwitchModal] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
   const [tokenPrices, setTokenPrices] = useState<TokenPriceMap>({ USDC: 1, EURC: 1 });
+  const [smartError, setSmartError] = useState<SmartError | null>(null);
+  const [tokenSearch, setTokenSearch] = useState("");
+  const [recentTokens, setRecentTokens] = useState<TokenSymbol[]>(SWAP_TOKENS);
+  const [customSlippage, setCustomSlippage] = useState("");
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
   const selectableSwapTokens = SWAP_TOKENS;
+  const filteredTokens = useMemo(() => {
+    const query = tokenSearch.trim().toLowerCase();
+    if (!query) return selectableSwapTokens;
+    return selectableSwapTokens.filter((symbol) => {
+      const meta = TOKEN_META[symbol];
+      const addresses = Object.values(TOKEN_CONTRACTS[symbol] ?? {}).map((address) => String(address).toLowerCase());
+      return symbol.toLowerCase().includes(query) || meta.label.toLowerCase().includes(query) || addresses.some((address) => address.includes(query));
+    });
+  }, [selectableSwapTokens, tokenSearch]);
+  const unsupportedTokenSearch = tokenSearch.trim().length > 3 && filteredTokens.length === 0;
   const swapIntro = routerConfigured
     ? "Swap USDC and EURC with live wallet balances and onchain execution."
     : "Swap tokens on Arc Testnet with a clean wallet-first trading experience.";
@@ -64,7 +119,7 @@ export default function SwapPage() {
     const amount = parseDisplayAmount(value);
     const price = tokenPrices[symbol];
     if (!amount || !Number.isFinite(price)) return priceLabel(symbol);
-    return `≈ ${formatUsd(amount * Number(price))}`;
+    return `~ ${formatUsd(amount * Number(price))}`;
   };
   const quoteRate = (() => {
     const amountIn = Number(state.amountIn || 0);
@@ -76,6 +131,16 @@ export default function SwapPage() {
     return `1 ${fromToken.symbol} = ${rate.toLocaleString(undefined, { minimumFractionDigits: rate >= 1 ? 2 : 4, maximumFractionDigits: 6 })} ${toToken.symbol}`;
   })();
   const fromBalanceAmount = balances.find((balance) => balance.token === fromToken.symbol)?.amount ?? "0";
+  const toBalanceAmount = balances.find((balance) => balance.token === toToken.symbol)?.amount ?? "0";
+  const emptyWallet = isConnected && !balancesLoading && Number(fromBalanceAmount || 0) <= 0 && Number(toBalanceAmount || 0) <= 0;
+  const lowBalance = isConnected && !balancesLoading && Number(fromBalanceAmount || 0) > 0 && Number(fromBalanceAmount || 0) < Number(state.amountIn || 0);
+  const priceImpact = (() => {
+    const amountIn = Number(state.amountIn || 0);
+    const amountOut = Number(estimatedOut || 0);
+    if (!amountIn || !amountOut) return 0;
+    return Math.abs(1 - amountOut / amountIn) * 100;
+  })();
+  const highPriceImpact = priceImpact >= 1;
   const setPercentAmount = (percent: number) => {
     const numeric = Number(fromBalanceAmount || 0);
     if (!Number.isFinite(numeric) || numeric <= 0) return;
@@ -93,9 +158,6 @@ export default function SwapPage() {
         setTokenPrices({
           USDC: 1,
           EURC: Number(data?.prices?.EURC) || 1,
-          WETH: Number(data?.prices?.WETH) || undefined,
-          ETH: Number(data?.prices?.ETH) || undefined,
-          ARC: Number(data?.prices?.ARC) || undefined,
         });
       })
       .catch(() => null);
@@ -104,6 +166,18 @@ export default function SwapPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    setRecentTokens(loadRecentTokens());
+  }, []);
+
+  useEffect(() => {
+    if (isConnected && currentChainId !== requiredChainId) {
+      setShowNetworkSwitchModal(true);
+    } else if (currentChainId === requiredChainId) {
+      setShowNetworkSwitchModal(false);
+    }
+  }, [currentChainId, isConnected, requiredChainId]);
 
   const handleSwap = async () => {
     if (!isConnected) {
@@ -121,9 +195,10 @@ export default function SwapPage() {
       refresh();
       show(`Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}`, "success");
     } catch (err: any) {
-      const message = err?.message || "Swap failed";
-      setShowFaucetHint(/insufficient|funds|balance/i.test(message));
-      show(message, "error");
+      const nextError = normalizeSwapError(err);
+      setSmartError(nextError);
+      setShowFaucetHint(/balance|faucet|funds/i.test(`${nextError.title} ${nextError.message} ${nextError.action}`));
+      show(nextError.title, "error");
     }
   };
 
@@ -133,7 +208,13 @@ export default function SwapPage() {
       setShowNetworkSwitchModal(false);
       show("Wallet switched to ARC Chain", "success");
     } catch (err: any) {
-      show(err?.message || "Network switch failed", "error");
+      const nextError = normalizeSwapError(err);
+      setSmartError({
+        title: /4902|unrecognized|not configured/i.test(String(err?.message)) ? "Add ARC Chain to wallet" : nextError.title,
+        message: /4902|unrecognized|not configured/i.test(String(err?.message)) ? "Your wallet does not have ARC Testnet yet. RainbowKit can add it from the configured chain list." : nextError.message,
+        action: "Open wallet network settings or retry the switch button.",
+      });
+      show("Network switch needs attention", "error");
     }
   };
 
@@ -143,7 +224,9 @@ export default function SwapPage() {
       pushActivity(createActivity("wallet", `Approved ${state.fromToken}`, `Approval confirmed for ${state.fromToken} swap routing.`, state.fromToken as TokenSymbol, "completed", result?.hash));
       show(`Approved ${state.fromToken}`, "success");
     } catch (err: any) {
-      show(err?.message || "Approval failed", "error");
+      const nextError = normalizeSwapError(err);
+      setSmartError(nextError);
+      show(nextError.title, "error");
     }
   };
 
@@ -153,7 +236,24 @@ export default function SwapPage() {
     } else {
       updateState(symbol === state.fromToken ? { toToken: symbol, fromToken: state.toToken } : { toToken: symbol });
     }
+    const nextRecent = [symbol, ...recentTokens.filter((item) => item !== symbol)].filter((item, index, list) => list.indexOf(item) === index && SWAP_TOKENS.includes(item));
+    setRecentTokens(nextRecent);
+    window.localStorage.setItem(RECENT_SWAP_TOKEN_KEY, JSON.stringify(nextRecent));
+    setTokenSearch("");
     setSelector(null);
+  };
+
+  const setSlippage = (slippage: string) => {
+    setCustomSlippage("");
+    updateState({ slippage });
+  };
+
+  const applyCustomSlippage = (value: string) => {
+    setCustomSlippage(value);
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0 && numeric <= 10) {
+      updateState({ slippage: `${numeric}%` });
+    }
   };
 
   const isLoading = state.status === "approving" || state.status === "swapping";
@@ -191,6 +291,8 @@ export default function SwapPage() {
               onToken={() => setSelector("from")}
               onQuickAmount={setPercentAmount}
             />
+
+            {emptyWallet && <EmptyWalletGuide />}
             <div className="flex justify-center my-4">
               <button
                 onClick={() => updateState({ fromToken: state.toToken, toToken: state.fromToken })}
@@ -217,18 +319,39 @@ export default function SwapPage() {
               onToken={() => setSelector("to")}
             />
 
-            <div className="grid grid-cols-3 gap-3 my-6">
-              {["auto", "0.5%", "1%"].map((slippage) => (
-                <button key={slippage} onClick={() => updateState({ slippage })} className="btn-ghost rounded-xl py-3" style={{ color: state.slippage === slippage ? "#38bdf8" : "#849495", fontSize: 12 }}>
+            <div className="lunexis-swap-settings my-6">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <span>Slippage</span>
+                <strong>{state.slippage}</strong>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {["0.1%", "0.5%", "1%"].map((slippage) => (
+                  <button key={slippage} onClick={() => setSlippage(slippage)} className={`btn-ghost rounded-full py-3 ${state.slippage === slippage ? "is-active" : ""}`} style={{ color: state.slippage === slippage ? "#38bdf8" : "#849495", fontSize: 12 }}>
                   {slippage}
                 </button>
               ))}
+              </div>
+              <input
+                value={customSlippage}
+                onChange={(event) => applyCustomSlippage(event.target.value)}
+                placeholder="Custom slippage %"
+                inputMode="decimal"
+                className="lunexis-slippage-input"
+              />
             </div>
 
-            <div className="flex justify-between rounded-2xl p-4 mb-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show={Boolean(state.amountIn && !quoteLoading)} />
+
+            <div className="flex justify-between rounded-2xl p-4 mb-6" style={{ background: highPriceImpact ? "rgba(255,156,0,0.1)" : "rgba(255,255,255,0.03)", border: highPriceImpact ? "1px solid rgba(255,156,0,0.35)" : "1px solid rgba(255,255,255,0.06)" }}>
               <span style={{ color: "#849495" }}>Price Impact</span>
-              <span style={{ color: estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? "< 0.1%" : "Onchain Quote"}</span>
+              <span style={{ color: highPriceImpact ? "#ffb020" : estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? `${priceImpact.toFixed(2)}%` : "Onchain Quote"}</span>
             </div>
+            {highPriceImpact && (
+              <div className="lunexis-impact-warning mb-6">
+                <strong>High price impact detected</strong>
+                <span>Large trade may affect output. Consider reducing the amount.</span>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl p-4 mb-6" style={{ background: "rgba(0,220,229,0.055)", border: "1px solid rgba(56,189,248,0.14)" }}>
               <span style={{ color: "#849495" }}>Swap Price</span>
               <span style={{ color: estimatedOut ? "#38bdf8" : "#9fb2c4", fontFamily: "'Space Grotesk'", fontWeight: 900, fontSize: 13 }}>
@@ -251,11 +374,9 @@ export default function SwapPage() {
               </div>
             )}
             {showFaucetHint && (
-              <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
-                <span style={{ color: "#ffb7eb", fontSize: 12 }}>Transaction may need test tokens.</span>
-                <FaucetButton label="Get Test Tokens" compact />
-              </div>
+              <FaucetHelper />
             )}
+            {lowBalance && <FaucetHelper />}
             {state.txHash && (
               <a href={`${ARC_TESTNET_EXPLORER_URL}/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
@@ -271,9 +392,31 @@ export default function SwapPage() {
 
       {selector && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }} onClick={() => setSelector(null)}>
-          <div className="arc-card rounded-3xl p-6 w-96" onClick={(event) => event.stopPropagation()}>
+          <div className="arc-card rounded-3xl p-6 w-[min(440px,92vw)]" onClick={(event) => event.stopPropagation()}>
             <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Select Token</h3>
-            {selectableSwapTokens.map((symbol) => {
+            <input
+              value={tokenSearch}
+              onChange={(event) => setTokenSearch(event.target.value)}
+              placeholder="Search USDC, EURC, or contract address"
+              className="lunexis-token-search mb-4"
+              autoFocus
+            />
+            <div className="lunexis-recent-tokens mb-4">
+              <span>Recent</span>
+              {recentTokens.map((symbol) => (
+                <button key={symbol} onClick={() => pickToken(symbol)}>
+                  <TokenIcon symbol={symbol} size={20} />
+                  {symbol}
+                </button>
+              ))}
+            </div>
+            {unsupportedTokenSearch && (
+              <div className="lunexis-unsupported-token mb-4">
+                <strong>Unsupported Token</strong>
+                <span>Lunexis currently supports only USDC and EURC.</span>
+              </div>
+            )}
+            {filteredTokens.map((symbol) => {
               const token = TOKEN_META[symbol];
               return (
                 <button key={symbol} onClick={() => pickToken(symbol)} className="w-full flex items-center gap-4 p-4 rounded-2xl mb-2 btn-ghost" style={{ borderColor: `${token.accent}44` }}>
@@ -317,7 +460,7 @@ export default function SwapPage() {
               </div>
             </div>
             <p style={{ color: "#9fb2c4", fontSize: 14, lineHeight: 1.7, marginBottom: 22 }}>
-              Swap korar age wallet Arc Testnet e switch korte hobe. Apni jei chain e thaken, ekhane click korlei wallet Arc Chain e switch request pabe.
+              USDC and EURC swaps execute only on ARC Testnet. Switch once and Lunexis will recheck your wallet automatically.
             </p>
             <button onClick={handleSwitchNetwork} disabled={isSwitchingNetwork} className="btn-primary w-full py-3.5 rounded-2xl mb-3">
               {isSwitchingNetwork ? "Switching..." : "Switch to Arc Chain"}
@@ -342,6 +485,60 @@ export default function SwapPage() {
         explorerBaseUrl={`${ARC_TESTNET_EXPLORER_URL}/tx/`}
         onClose={() => setSuccessTx(null)}
       />
+      {smartError && <SmartErrorPopup error={smartError} onClose={() => setSmartError(null)} />}
+    </div>
+  );
+}
+
+function RoutePreview({ fromToken, toToken, show }: { fromToken: TokenSymbol; toToken: TokenSymbol; show: boolean }) {
+  if (!show || !SWAP_TOKENS.includes(fromToken) || !SWAP_TOKENS.includes(toToken)) return null;
+  return (
+    <div className="lunexis-route-preview">
+      <span>Route</span>
+      <div>
+        <TokenIcon symbol={fromToken} size={28} />
+        <strong>{fromToken}</strong>
+        <i />
+        <TokenIcon symbol={toToken} size={28} />
+        <strong>{toToken}</strong>
+      </div>
+    </div>
+  );
+}
+
+function FaucetHelper() {
+  return (
+    <div className="lunexis-faucet-helper mt-3">
+      <div>
+        <strong>Low balance detected</strong>
+        <span>Need test tokens? Get faucet funds from Circle.</span>
+      </div>
+      <FaucetButton label="Get Faucet Funds" compact />
+    </div>
+  );
+}
+
+function EmptyWalletGuide() {
+  return (
+    <div className="lunexis-empty-guide mt-4">
+      <strong>Start your first stablecoin swap</strong>
+      {["Get faucet funds", "Connect wallet", "Swap USDC <> EURC", "Complete first transaction"].map((step, index) => (
+        <div key={step}>
+          <span>{index + 1}</span>
+          {step}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SmartErrorPopup({ error, onClose }: { error: SmartError; onClose: () => void }) {
+  return (
+    <div className={`lunexis-smart-error is-${error.tone ?? "error"}`}>
+      <button onClick={onClose} aria-label="Close error">x</button>
+      <strong>{error.title}</strong>
+      <span>{error.message}</span>
+      <small>{error.action}</small>
     </div>
   );
 }

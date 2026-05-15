@@ -1209,6 +1209,306 @@ html[data-lunexis-theme="space"] body {
   }
 }
 
+.lunexis-swap-settings {
+  border-radius: 22px;
+  padding: 0.9rem;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.lunexis-swap-settings span {
+  color: #849495;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lunexis-swap-settings strong {
+  color: #38bdf8;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+}
+
+.lunexis-swap-settings button.is-active {
+  background: rgba(61,106,255,0.42) !important;
+  box-shadow: 0 0 24px rgba(0,142,236,0.42) !important;
+  color: #fff !important;
+}
+
+.lunexis-slippage-input,
+.lunexis-token-search {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 999px !important;
+  border: 1px solid rgba(56,189,248,0.16) !important;
+  background: rgba(0,0,0,0.32) !important;
+  color: #f8fbff !important;
+  padding: 0 1rem !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 0.85rem !important;
+  outline: none !important;
+}
+
+.lunexis-route-preview {
+  margin-bottom: 1rem;
+  border-radius: 22px;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, rgba(0,220,229,0.075), rgba(61,106,255,0.08));
+  border: 1px solid rgba(56,189,248,0.16);
+}
+
+.lunexis-route-preview > span {
+  display: block;
+  color: #849495;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.7rem;
+}
+
+.lunexis-route-preview > div {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #f8fbff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+}
+
+.lunexis-route-preview i {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  min-width: 54px;
+  border-radius: 999px;
+  background: rgba(56,189,248,0.18);
+  overflow: hidden;
+}
+
+.lunexis-route-preview i::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+  animation: lunexisRouteFlow 1.6s ease-in-out infinite;
+}
+
+.lunexis-impact-warning,
+.lunexis-faucet-helper,
+.lunexis-empty-guide,
+.lunexis-unsupported-token {
+  border-radius: 20px;
+  padding: 0.9rem;
+  background: rgba(255,156,0,0.09);
+  border: 1px solid rgba(255,156,0,0.24);
+  color: #ffd39a;
+}
+
+.lunexis-impact-warning {
+  animation: lunexisWarningPulse 1.8s ease-in-out infinite;
+}
+
+.lunexis-impact-warning strong,
+.lunexis-faucet-helper strong,
+.lunexis-empty-guide strong,
+.lunexis-unsupported-token strong {
+  display: block;
+  color: #fff5e6;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.lunexis-impact-warning span,
+.lunexis-faucet-helper span,
+.lunexis-empty-guide div,
+.lunexis-unsupported-token span {
+  display: block;
+  color: #d7b98f;
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+}
+
+.lunexis-faucet-helper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(56,189,248,0.07);
+  border-color: rgba(56,189,248,0.18);
+}
+
+.lunexis-faucet-helper span {
+  color: #9fb2c4;
+}
+
+.lunexis-empty-guide {
+  display: grid;
+  gap: 0.55rem;
+  background: rgba(0,220,229,0.06);
+  border-color: rgba(0,220,229,0.18);
+}
+
+.lunexis-empty-guide strong {
+  color: #dff8ff;
+  margin-bottom: 0.15rem;
+}
+
+.lunexis-empty-guide div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a9c2d6;
+  margin: 0;
+  animation: arcFadeUp 0.5s ease both;
+}
+
+.lunexis-empty-guide div span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(56,189,248,0.15);
+  border: 1px solid rgba(56,189,248,0.24);
+  color: #38bdf8;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.lunexis-recent-tokens {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.lunexis-recent-tokens > span {
+  color: #849495;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lunexis-recent-tokens button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.65rem !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(56,189,248,0.14) !important;
+  color: #dff8ff !important;
+  font-size: 0.68rem !important;
+}
+
+.lunexis-unsupported-token {
+  background: rgba(255,45,178,0.08);
+  border-color: rgba(255,45,178,0.22);
+}
+
+.lunexis-unsupported-token strong {
+  color: #ffc7ec;
+}
+
+.lunexis-unsupported-token span {
+  color: #d9a6c9;
+}
+
+.lunexis-smart-error {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 80;
+  width: min(360px, calc(100vw - 2rem));
+  border-radius: 22px;
+  padding: 1rem 2.8rem 1rem 1rem;
+  background: radial-gradient(circle at 10% 10%, rgba(255,45,178,0.16), transparent 45%), rgba(9, 10, 18, 0.92);
+  border: 1px solid rgba(255,45,178,0.26);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 34px rgba(255,45,178,0.13);
+  backdrop-filter: blur(18px);
+  animation: lunexisErrorIn 0.28s cubic-bezier(.2,.9,.2,1) both;
+}
+
+.lunexis-smart-error.is-warning {
+  background: radial-gradient(circle at 10% 10%, rgba(255,156,0,0.16), transparent 45%), rgba(9, 10, 18, 0.92);
+  border-color: rgba(255,156,0,0.3);
+}
+
+.lunexis-smart-error button {
+  position: absolute !important;
+  right: 0.7rem;
+  top: 0.7rem;
+  width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+}
+
+.lunexis-smart-error strong {
+  display: block;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.lunexis-smart-error span,
+.lunexis-smart-error small {
+  display: block;
+  margin-top: 0.35rem;
+  color: #c7d4e3;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.lunexis-smart-error small {
+  color: #8fe8ff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .lunexis-faucet-helper {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lunexis-smart-error {
+    left: 1rem;
+    right: 1rem;
+    bottom: calc(5.8rem + env(safe-area-inset-bottom));
+    width: auto;
+  }
+}
+
+@keyframes lunexisRouteFlow {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(240%); }
+}
+
+@keyframes lunexisWarningPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255,156,0,0); }
+  50% { box-shadow: 0 0 28px rgba(255,156,0,0.18); }
+}
+
+@keyframes lunexisErrorIn {
+  from { transform: translateY(16px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
 /* Gradient border */
 .gradient-border {
   position: relative;

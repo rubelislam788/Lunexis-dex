@@ -6,7 +6,7 @@ import type { TokenSymbol } from "@/types";
 import { TOKEN_META } from "@/lib/tokens";
 import TokenIcon from "@/components/ui/TokenIcon";
 
-const TOKENS: TokenSymbol[] = ["ARC", "USDC", "EURC", "WETH"];
+const TOKENS: TokenSymbol[] = ["USDC", "EURC"];
 const TIMEFRAMES = ["1H", "24H", "7D", "30D", "1Y", "MAX"] as const;
 type Timeframe = (typeof TIMEFRAMES)[number];
 
@@ -14,13 +14,12 @@ type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
 
 function fallbackPrice(symbol: TokenSymbol) {
   if (symbol === "USDC" || symbol === "EURC") return 1;
-  if (symbol === "ARC") return 0.015;
-  return 3000;
+  return 1;
 }
 
 function pointsFor(symbol: TokenSymbol, timeframe: Timeframe, base: number) {
   const count = timeframe === "1H" ? 24 : timeframe === "24H" ? 30 : 42;
-  const volatility = symbol === "USDC" || symbol === "EURC" ? 0.002 : symbol === "ARC" ? 0.08 : 0.035;
+  const volatility = 0.002;
   const seed = symbol.charCodeAt(0) + timeframe.length * 17;
   return Array.from({ length: count }).map((_, index) => {
     const wave = Math.sin((index + seed) / 4) * volatility;
@@ -51,9 +50,6 @@ export default function TokenPriceChart({ activeToken }: { activeToken: TokenSym
         setPrices({
           USDC: 1,
           EURC: Number(data?.prices?.EURC) || 1,
-          WETH: Number(data?.prices?.WETH) || Number(data?.prices?.ETH) || undefined,
-          ETH: Number(data?.prices?.ETH) || undefined,
-          ARC: Number(data?.prices?.ARC) || undefined,
         });
       })
       .catch(() => null);
@@ -65,9 +61,6 @@ export default function TokenPriceChart({ activeToken }: { activeToken: TokenSym
           setPrices((prev) => ({
             ...prev,
             EURC: Number(data.prices.EURC) || prev.EURC,
-            WETH: Number(data.prices.WETH) || Number(data.prices.ETH) || prev.WETH,
-            ETH: Number(data.prices.ETH) || prev.ETH,
-            ARC: Number(data.prices.ARC) || prev.ARC,
           }));
         })
         .catch(() => null);
