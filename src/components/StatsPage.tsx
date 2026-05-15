@@ -9,7 +9,7 @@ export default function StatsPage() {
   const cards = [
     ["Arc Block", stats.arcBlock, "Latest Arc Testnet block from RPC"],
     ["Arc Gas", stats.arcGasPrice, "Current Arc native USDC gas price"],
-    ["Operators", stats.profiles.toLocaleString(), "Wallet profiles created locally in this app"],
+    ["Operators", stats.profiles.toLocaleString(), "Synced wallet profiles across Lunexis"],
     ["Verified Missions", stats.missionsCompleted.toLocaleString(), "Completed mission verifications"],
     ["Rewards Claimed", `${stats.rewardsClaimed.toLocaleString()} points`, "Claimed mission reward points"],
     ["Confirmed Swaps", stats.swaps.toLocaleString(), "Wallet-confirmed swap activities"],

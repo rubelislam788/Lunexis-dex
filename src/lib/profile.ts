@@ -40,6 +40,27 @@ function writeStore(store: ProfileStore) {
   window.dispatchEvent(new Event("arc-profile-updated"));
 }
 
+export async function loadRemoteProfiles(): Promise<UserProfile[]> {
+  const localProfiles = loadAllProfiles();
+  const response = await fetch("/api/profiles").catch(() => null);
+  if (!response?.ok) return localProfiles;
+  const data = await response.json().catch(() => null);
+  if (!Array.isArray(data?.profiles)) return localProfiles;
+  const merged = new Map<string, UserProfile>();
+  localProfiles.forEach((profile) => merged.set(normalizeAddress(profile.walletAddress), profile));
+  (data.profiles as UserProfile[]).forEach((profile) => merged.set(normalizeAddress(profile.walletAddress), profile));
+  return Array.from(merged.values());
+}
+
+function publishProfile(profile: UserProfile) {
+  if (typeof window === "undefined") return;
+  void fetch("/api/profiles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile }),
+  }).catch(() => null);
+}
+
 export function createActivity(
   type: ActivityItem["type"],
   title: string,
@@ -86,6 +107,7 @@ export function loadProfile(address?: string): UserProfile | null {
   if (!store[key]) {
     store[key] = profile;
     writeStore(store);
+    publishProfile(profile);
   }
   return profile;
 }
@@ -94,6 +116,7 @@ export function saveProfile(profile: UserProfile): UserProfile {
   const store = readStore();
   store[normalizeAddress(profile.walletAddress)] = profile;
   writeStore(store);
+  publishProfile(profile);
   return profile;
 }
 

@@ -9,7 +9,7 @@ export const arcChain = {
   iconBackground: "#07111f",
 } satisfies Chain;
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "lunexis-demo";
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "lunexis";
 
 export const wagmiChains: readonly [Chain, ...Chain[]] = [arcChain];
 

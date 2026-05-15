@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import type { LeaderboardEntry } from "@/types";
-import { loadAllProfiles } from "@/lib/profile";
+import type { LeaderboardEntry, UserProfile } from "@/types";
+import { loadAllProfiles, loadRemoteProfiles } from "@/lib/profile";
 
 function tierFor(xp: number) {
   if (xp >= 3000) return "Elite";
@@ -12,8 +12,14 @@ function tierFor(xp: number) {
   return "Rookie";
 }
 
-function buildEntries(): LeaderboardEntry[] {
-  return loadAllProfiles().map((profile, index) => ({
+function buildEntries(profiles: UserProfile[]): LeaderboardEntry[] {
+  return profiles
+    .sort((a, b) => {
+      if (b.xp !== a.xp) return b.xp - a.xp;
+      if (b.completedMissionIds.length !== a.completedMissionIds.length) return b.completedMissionIds.length - a.completedMissionIds.length;
+      return b.rewardsEarned - a.rewardsEarned;
+    })
+    .map((profile, index) => ({
     rank: index + 1,
     address: profile.walletAddress,
     username: profile.username,
@@ -28,10 +34,17 @@ export default function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
-    const sync = () => setEntries(buildEntries());
+    const sync = () => {
+      setEntries(buildEntries(loadAllProfiles()));
+      void loadRemoteProfiles().then((profiles) => setEntries(buildEntries(profiles)));
+    };
     sync();
+    const interval = window.setInterval(sync, 15000);
     window.addEventListener("arc-profile-updated", sync);
-    return () => window.removeEventListener("arc-profile-updated", sync);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("arc-profile-updated", sync);
+    };
   }, []);
 
   return (

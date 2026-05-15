@@ -152,7 +152,7 @@ export default function BridgePage() {
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Bridge Engine</span>
                 <span style={{ color: bridgeConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {bridgeMode === "contract" ? "Bridge Contract" : bridgeMode === "appkit" ? "Arc App Kit" : "Not Configured"}
+                  {bridgeMode === "contract" ? "Bridge Contract" : bridgeMode === "appkit" ? "Arc App Kit" : "Live Path Pending"}
                 </span>
               </div>
             </div>

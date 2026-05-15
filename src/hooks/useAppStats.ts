@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatUnits } from "viem";
 import { arcPublicClient, sepoliaPublicClient } from "@/lib/onchain";
-import { loadAllProfiles } from "@/lib/profile";
+import { loadAllProfiles, loadRemoteProfiles } from "@/lib/profile";
+import type { UserProfile } from "@/types";
 
 export interface AppStats {
   profiles: number;
@@ -18,8 +19,7 @@ export interface AppStats {
   isLoading: boolean;
 }
 
-function getProfileTotals() {
-  const profiles = loadAllProfiles();
+function getProfileTotals(profiles: UserProfile[] = loadAllProfiles()) {
   return {
     profiles: profiles.length,
     missionsCompleted: profiles.reduce((sum, profile) => sum + profile.completedMissionIds.length, 0),
@@ -48,8 +48,10 @@ export function useAppStats(refreshMs = 15000): AppStats & { refresh: () => Prom
         arcPublicClient.getGasPrice().catch(() => BigInt(0)),
       ]);
 
+      const remoteProfiles = await loadRemoteProfiles();
+
       setSnapshot({
-        ...getProfileTotals(),
+        ...getProfileTotals(remoteProfiles),
         arcBlock: arcBlock.toLocaleString(),
         sepoliaBlock: sepoliaBlock.toLocaleString(),
         arcGasPrice: `${Number(formatUnits(arcGasPrice, 18)).toLocaleString(undefined, { maximumFractionDigits: 8 })} USDC`,
