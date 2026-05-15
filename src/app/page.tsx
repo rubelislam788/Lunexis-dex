@@ -13,6 +13,7 @@ import RewardsPage from "@/components/RewardsPage";
 import LeaderboardPage from "@/components/LeaderboardPage";
 import StatsPage from "@/components/StatsPage";
 import { QUESTS } from "@/lib/missions";
+import LunexisIntro from "@/components/ui/LunexisIntro";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +110,7 @@ export default function Home() {
 
   return (
     <div className="arc-app-root" style={appShellStyle}>
+      {currentPage === "landing" && <LunexisIntro />}
       <Header
         currentPage={currentPage}
         onNavigate={navigate}

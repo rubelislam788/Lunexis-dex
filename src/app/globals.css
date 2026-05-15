@@ -1066,6 +1066,315 @@ a.arc-uiverse-button:active,
   pointer-events: none;
 }
 
+.lunexis-header-logo {
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,0.24), transparent 24%),
+    radial-gradient(circle at 72% 84%, rgba(217,70,239,0.3), transparent 36%),
+    linear-gradient(145deg, rgba(17,40,76,0.94), rgba(6,10,28,0.96));
+  border: 1px solid rgba(150, 221, 255, 0.32);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.38),
+    0 0 28px rgba(56,189,248,0.24),
+    0 0 22px rgba(168,85,247,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -10px 18px rgba(0,0,0,0.3);
+  transform: perspective(120px) rotateX(7deg) rotateY(-9deg);
+  overflow: hidden;
+}
+
+.lunexis-logo-mark {
+  display: block;
+  overflow: visible;
+}
+
+.lunexis-logo-mark.is-animated .lunexis-crescent-main,
+.lunexis-logo-mark.is-animated .lunexis-crescent-cut,
+.lunexis-logo-mark.is-animated .lunexis-crescent-core,
+.lunexis-logo-mark.is-animated .lunexis-highlight {
+  transform-origin: 80px 88px;
+  animation: lunexisLogoMaterialize 1.8s cubic-bezier(.2,.9,.22,1) both, lunexisLogoIdle 4.6s ease-in-out 3.2s infinite;
+}
+
+.lunexis-logo-mark.is-animated .lunexis-orbit {
+  stroke-dasharray: 360;
+  stroke-dashoffset: 360;
+  transform-origin: 80px 84px;
+  animation: lunexisStrokeDraw 1.8s ease 1.35s both, lunexisOrbitBreathe 5s ease-in-out 3.1s infinite;
+}
+
+.lunexis-logo-mark.is-animated .lunexis-network-line,
+.lunexis-logo-mark.is-animated .lunexis-network-line-glow {
+  stroke-dasharray: 110;
+  stroke-dashoffset: 110;
+  animation: lunexisStrokeDraw 1.15s ease 2s both;
+}
+
+.lunexis-logo-mark.is-animated .lunexis-node {
+  transform-origin: center;
+  opacity: 0;
+  animation: lunexisNodePop 0.65s cubic-bezier(.2,1.4,.3,1) both;
+}
+
+.lunexis-logo-mark.is-animated .lunexis-node:nth-of-type(1) { animation-delay: 2.42s; }
+.lunexis-logo-mark.is-animated .lunexis-node:nth-of-type(2) { animation-delay: 2.62s; }
+.lunexis-logo-mark.is-animated .lunexis-node:nth-of-type(3) { animation-delay: 2.82s; }
+
+.lunexis-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(23, 62, 128, 0.24), transparent 20rem),
+    radial-gradient(circle at 28% 22%, rgba(0, 220, 229, 0.14), transparent 22rem),
+    radial-gradient(circle at 72% 78%, rgba(217, 70, 239, 0.14), transparent 24rem),
+    #000;
+  animation: lunexisIntroExit 0.75s ease 7.45s both;
+}
+
+.lunexis-intro-space,
+.lunexis-intro-space::before,
+.lunexis-intro-space::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.lunexis-intro-space {
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.22) 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(94,234,255,0.18) 1px, transparent 1.4px);
+  background-size: 120px 120px, 74px 74px;
+  opacity: 0.45;
+  animation: lunexisSpaceDrift 18s linear infinite;
+}
+
+.lunexis-intro-space::before {
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(125, 211, 252, 0.14) 46%, transparent 58%),
+    radial-gradient(circle at 50% 50%, rgba(59,130,246,0.12), transparent 16rem);
+  background-size: 260% 260%, 100% 100%;
+  animation: lunexisHoloSweep 5.8s ease-in-out infinite;
+}
+
+.lunexis-intro-space::after {
+  background: radial-gradient(circle at 50% 50%, transparent 0 14rem, rgba(0,0,0,0.5) 62%, rgba(0,0,0,0.9) 100%);
+}
+
+.lunexis-intro-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lunexis-intro-particles span {
+  position: absolute;
+  border-radius: 999px;
+  background: #b9f8ff;
+  box-shadow: 0 0 14px rgba(94,234,255,0.86);
+  opacity: 0;
+  animation: lunexisParticleFloat 5.8s ease-in-out infinite;
+}
+
+.lunexis-intro-stage {
+  position: relative;
+  width: min(92vw, 720px);
+  min-height: 620px;
+  display: grid;
+  place-items: center;
+  transform: translateZ(0);
+  animation: lunexisCameraZoom 7.4s cubic-bezier(.2,.85,.18,1) both;
+}
+
+.lunexis-lens-flare {
+  position: absolute;
+  width: 64%;
+  height: 2px;
+  top: 49%;
+  left: 18%;
+  background: linear-gradient(90deg, transparent, rgba(191,246,255,0.9), transparent);
+  filter: blur(1px);
+  opacity: 0;
+  animation: lunexisLensFlare 1.1s ease 3.6s both;
+}
+
+.lunexis-energy-ring,
+.lunexis-energy-ring::before,
+.lunexis-energy-ring::after {
+  position: absolute;
+  width: clamp(250px, 42vw, 390px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.lunexis-energy-ring {
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  box-shadow: 0 0 40px rgba(56,189,248,0.26), inset 0 0 38px rgba(99,102,241,0.16);
+  opacity: 0;
+  transform: scale(0.62) rotate(0deg);
+  animation: lunexisRingForm 2s cubic-bezier(.2,.9,.22,1) 0.55s both, lunexisRingRotate 10s linear 2.45s infinite;
+}
+
+.lunexis-energy-ring::before {
+  content: "";
+  inset: -12px;
+  width: auto;
+  background: conic-gradient(from 90deg, transparent, rgba(0,220,229,0.92), transparent 26%, rgba(168,85,247,0.88), transparent 58%, rgba(255,255,255,0.72), transparent 72%);
+  padding: 2px;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  filter: blur(0.2px);
+}
+
+.lunexis-energy-ring::after {
+  content: "";
+  inset: 32px;
+  width: auto;
+  border: 1px solid rgba(216, 180, 254, 0.24);
+  box-shadow: inset 0 0 24px rgba(217,70,239,0.14);
+}
+
+.lunexis-energy-ring.is-secondary {
+  width: clamp(330px, 54vw, 520px);
+  transform: scale(0.72) rotate(28deg);
+  border-color: rgba(168,85,247,0.24);
+  animation-delay: 0.95s, 2.65s;
+  animation-duration: 2.2s, 14s;
+  animation-direction: normal, reverse;
+}
+
+.lunexis-energy-pulse {
+  position: absolute;
+  width: 18rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.36);
+  opacity: 0;
+  box-shadow: 0 0 44px rgba(56,189,248,0.2);
+  animation: lunexisPulseWave 2.4s ease-out 5.15s both;
+}
+
+.lunexis-orbit-system {
+  position: absolute;
+  width: min(82vw, 560px);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  animation: lunexisOrbitSystemIn 1s ease 2.7s both, lunexisOrbitSystemFloat 5.6s ease-in-out 3.7s infinite;
+}
+
+.lunexis-orbit-path {
+  position: absolute;
+  inset: 20%;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(56,189,248,0.14);
+}
+
+.lunexis-orbit-path.is-one { transform: rotateX(62deg) rotateZ(-20deg); }
+.lunexis-orbit-path.is-two { transform: rotateX(68deg) rotateZ(42deg); border-color: rgba(168,85,247,0.3); }
+.lunexis-orbit-path.is-three { transform: rotateX(58deg) rotateZ(112deg); border-color: rgba(191,246,255,0.18); }
+
+.lunexis-orbit-node {
+  --angle: 0deg;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #dffbff;
+  box-shadow: 0 0 16px rgba(94,234,255,0.94), 0 0 28px rgba(168,85,247,0.42);
+  transform: rotate(var(--angle)) translateX(168px) scale(0);
+  animation: lunexisOrbitNodeTravel 4.8s linear 3.15s infinite;
+}
+
+.lunexis-orbit-node.node-1 { --angle: 0deg; animation-delay: 3.1s; }
+.lunexis-orbit-node.node-2 { --angle: 64deg; animation-delay: 3.28s; }
+.lunexis-orbit-node.node-3 { --angle: 128deg; animation-delay: 3.46s; }
+.lunexis-orbit-node.node-4 { --angle: 192deg; animation-delay: 3.64s; }
+.lunexis-orbit-node.node-5 { --angle: 256deg; animation-delay: 3.82s; }
+.lunexis-orbit-node.node-6 { --angle: 320deg; animation-delay: 4s; }
+
+.lunexis-intro-logo {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: drop-shadow(0 0 28px rgba(56,189,248,0.52)) drop-shadow(0 0 46px rgba(168,85,247,0.25));
+  animation: lunexisLogoIntro 1.6s cubic-bezier(.2,.9,.22,1) 1.55s both, lunexisLogoFloat 4.6s ease-in-out 4s infinite;
+}
+
+.lunexis-intro-wordmark {
+  position: absolute;
+  z-index: 4;
+  bottom: 88px;
+  perspective: 500px;
+  opacity: 0;
+  animation: lunexisWordmarkIn 1.25s cubic-bezier(.2,.9,.22,1) 4.05s both;
+}
+
+.lunexis-intro-wordmark span {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(38px, 8vw, 76px);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: transparent;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(168,219,255,0.74) 45%, rgba(72,115,255,0.78) 58%, rgba(255,255,255,0.9) 100%),
+    linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.9) 48%, transparent 60%);
+  background-size: 100% 100%, 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 22px rgba(56,189,248,0.38), 0 0 36px rgba(168,85,247,0.22);
+  animation: lunexisWordmarkShine 2.8s ease-in-out 4.4s infinite;
+}
+
+@media (max-width: 640px) {
+  .lunexis-intro-stage {
+    min-height: 520px;
+  }
+
+  .lunexis-intro-logo .lunexis-logo-mark {
+    width: 190px;
+    height: 190px;
+  }
+
+  .lunexis-orbit-node {
+    transform: rotate(var(--angle)) translateX(118px) scale(0);
+  }
+
+  .lunexis-intro-wordmark {
+    bottom: 92px;
+  }
+
+  .lunexis-intro-wordmark span {
+    letter-spacing: 0.1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lunexis-intro {
+    animation-duration: 0.2s;
+    animation-delay: 2s;
+  }
+
+  .lunexis-intro *,
+  .lunexis-logo-mark.is-animated * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+  }
+}
+
 .arc-page-shell::before {
   content: "";
   position: absolute;
@@ -1432,6 +1741,204 @@ a.arc-uiverse-button:active,
 @keyframes arcParticleFloat {
   0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.4; }
   50% { transform: translate3d(14px, -18px, 0); opacity: 1; }
+}
+
+@keyframes lunexisIntroExit {
+  0%, 84% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes lunexisSpaceDrift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 240px 120px, -148px 148px; }
+}
+
+@keyframes lunexisHoloSweep {
+  0% { background-position: -180% 0, 50% 50%; opacity: 0.38; }
+  50% { opacity: 0.72; }
+  100% { background-position: 180% 0, 50% 50%; opacity: 0.38; }
+}
+
+@keyframes lunexisParticleFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.4);
+  }
+  22%, 72% {
+    opacity: 0.88;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(28px, -54px, 0) scale(1);
+  }
+}
+
+@keyframes lunexisCameraZoom {
+  0% { transform: scale(0.88) translateY(18px); filter: saturate(0.85); }
+  45% { transform: scale(1) translateY(0); filter: saturate(1.08); }
+  100% { transform: scale(1.04) translateY(-4px); filter: saturate(1.16); }
+}
+
+@keyframes lunexisRingForm {
+  from {
+    opacity: 0;
+    transform: scale(0.48) rotate(-38deg);
+    filter: blur(10px);
+  }
+  56% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.84;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes lunexisRingRotate {
+  to { rotate: 360deg; }
+}
+
+@keyframes lunexisStrokeDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes lunexisLogoIntro {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.72) rotateX(18deg);
+    filter: blur(12px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes lunexisLogoMaterialize {
+  from {
+    opacity: 0;
+    transform: scale(0.88) rotate(-8deg);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes lunexisLogoIdle {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -3px, 0) scale(1.015); }
+}
+
+@keyframes lunexisLogoFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -12px, 0) scale(1.018); }
+}
+
+@keyframes lunexisOrbitBreathe {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.035); }
+}
+
+@keyframes lunexisNodePop {
+  from { opacity: 0; transform: scale(0.28); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lunexisOrbitSystemIn {
+  from {
+    opacity: 0;
+    transform: rotateX(16deg) scale(0.8);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes lunexisOrbitSystemFloat {
+  0%, 100% { transform: translateY(0) rotateZ(0deg); }
+  50% { transform: translateY(-8px) rotateZ(2.5deg); }
+}
+
+@keyframes lunexisOrbitNodeTravel {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(168px) scale(0);
+  }
+  14% {
+    opacity: 1;
+    transform: rotate(calc(var(--angle) + 42deg)) translateX(168px) scale(1);
+  }
+  76% {
+    opacity: 1;
+    transform: rotate(calc(var(--angle) + 292deg)) translateX(168px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--angle) + 360deg)) translateX(168px) scale(0.28);
+  }
+}
+
+@keyframes lunexisLensFlare {
+  from {
+    opacity: 0;
+    transform: translateX(-16%) scaleX(0.3);
+  }
+  46% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16%) scaleX(1.12);
+  }
+}
+
+@keyframes lunexisPulseWave {
+  from {
+    opacity: 0.76;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.25);
+  }
+}
+
+@keyframes lunexisWordmarkIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) rotateX(22deg);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes lunexisWordmarkShine {
+  0%, 100% { background-position: 0 0, 120% 0; }
+  50% { background-position: 0 0, -120% 0; }
 }
 
 /* Input */
