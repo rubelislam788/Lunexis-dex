@@ -371,20 +371,6 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
             {price}
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <div
-              className="rounded-full px-2.5 py-1"
-              style={{
-                background: "rgba(255,255,255,0.035)",
-                border: `1px solid ${TOKEN_META[token].accent}18`,
-                color: "#9fb2c4",
-                fontSize: 10,
-                fontFamily: "'Space Grotesk'",
-                fontWeight: 700,
-                letterSpacing: 0,
-              }}
-            >
-              Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
-            </div>
             {onQuickAmount && (
               <>
                 {[
@@ -406,19 +392,35 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
             )}
           </div>
         </div>
-        <button
-          onClick={onToken}
-          className="flex items-center gap-2 px-3 py-2 rounded-full transition-all"
-          style={{
-            background: `linear-gradient(135deg, ${TOKEN_META[token].accent}18, rgba(255,255,255,0.045))`,
-            border: `1px solid ${TOKEN_META[token].accent}44`,
-            boxShadow: `0 0 22px ${TOKEN_META[token].accent}18`,
-            minWidth: 112,
-          }}
-        >
-          <TokenIcon symbol={token} size={30} />
-          <span style={{ fontFamily: "'Space Grotesk'", fontSize: 15, fontWeight: 900, color: "#f8fbff" }}>{token}</span>
-        </button>
+        <div className="flex flex-col items-end gap-2 self-start pt-8">
+          <button
+            onClick={onToken}
+            className="flex items-center gap-2 px-3 py-2 rounded-full transition-all"
+            style={{
+              background: `linear-gradient(135deg, ${TOKEN_META[token].accent}18, rgba(255,255,255,0.045))`,
+              border: `1px solid ${TOKEN_META[token].accent}44`,
+              boxShadow: `0 0 22px ${TOKEN_META[token].accent}18`,
+              minWidth: 112,
+            }}
+          >
+            <TokenIcon symbol={token} size={30} />
+            <span style={{ fontFamily: "'Space Grotesk'", fontSize: 15, fontWeight: 900, color: "#f8fbff" }}>{token}</span>
+          </button>
+          <div
+            className="rounded-full px-2.5 py-1"
+            style={{
+              background: "rgba(255,255,255,0.035)",
+              border: `1px solid ${TOKEN_META[token].accent}18`,
+              color: "#9fb2c4",
+              fontSize: 10,
+              fontFamily: "'Space Grotesk'",
+              fontWeight: 700,
+              letterSpacing: 0,
+            }}
+          >
+            Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
