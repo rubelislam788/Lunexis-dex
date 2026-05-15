@@ -296,35 +296,37 @@ export default function SwapPage() {
 function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; price: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
   return (
     <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="mb-3">
         <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase" }}>{label}</div>
-        <div
-          className="rounded-full px-3 py-1"
-          style={{
-            background: `${TOKEN_META[token].accent}12`,
-            border: `1px solid ${TOKEN_META[token].accent}26`,
-            boxShadow: `0 0 18px ${TOKEN_META[token].accent}10`,
-            color: "#d9fbff",
-            fontSize: 10,
-            fontFamily: "'Space Grotesk'",
-            fontWeight: 900,
-            letterSpacing: 0,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {price}
-        </div>
       </div>
       <div className="flex items-center gap-4">
-        <input
-          type="text"
-          inputMode={readOnly ? undefined : "decimal"}
-          value={amount}
-          readOnly={readOnly}
-          onChange={(event) => onAmount?.(event.target.value)}
-          placeholder="0.00"
-          className="arc-swap-amount-input flex-1"
-        />
+        <div className="flex-1 min-w-0">
+          <input
+            type="text"
+            inputMode={readOnly ? undefined : "decimal"}
+            value={amount}
+            readOnly={readOnly}
+            onChange={(event) => onAmount?.(event.target.value)}
+            placeholder="0.00"
+            className="arc-swap-amount-input"
+          />
+          <div
+            className="mt-2 inline-flex rounded-full px-3 py-1"
+            style={{
+              background: `${TOKEN_META[token].accent}12`,
+              border: `1px solid ${TOKEN_META[token].accent}26`,
+              boxShadow: `0 0 18px ${TOKEN_META[token].accent}10`,
+              color: "#d9fbff",
+              fontSize: 10,
+              fontFamily: "'Space Grotesk'",
+              fontWeight: 900,
+              letterSpacing: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {price}
+          </div>
+        </div>
         <button
           onClick={onToken}
           className="flex items-center gap-2 px-3 py-2 rounded-full transition-all"
