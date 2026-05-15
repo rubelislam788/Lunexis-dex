@@ -90,6 +90,7 @@ export function getDefaultProfile(address: string): UserProfile {
     wallets: [address],
     xp: 0,
     rewardsEarned: 0,
+    rewardTokenTotals: {},
     completedMissionIds: [],
     claimedRewardIds: [],
     balances: DEFAULT_BALANCES,
@@ -157,15 +158,20 @@ export function completeMission(address: string, missionId: string, xp: number):
   });
 }
 
-export function claimReward(address: string, rewardId: string, amount: number): UserProfile {
+export function claimReward(address: string, rewardId: string, amount: number, token: TokenSymbol = "USDC"): UserProfile {
   const current = loadProfile(address) ?? getDefaultProfile(address);
   if (current.claimedRewardIds.includes(rewardId)) return current;
+  const rewardTokenTotals = {
+    ...(current.rewardTokenTotals ?? {}),
+    [token]: (current.rewardTokenTotals?.[token] ?? 0) + amount,
+  };
   return saveProfile({
     ...current,
     rewardsEarned: current.rewardsEarned + amount,
+    rewardTokenTotals,
     claimedRewardIds: [...current.claimedRewardIds, rewardId],
     activities: [
-      createActivity("reward", "Reward claimed", `${amount} points claimed from mission rewards.`),
+      createActivity("reward", "Reward claimed", `${amount.toLocaleString()} ${token} claimed from mission rewards.`, token),
       ...current.activities,
     ],
   });

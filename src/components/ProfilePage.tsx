@@ -4,6 +4,7 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
+import { formatRewardTotals } from "@/lib/rewards";
 import { TOKEN_META } from "@/lib/tokens";
 import TokenIcon from "@/components/ui/TokenIcon";
 import ActivityTimeline from "@/components/ActivityTimeline";
@@ -92,7 +93,7 @@ export default function ProfilePage() {
           <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               ["XP", profile.xp.toLocaleString()],
-              ["Rewards", `${profile.rewardsEarned.toLocaleString()} points`],
+              ["Rewards", formatRewardTotals(profile.rewardTokenTotals, profile.rewardsEarned)],
               ["Missions", `${profile.completedMissionIds.length} done`],
             ].map(([label, value]) => (
               <div key={label} className="arc-card rounded-2xl p-5">

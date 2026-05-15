@@ -2,6 +2,7 @@
 
 import { useAppStats } from "@/hooks/useAppStats";
 import FaucetButton from "@/components/ui/FaucetButton";
+import { formatRewardTotals } from "@/lib/rewards";
 
 export default function StatsPage() {
   const stats = useAppStats();
@@ -11,7 +12,7 @@ export default function StatsPage() {
     ["Arc Gas", stats.arcGasPrice, "Current Arc native USDC gas price"],
     ["Operators", stats.profiles.toLocaleString(), "Synced wallet profiles across Lunexis"],
     ["Verified Missions", stats.missionsCompleted.toLocaleString(), "Completed mission verifications"],
-    ["Rewards Claimed", `${stats.rewardsClaimed.toLocaleString()} points`, "Claimed mission reward points"],
+    ["Rewards Claimed", formatRewardTotals(stats.rewardTokenTotals, stats.rewardsClaimed), "Claimed mission token rewards"],
     ["Confirmed Swaps", stats.swaps.toLocaleString(), "Wallet-confirmed swap activities"],
   ];
 

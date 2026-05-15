@@ -223,8 +223,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       id: `custom-${Date.now()}`,
       title: `Custom Mission ${nextNumber}`,
       description: "Describe the mission requirement here.",
-      reward: "500 points",
-      rewardAmt: 500,
+      reward: "5 USDC",
+      rewardAmt: 5,
       xp: 250,
       difficulty: "Easy",
       category: "Custom",
@@ -359,7 +359,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           profile={profile}
           onSelectQuest={onSelectQuest}
           onVerify={verifyQuest}
-          onClaim={(quest) => claim(quest.id, quest.rewardAmt)}
+          onClaim={(quest) => claim(quest.id, quest.rewardAmt, quest.reward.includes("EURC") ? "EURC" : "USDC")}
           saveProof={saveProof}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}

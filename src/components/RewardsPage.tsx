@@ -6,7 +6,7 @@ import { useProfile } from "@/hooks/useProfile";
 import ActivityTimeline from "@/components/ActivityTimeline";
 import FaucetButton from "@/components/ui/FaucetButton";
 import { isAdminWallet } from "@/lib/admin";
-import { DEFAULT_REWARDS, normalizeRewards, type RewardConfig } from "@/lib/rewards";
+import { DEFAULT_REWARDS, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 
 const REWARD_STORAGE_KEY = "lunexis.rewards.v1";
 
@@ -64,7 +64,8 @@ export default function RewardsPage() {
     const reward: RewardConfig = {
       id: `reward-custom-${Date.now()}`,
       title: `Custom Reward ${rewards.length + 1}`,
-      amount: 500,
+      amount: 5,
+      token: "USDC",
       requirement: "Admin configured reward",
       missionIds: [],
     };
@@ -106,7 +107,7 @@ export default function RewardsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 34, fontWeight: 900, color: "#f8fbff" }}>Rewards Command</h1>
-            <p style={{ color: "#849495" }}>Claim points, monitor XP, and track achievements.</p>
+            <p style={{ color: "#849495" }}>Claim USDC and EURC rewards, monitor XP, and track achievements.</p>
           </div>
           <div className="flex items-center gap-3">
             {isRewardAdmin && (
@@ -154,6 +155,13 @@ export default function RewardsPage() {
                       <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Amount</span>
                       <input type="number" min="0" value={reward.amount} onChange={(event) => updateReward(reward.id, { amount: Number(event.target.value) })} className="rounded-2xl px-4 py-3" />
                     </label>
+                    <label className="grid gap-2">
+                      <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Reward Token</span>
+                      <select value={reward.token} onChange={(event) => updateReward(reward.id, { token: event.target.value as RewardConfig["token"] })} className="rounded-2xl px-4 py-3">
+                        <option value="USDC">USDC</option>
+                        <option value="EURC">EURC</option>
+                      </select>
+                    </label>
                     <label className="grid gap-2 md:col-span-2">
                       <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Requirement Text</span>
                       <input value={reward.requirement} onChange={(event) => updateReward(reward.id, { requirement: event.target.value })} className="rounded-2xl px-4 py-3" />
@@ -178,7 +186,7 @@ export default function RewardsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[
             ["Total XP", profile?.xp ?? 0],
-            ["Rewards Earned", `${profile?.rewardsEarned ?? 0} points`],
+            ["Rewards Earned", formatRewardTotals(profile?.rewardTokenTotals, profile?.rewardsEarned ?? 0)],
             ["Completed", profile?.completedMissionIds.length ?? 0],
           ].map(([label, value]) => (
             <div key={label} className="arc-card rounded-2xl p-5">
@@ -199,10 +207,10 @@ export default function RewardsPage() {
                 <p style={{ color: eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
                   {eligible ? "Eligible from verified missions" : reward.missionIds.length ? "Verify required missions first" : "Connect wallet to claim"}
                 </p>
-                <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{reward.amount} points</div>
+                <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{formatRewardAmount(reward.amount, reward.token)}</div>
                 <button
                   disabled={!eligible || claimed}
-                  onClick={() => claim(reward.id, reward.amount)}
+                  onClick={() => claim(reward.id, reward.amount, reward.token)}
                   className="btn-primary w-full mt-5 py-3 rounded-xl"
                 >
                   {claimed ? "Completed" : "Claim Reward"}

@@ -10,6 +10,7 @@ export interface AppStats {
   profiles: number;
   missionsCompleted: number;
   rewardsClaimed: number;
+  rewardTokenTotals: Partial<Record<"USDC" | "EURC", number>>;
   swaps: number;
   bridges: number;
   arcBlock: string;
@@ -24,6 +25,11 @@ function getProfileTotals(profiles: UserProfile[] = loadAllProfiles()) {
     profiles: profiles.length,
     missionsCompleted: profiles.reduce((sum, profile) => sum + profile.completedMissionIds.length, 0),
     rewardsClaimed: profiles.reduce((sum, profile) => sum + profile.rewardsEarned, 0),
+    rewardTokenTotals: profiles.reduce<Partial<Record<"USDC" | "EURC", number>>>((totals, profile) => {
+      totals.USDC = (totals.USDC ?? 0) + (profile.rewardTokenTotals?.USDC ?? 0);
+      totals.EURC = (totals.EURC ?? 0) + (profile.rewardTokenTotals?.EURC ?? 0);
+      return totals;
+    }, {}),
     swaps: profiles.reduce((sum, profile) => sum + profile.activities.filter((item) => item.type === "swap" && item.status === "completed").length, 0),
     bridges: profiles.reduce((sum, profile) => sum + profile.activities.filter((item) => item.type === "bridge" && item.status === "completed").length, 0),
   };

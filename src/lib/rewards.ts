@@ -1,16 +1,19 @@
+import type { TokenSymbol } from "@/types";
+
 export interface RewardConfig {
   id: string;
   title: string;
   amount: number;
+  token: Extract<TokenSymbol, "USDC" | "EURC">;
   requirement: string;
   missionIds: string[];
 }
 
 export const DEFAULT_REWARDS: RewardConfig[] = [
-  { id: "reward-social", title: "Social Signal Pack", amount: 650, requirement: "Complete all social missions", missionIds: ["social-follow", "social-rubel-post", "social-arc-post"] },
-  { id: "reward-bridge", title: "Bridge Operator Bonus", amount: 800, requirement: "Complete Bridge the Arc Gate", missionIds: ["q2"] },
-  { id: "reward-swap", title: "Swap Pilot Bonus", amount: 500, requirement: "Complete Lunexis Swap Initiation", missionIds: ["q1"] },
-  { id: "reward-route", title: "Route Pathfinder Bonus", amount: 2500, requirement: "Complete swap and bridge route mission", missionIds: ["q4"] },
+  { id: "reward-social", title: "Social Signal Pack", amount: 6.5, token: "USDC", requirement: "Complete all social missions", missionIds: ["social-follow", "social-rubel-post", "social-arc-post"] },
+  { id: "reward-bridge", title: "Bridge Operator Bonus", amount: 8, token: "USDC", requirement: "Complete Bridge the Arc Gate", missionIds: ["q2"] },
+  { id: "reward-swap", title: "Swap Pilot Bonus", amount: 5, token: "EURC", requirement: "Complete Lunexis Swap Initiation", missionIds: ["q1"] },
+  { id: "reward-route", title: "Route Pathfinder Bonus", amount: 25, token: "USDC", requirement: "Complete swap and bridge route mission", missionIds: ["q4"] },
 ];
 
 export function normalizeRewards(value: unknown): RewardConfig[] {
@@ -22,10 +25,31 @@ export function normalizeRewards(value: unknown): RewardConfig[] {
       const id = typeof reward.id === "string" && reward.id.trim() ? reward.id.trim() : `reward-${Date.now()}`;
       const title = typeof reward.title === "string" && reward.title.trim() ? reward.title.trim() : "Custom Reward";
       const amount = Number.isFinite(Number(reward.amount)) ? Math.max(0, Number(reward.amount)) : 0;
+      const token = reward.token === "EURC" ? "EURC" : "USDC";
       const requirement = typeof reward.requirement === "string" ? reward.requirement : "";
       const missionIds = Array.isArray(reward.missionIds) ? reward.missionIds.filter((missionId): missionId is string => typeof missionId === "string").map((missionId) => missionId.trim()).filter(Boolean) : [];
-      return { id, title, amount, requirement, missionIds };
+      return { id, title, amount, token, requirement, missionIds };
     })
     .filter((item): item is RewardConfig => Boolean(item));
   return rewards.length ? rewards : DEFAULT_REWARDS;
+}
+
+export function formatRewardAmount(amount: number, token: RewardConfig["token"]) {
+  return `${amount.toLocaleString(undefined, {
+    minimumFractionDigits: amount % 1 ? 2 : 0,
+    maximumFractionDigits: 4,
+  })} ${token}`;
+}
+
+export function formatRewardTotals(totals?: Partial<Record<TokenSymbol, number>>, fallbackAmount = 0) {
+  const parts = (["USDC", "EURC"] as const)
+    .map((token) => {
+      const amount = totals?.[token] ?? 0;
+      return amount > 0 ? formatRewardAmount(amount, token) : "";
+    })
+    .filter(Boolean);
+
+  if (parts.length) return parts.join(" / ");
+  if (fallbackAmount > 0) return formatRewardAmount(fallbackAmount, "USDC");
+  return "0 USDC";
 }

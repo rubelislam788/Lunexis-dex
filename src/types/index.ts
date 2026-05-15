@@ -95,6 +95,7 @@ export interface UserProfile {
   wallets: string[];
   xp: number;
   rewardsEarned: number;
+  rewardTokenTotals?: Partial<Record<TokenSymbol, number>>;
   completedMissionIds: string[];
   claimedRewardIds: string[];
   activities: ActivityItem[];
