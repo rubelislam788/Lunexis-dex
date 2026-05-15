@@ -11,6 +11,8 @@ import { isAdminWallet } from "@/lib/admin";
 import { QUESTS } from "@/lib/missions";
 import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchain";
 import FaucetButton from "@/components/ui/FaucetButton";
+import CongratulationsModal from "@/components/ui/CongratulationsModal";
+import { formatRewardAmount } from "@/lib/rewards";
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
 type SocialProof = Record<string, boolean>;
@@ -118,6 +120,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
   const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
+  const [successReward, setSuccessReward] = useState<{ title: string; amount: string; message: string; txHash?: string } | null>(null);
   const [missionClock, setMissionClock] = useState(() => Date.now());
   const isMissionAdmin = isAdminWallet(address);
 
@@ -259,12 +262,22 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.setTimeout(() => document.getElementById("mission-control-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
 
+  const syncProfileBeforePayout = async () => {
+    if (!profile) return;
+    await fetch("/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    }).catch(() => null);
+  };
+
   const claimQuestReward = async (quest: Quest) => {
     if (!address || claimingQuestId) return;
     const token = quest.reward.includes("EURC") ? "EURC" : "USDC";
     setClaimingQuestId(quest.id);
     setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Paying ${quest.reward} to your wallet...` }));
     try {
+      await syncProfileBeforePayout();
       const response = await fetch("/api/reward-payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -273,12 +286,19 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           token,
           amount: quest.rewardAmt,
           recipient: address,
+          requiredMissionIds: [quest.id],
         }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || "Reward payout failed.");
       claim(quest.id, quest.rewardAmt, token, data?.hash);
       setVerifyMessages((prev) => ({ ...prev, [quest.id]: `${quest.reward} paid to your wallet.` }));
+      setSuccessReward({
+        title: "Congratulations",
+        amount: formatRewardAmount(quest.rewardAmt, token),
+        message: "Your mission reward has been paid to your connected wallet.",
+        txHash: data?.hash,
+      });
     } catch (error: any) {
       setVerifyMessages((prev) => ({ ...prev, [quest.id]: error?.message || "Reward payout failed." }));
     } finally {
@@ -334,6 +354,11 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       const result = await validateQuest(quest);
       if (result.ok) {
         markMissionComplete(quest.id, quest.xp);
+        setSuccessReward({
+          title: "Mission Complete",
+          amount: `${quest.xp.toLocaleString()} XP`,
+          message: "All mission tasks are verified. You can now claim the token reward.",
+        });
         setVerifyStates((prev) => ({ ...prev, [quest.id]: "success" }));
       } else {
         setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
@@ -395,6 +420,14 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           onEditQuest={openMissionEditor}
         />
       </div>
+      <CongratulationsModal
+        open={Boolean(successReward)}
+        title={successReward?.title}
+        amount={successReward?.amount}
+        message={successReward?.message ?? ""}
+        txHash={successReward?.txHash}
+        onClose={() => setSuccessReward(null)}
+      />
     </div>
   );
 }
@@ -532,6 +565,14 @@ function MissionControlPanel({
           Mission saved and published.
         </div>
       )}
+
+      <div className="mb-5 rounded-2xl px-4 py-3" style={{ background: "rgba(0,220,229,0.06)", border: "1px solid rgba(0,220,229,0.14)" }}>
+        <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission ID</div>
+        <div style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900, marginTop: 4 }}>{selected.id}</div>
+        <p style={{ color: "#9fb1c1", fontSize: 12, marginTop: 5 }}>
+          Use this ID inside Reward Control to lock a reward until every task in this mission is verified.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
         <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
@@ -748,6 +789,9 @@ function QuestCard({
             <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 5 }}>
               {quest.title}
             </h3>
+            <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 900, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+              ID: {quest.id}
+            </div>
             <p style={{ fontSize: 13, color: "#9fb1c1", lineHeight: 1.55 }}>{quest.description}</p>
           </div>
         </div>

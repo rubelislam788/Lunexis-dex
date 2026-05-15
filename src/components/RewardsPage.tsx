@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { useProfile } from "@/hooks/useProfile";
 import ActivityTimeline from "@/components/ActivityTimeline";
 import FaucetButton from "@/components/ui/FaucetButton";
+import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import { isAdminWallet } from "@/lib/admin";
 import { DEFAULT_REWARDS, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 
@@ -35,6 +36,7 @@ export default function RewardsPage() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
   const [claimMessage, setClaimMessage] = useState("");
+  const [successReward, setSuccessReward] = useState<{ amount: string; txHash?: string } | null>(null);
   const isRewardAdmin = isAdminWallet(address);
 
   useEffect(() => {
@@ -81,6 +83,15 @@ export default function RewardsPage() {
     setSaveState("idle");
   };
 
+  const syncProfileBeforePayout = async () => {
+    if (!profile) return;
+    await fetch("/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    }).catch(() => null);
+  };
+
   const saveRewards = async () => {
     if (!isRewardAdmin || !address) return;
     const nextRewards = normalizeRewards(rewards);
@@ -108,6 +119,7 @@ export default function RewardsPage() {
     setClaimingRewardId(reward.id);
     setClaimMessage("");
     try {
+      await syncProfileBeforePayout();
       const response = await fetch("/api/reward-payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,6 +128,7 @@ export default function RewardsPage() {
           token: reward.token,
           amount: reward.amount,
           recipient: address,
+          requiredMissionIds: reward.missionIds,
         }),
       });
       const data = await response.json().catch(() => null);
@@ -124,6 +137,7 @@ export default function RewardsPage() {
       }
       claim(reward.id, reward.amount, reward.token, data?.hash);
       setClaimMessage(`${formatRewardAmount(reward.amount, reward.token)} paid to your wallet.`);
+      setSuccessReward({ amount: formatRewardAmount(reward.amount, reward.token), txHash: data?.hash });
     } catch (error: any) {
       setClaimMessage(error?.message || "Reward payout failed.");
     } finally {
@@ -236,7 +250,7 @@ export default function RewardsPage() {
                 <div style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>{reward.title}</div>
                 <p style={{ color: "#849495", fontSize: 13, marginTop: 8 }}>{reward.requirement}</p>
                 <p style={{ color: eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
-                  {eligible ? "Eligible from verified missions" : reward.missionIds.length ? "Verify required missions first" : "Connect wallet to claim"}
+                  {eligible ? "Eligible from verified missions" : reward.missionIds.length ? `Complete mission ID: ${reward.missionIds.join(", ")}` : "Connect wallet to claim"}
                 </p>
                 <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{formatRewardAmount(reward.amount, reward.token)}</div>
                 <button
@@ -261,6 +275,14 @@ export default function RewardsPage() {
           <ActivityTimeline activities={profile?.activities ?? []} />
         </div>
       </div>
+      <CongratulationsModal
+        open={Boolean(successReward)}
+        title="Congratulations"
+        amount={successReward?.amount}
+        message="Your reward has been paid to your connected wallet after mission verification."
+        txHash={successReward?.txHash}
+        onClose={() => setSuccessReward(null)}
+      />
     </div>
   );
 }
