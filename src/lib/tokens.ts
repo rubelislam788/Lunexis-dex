@@ -42,7 +42,7 @@ export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
 
 export const SWAP_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
 export const BRIDGE_TOKENS: TokenSymbol[] = ["USDC"];
-export const PORTFOLIO_TOKENS: TokenSymbol[] = ["ETH", "USDC", "EURC"];
+export const PORTFOLIO_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
 
 export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
   ETH: 18,
