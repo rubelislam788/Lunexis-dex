@@ -370,6 +370,41 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
           >
             {price}
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div
+              className="rounded-full px-2.5 py-1"
+              style={{
+                background: "rgba(255,255,255,0.035)",
+                border: `1px solid ${TOKEN_META[token].accent}18`,
+                color: "#9fb2c4",
+                fontSize: 10,
+                fontFamily: "'Space Grotesk'",
+                fontWeight: 700,
+                letterSpacing: 0,
+              }}
+            >
+              Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
+            </div>
+            {onQuickAmount && (
+              <>
+                {[
+                  ["25%", 25],
+                  ["50%", 50],
+                  ["75%", 75],
+                  ["Max", 100],
+                ].map(([quickLabel, percent]) => (
+                  <button
+                    key={quickLabel}
+                    onClick={() => onQuickAmount(Number(percent))}
+                    className="btn-ghost rounded-full py-1 px-3"
+                    style={{ fontSize: 10, letterSpacing: "0.04em", minHeight: 26 }}
+                  >
+                    {quickLabel}
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
         </div>
         <button
           onClick={onToken}
@@ -385,43 +420,6 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
           <span style={{ fontFamily: "'Space Grotesk'", fontSize: 15, fontWeight: 900, color: "#f8fbff" }}>{token}</span>
         </button>
       </div>
-      <div className="mt-3 flex justify-end">
-        <div className="flex flex-col items-end gap-1">
-          <div
-            className="rounded-full px-2.5 py-1"
-            style={{
-              background: "rgba(255,255,255,0.035)",
-              border: `1px solid ${TOKEN_META[token].accent}18`,
-              color: "#9fb2c4",
-              fontSize: 10,
-              fontFamily: "'Space Grotesk'",
-              fontWeight: 700,
-              letterSpacing: 0,
-            }}
-          >
-            Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
-          </div>
-        </div>
-      </div>
-      {onQuickAmount && (
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {[
-            ["25%", 25],
-            ["50%", 50],
-            ["75%", 75],
-            ["Max", 100],
-          ].map(([label, percent]) => (
-            <button
-              key={label}
-              onClick={() => onQuickAmount(Number(percent))}
-              className="btn-ghost rounded-full py-2"
-              style={{ fontSize: 10, letterSpacing: "0.04em" }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
