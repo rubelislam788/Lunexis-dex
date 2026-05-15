@@ -158,7 +158,7 @@ export function completeMission(address: string, missionId: string, xp: number):
   });
 }
 
-export function claimReward(address: string, rewardId: string, amount: number, token: TokenSymbol = "USDC"): UserProfile {
+export function claimReward(address: string, rewardId: string, amount: number, token: TokenSymbol = "USDC", txHash?: string): UserProfile {
   const current = loadProfile(address) ?? getDefaultProfile(address);
   if (current.claimedRewardIds.includes(rewardId)) return current;
   const rewardTokenTotals = {
@@ -171,7 +171,7 @@ export function claimReward(address: string, rewardId: string, amount: number, t
     rewardTokenTotals,
     claimedRewardIds: [...current.claimedRewardIds, rewardId],
     activities: [
-      createActivity("reward", "Reward claimed", `${amount.toLocaleString()} ${token} claimed from mission rewards.`, token),
+      createActivity("reward", "Reward claimed", `${amount.toLocaleString()} ${token} paid to your wallet.`, token, "completed", txHash),
       ...current.activities,
     ],
   });

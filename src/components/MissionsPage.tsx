@@ -117,6 +117,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [missionControlQuestId, setMissionControlQuestId] = useState(QUESTS[0]?.id ?? "");
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
+  const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
   const [missionClock, setMissionClock] = useState(() => Date.now());
   const isMissionAdmin = isAdminWallet(address);
 
@@ -258,6 +259,33 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.setTimeout(() => document.getElementById("mission-control-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
 
+  const claimQuestReward = async (quest: Quest) => {
+    if (!address || claimingQuestId) return;
+    const token = quest.reward.includes("EURC") ? "EURC" : "USDC";
+    setClaimingQuestId(quest.id);
+    setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Paying ${quest.reward} to your wallet...` }));
+    try {
+      const response = await fetch("/api/reward-payout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rewardId: quest.id,
+          token,
+          amount: quest.rewardAmt,
+          recipient: address,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error || "Reward payout failed.");
+      claim(quest.id, quest.rewardAmt, token, data?.hash);
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: `${quest.reward} paid to your wallet.` }));
+    } catch (error: any) {
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: error?.message || "Reward payout failed." }));
+    } finally {
+      setClaimingQuestId(null);
+    }
+  };
+
   const hasConfirmedActivity = async (type: "swap" | "bridge") => {
     const activities = profile?.activities.filter((item) => item.type === type && item.status === "completed") ?? [];
     if (activities.length === 0) return false;
@@ -359,7 +387,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           profile={profile}
           onSelectQuest={onSelectQuest}
           onVerify={verifyQuest}
-          onClaim={(quest) => claim(quest.id, quest.rewardAmt, quest.reward.includes("EURC") ? "EURC" : "USDC")}
+          onClaim={claimQuestReward}
           saveProof={saveProof}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}

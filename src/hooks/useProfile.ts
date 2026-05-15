@@ -51,9 +51,9 @@ export function useProfile() {
     return next;
   }, [address]);
 
-  const claim = useCallback((rewardId: string, amount: number, token?: Parameters<typeof claimReward>[3]) => {
+  const claim = useCallback((rewardId: string, amount: number, token?: Parameters<typeof claimReward>[3], txHash?: string) => {
     if (!address) return null;
-    const next = claimReward(address, rewardId, amount, token);
+    const next = claimReward(address, rewardId, amount, token, txHash);
     setProfile(next);
     return next;
   }, [address]);

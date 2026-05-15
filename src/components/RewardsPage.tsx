@@ -33,6 +33,8 @@ export default function RewardsPage() {
   const [rewards, setRewards] = useState<RewardConfig[]>(() => DEFAULT_REWARDS);
   const [showRewardAdmin, setShowRewardAdmin] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
+  const [claimMessage, setClaimMessage] = useState("");
   const isRewardAdmin = isAdminWallet(address);
 
   useEffect(() => {
@@ -99,6 +101,34 @@ export default function RewardsPage() {
       return;
     }
     setSaveState("error");
+  };
+
+  const claimTokenReward = async (reward: RewardConfig) => {
+    if (!address || claimingRewardId) return;
+    setClaimingRewardId(reward.id);
+    setClaimMessage("");
+    try {
+      const response = await fetch("/api/reward-payout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rewardId: reward.id,
+          token: reward.token,
+          amount: reward.amount,
+          recipient: address,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || "Reward payout failed.");
+      }
+      claim(reward.id, reward.amount, reward.token, data?.hash);
+      setClaimMessage(`${formatRewardAmount(reward.amount, reward.token)} paid to your wallet.`);
+    } catch (error: any) {
+      setClaimMessage(error?.message || "Reward payout failed.");
+    } finally {
+      setClaimingRewardId(null);
+    }
   };
 
   return (
@@ -200,6 +230,7 @@ export default function RewardsPage() {
           {rewards.map((reward) => {
             const claimed = profile?.claimedRewardIds.includes(reward.id);
             const eligible = Boolean(isConnected && profile && (reward.missionIds.length === 0 || reward.missionIds.every((id) => profile.completedMissionIds.includes(id))));
+            const isClaiming = claimingRewardId === reward.id;
             return (
               <div key={reward.id} className="arc-card rounded-3xl p-6">
                 <div style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>{reward.title}</div>
@@ -209,16 +240,21 @@ export default function RewardsPage() {
                 </p>
                 <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{formatRewardAmount(reward.amount, reward.token)}</div>
                 <button
-                  disabled={!eligible || claimed}
-                  onClick={() => claim(reward.id, reward.amount, reward.token)}
+                  disabled={!eligible || claimed || Boolean(claimingRewardId)}
+                  onClick={() => claimTokenReward(reward)}
                   className="btn-primary w-full mt-5 py-3 rounded-xl"
                 >
-                  {claimed ? "Completed" : "Claim Reward"}
+                  {claimed ? "Completed" : isClaiming ? "Paying..." : "Claim Reward"}
                 </button>
               </div>
             );
           })}
         </div>
+        {claimMessage && (
+          <div className="arc-card rounded-2xl p-4 mt-5" style={{ color: claimMessage.includes("paid") ? "#22c55e" : "#ffb7eb", fontSize: 13 }}>
+            {claimMessage}
+          </div>
+        )}
 
         <div className="arc-card rounded-3xl p-6 mt-6">
           <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Reward Activity</h2>
