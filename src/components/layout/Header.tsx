@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import FaucetButton from "@/components/ui/FaucetButton";
 import ArcLogo from "@/components/ui/ArcLogo";
 import type { Page } from "@/types";
 
@@ -65,7 +64,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           ))}
         </nav>
 
-        <button onClick={() => onNavigate("landing")} className="arc-floating-brand" aria-label="Go to home">
+        <button onClick={() => onNavigate("landing")} className="arc-floating-brand bg-transparent" aria-label="Go to home">
           <ArcLogo size={34} compact />
           <span>Lunexis</span>
         </button>
@@ -89,12 +88,9 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>account_circle</span>
             <span className="hidden sm:inline">Profile</span>
           </button>
-
-          <div className="hidden md:block">
-            <FaucetButton label="Faucet" compact />
+          <div className="hidden xl:block">
+            <ArcSwapConnectButton onProfile={() => onNavigate("profile")} />
           </div>
-
-          <ArcSwapConnectButton onProfile={() => onNavigate("profile")} />
         </div>
       </div>
     </header>
