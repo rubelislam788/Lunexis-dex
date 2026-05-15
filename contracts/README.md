@@ -47,3 +47,23 @@ Notes:
 - The deployer wallet must hold ARC, WETH, USDC, EURC, and Arc native gas before liquidity can be added.
 - `MINT_WETH` only works if the configured WETH contract exposes `faucet(uint256)`.
 - Do not commit `ARC_DEPLOYER_PRIVATE_KEY`.
+
+## Lunexis staking
+
+`LunexisStakingManager.sol` is a standalone ARC Testnet staking manager for ERC20 tokens.
+
+Frontend environment variables:
+
+```env
+NEXT_PUBLIC_LUNEXIS_STAKING_MANAGER_ADDRESS=0x...
+NEXT_PUBLIC_STAKING_ADMIN_WALLET=0x...
+```
+
+Deploy:
+
+```bash
+$env:DEPLOYER_PRIVATE_KEY="0x..."
+npm run deploy:staking
+```
+
+The manager supports flexible pools, locked pools, fixed reward-style pools, APR updates, pool pause controls, reward claiming, normal unstake, and emergency withdraw. Fund the contract with the chosen reward token before users claim rewards.

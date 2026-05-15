@@ -25,6 +25,7 @@ const NAV_LINKS: Array<{ label: string; page: Page }> = [
   { label: "Leaderboard", page: "leaderboard" },
   { label: "Rewards", page: "rewards" },
   { label: "Stats", page: "stats" },
+  { label: "Staking", page: "staking" },
 ];
 
 export default function Header({ currentPage, onNavigate, showSidebar, isOverlaySidebar, sidebarOpen, sidebarCollapsed, onToggleSidebar }: HeaderProps) {

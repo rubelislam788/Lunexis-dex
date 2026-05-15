@@ -5,7 +5,7 @@ import type { Page } from "@/types";
 const MOBILE_TABS: Array<{ page: Page; label: string; icon: string }> = [
   { page: "landing", label: "Home", icon: "home" },
   { page: "swap", label: "Swap", icon: "swap_horiz" },
-  { page: "bridge", label: "Bridge", icon: "hub" },
+  { page: "staking", label: "Stake", icon: "lock_open" },
   { page: "missions", label: "Missions", icon: "task_alt" },
   { page: "profile", label: "Profile", icon: "account_circle" },
 ];

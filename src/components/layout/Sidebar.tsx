@@ -23,6 +23,7 @@ const SIDE_LINKS: Array<{ label: string; page: Page; icon: string }> = [
   { label: "Rewards", page: "rewards", icon: "workspace_premium" },
   { label: "Swap", page: "swap", icon: "swap_horiz" },
   { label: "Bridge", page: "bridge", icon: "hub" },
+  { label: "Staking", page: "staking", icon: "lock_open" },
   { label: "Profile", page: "profile", icon: "account_circle" },
 ];
 
