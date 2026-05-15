@@ -1,4 +1,4 @@
-# ARC Quest — Web3 Mission Control
+# Lunexis — Web3 Mission Control
 
 A Next.js 15 web3 questing platform integrated with [Circle Arc App Kit](https://docs.arc.network/app-kit) for real cross-chain swap and bridge functionality.
 

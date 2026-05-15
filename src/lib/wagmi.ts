@@ -9,12 +9,12 @@ export const arcChain = {
   iconBackground: "#07111f",
 } satisfies Chain;
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "arc-swap-demo";
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "lunexis-demo";
 
 export const wagmiChains: readonly [Chain, ...Chain[]] = [arcChain];
 
 export const wagmiConfig = getDefaultConfig({
-  appName: "ARC Swap",
+  appName: "Lunexis",
   projectId,
   chains: wagmiChains,
   ssr: true,

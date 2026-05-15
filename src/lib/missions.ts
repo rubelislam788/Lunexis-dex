@@ -4,7 +4,7 @@ const DEFAULT_MISSION_START_AT = new Date().toISOString();
 const DEFAULT_MISSION_END_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
 const BASE_QUESTS: Quest[] = [
-  { id: "q1", title: "Arc Swap Initiation", description: "Complete a confirmed token swap on Arc and activate your operator route.", reward: "500 points", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 3, tags: ["Swap", "Arc"], featured: true, tasks: [
+  { id: "q1", title: "Lunexis Swap Initiation", description: "Complete a confirmed token swap on Arc and activate your operator route.", reward: "500 points", rewardAmt: 500, xp: 250, difficulty: "Easy", category: "DeFi", progress: 0, totalSteps: 3, tags: ["Swap", "Arc"], featured: true, tasks: [
     { id: "q1-t1", title: "Connect wallet on Arc Testnet." },
     { id: "q1-t2", title: "Select a token pair in Swap." },
     { id: "q1-t3", title: "Confirm one onchain swap transaction." },

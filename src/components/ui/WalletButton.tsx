@@ -84,7 +84,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
                 )}
                 <div>
                   <p style={{ fontFamily: "'Space Grotesk'", fontSize: 14, color: "#f8fbff", fontWeight: 900 }}>
-                    {profile?.username ?? "ARC Operator"}
+                    {profile?.username ?? "Lunexis Operator"}
                   </p>
                   <p style={{ fontSize: 11, color: "#849495", fontFamily: "'Space Grotesk'" }}>
                     {formatAddress(address)}
@@ -157,7 +157,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
               </button>
             </div>
             <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 20, fontWeight: 900, color: "#f8fbff", marginBottom: 6 }}>Connect Wallet</h3>
-            <p style={{ color: "#849495", fontSize: 13, marginBottom: 18 }}>Choose a wallet adapter for ARC Swap.</p>
+            <p style={{ color: "#849495", fontSize: 13, marginBottom: 18 }}>Choose a wallet adapter for Lunexis.</p>
             <div className="grid gap-3">
               {walletOptions.map((wallet) => (
                 <button

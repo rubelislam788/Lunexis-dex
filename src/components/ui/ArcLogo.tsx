@@ -88,7 +88,7 @@ export default function ArcLogo({
             lineHeight: 1,
           }}
         >
-          ARC SWAP
+          Lunexis
         </div>
         <div
           style={{

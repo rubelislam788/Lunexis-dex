@@ -73,7 +73,7 @@ export function getDefaultProfile(address: string): UserProfile {
     claimedRewardIds: [],
     balances: DEFAULT_BALANCES,
     activities: [
-      createActivity("wallet", "Wallet connected", `${address.slice(0, 6)}...${address.slice(-4)} joined ARC Swap.`),
+      createActivity("wallet", "Wallet connected", `${address.slice(0, 6)}...${address.slice(-4)} joined Lunexis.`),
     ],
   };
 }

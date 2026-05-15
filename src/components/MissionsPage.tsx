@@ -320,7 +320,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         <div className="flex justify-between items-center mb-8 arc-fade-up">
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#e9feff", marginBottom: 4 }}>
-              ARC Mission Grid
+              Lunexis Mission Grid
             </h1>
             <p style={{ color: "#849495", fontSize: 14 }}>
               Verify real activity, unlock XP, and build your operator history.

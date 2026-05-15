@@ -7,7 +7,7 @@ import FaucetButton from "@/components/ui/FaucetButton";
 const REWARDS = [
   { id: "reward-social", title: "Social Signal Pack", amount: 650, requirement: "Complete all social missions", missionIds: ["social-follow", "social-rubel-post", "social-arc-post"] },
   { id: "reward-bridge", title: "Bridge Operator Bonus", amount: 800, requirement: "Complete Bridge the Arc Gate", missionIds: ["q2"] },
-  { id: "reward-swap", title: "Swap Pilot Bonus", amount: 500, requirement: "Complete Arc Swap Initiation", missionIds: ["q1"] },
+  { id: "reward-swap", title: "Swap Pilot Bonus", amount: 500, requirement: "Complete Lunexis Swap Initiation", missionIds: ["q1"] },
   { id: "reward-route", title: "Route Pathfinder Bonus", amount: 2500, requirement: "Complete swap and bridge route mission", missionIds: ["q4"] },
 ];
 
