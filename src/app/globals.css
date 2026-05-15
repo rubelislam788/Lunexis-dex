@@ -529,27 +529,25 @@ body::after {
   padding: 7px 12px !important;
   border-radius: 8px !important;
   background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.5) !important;
-  color: rgba(255,255,255,0.72) !important;
+  border: 1px solid rgb(61, 106, 255) !important;
+  color: #ffffff !important;
   font-size: 10px !important;
   font-weight: 900 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
   white-space: nowrap;
-  text-shadow: none !important;
   box-shadow: none !important;
-  transition: 0.5s ease !important;
+  transition: all 0.2s ease-in !important;
 }
 
 .arc-floating-nav-link:hover,
 .arc-floating-nav-link.is-active {
-  background: #008cff !important;
-  border-color: #008cff !important;
+  background: rgb(61, 106, 255) !important;
+  border-color: rgb(61, 106, 255) !important;
   color: #ffffff !important;
   transform: translateY(-1px);
-  text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff !important;
-  box-shadow: 0 0 5px #008cff, 0 0 20px #008cff, 0 0 50px #008cff, 0 0 100px #008cff !important;
-  transition: 0.5s ease !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
+  transition: all 0.2s ease-out !important;
 }
 
 .arc-floating-menu-button {
@@ -559,10 +557,10 @@ body::after {
   place-items: center;
   border-radius: 8px !important;
   background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.5) !important;
+  border: 1px solid rgb(61, 106, 255) !important;
   box-shadow: none !important;
   overflow: hidden !important;
-  transition: 0.5s ease !important;
+  transition: all 0.2s ease-in !important;
 }
 
 .arc-floating-menu-button::after {
@@ -571,10 +569,10 @@ body::after {
 
 .arc-floating-menu-button:hover,
 .arc-floating-menu-button.is-active {
-  background: #008cff !important;
-  border-color: #008cff !important;
-  box-shadow: 0 0 5px #008cff, 0 0 20px #008cff, 0 0 50px #008cff, 0 0 100px #008cff !important;
-  transition: 0.5s ease !important;
+  background: rgb(61, 106, 255) !important;
+  border-color: rgb(61, 106, 255) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
+  transition: all 0.2s ease-out !important;
 }
 
 .arc-floating-menu-button .hamburger-label {
@@ -623,28 +621,26 @@ body::after {
   padding: 7px 12px !important;
   border-radius: 8px !important;
   background: transparent !important;
-  color: rgba(255,255,255,0.72) !important;
-  border: 1px solid rgba(255,255,255,0.5) !important;
+  color: #ffffff !important;
+  border: 1px solid rgb(61, 106, 255) !important;
   font-family: "Space Grotesk", sans-serif;
   font-size: 10px !important;
   font-weight: 900 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
-  text-shadow: none !important;
   box-shadow: none !important;
-  transition: 0.5s ease !important;
+  transition: all 0.2s ease-in !important;
 }
 
 .arc-floating-action:hover,
 .arc-floating-action:focus,
 .arc-floating-action.is-active {
-  background: #008cff !important;
+  background: rgb(61, 106, 255) !important;
   transform: translateY(-1px);
-  border-color: #008cff !important;
+  border-color: rgb(61, 106, 255) !important;
   color: #ffffff !important;
-  text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff !important;
-  box-shadow: 0 0 5px #008cff, 0 0 20px #008cff, 0 0 50px #008cff, 0 0 100px #008cff !important;
-  transition: 0.5s ease !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
+  transition: all 0.2s ease-out !important;
 }
 
 .arc-floating-topbar .btn-primary,
@@ -654,12 +650,11 @@ body::after {
   border-radius: 8px !important;
   padding: 7px 12px !important;
   background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.5) !important;
-  color: rgba(255,255,255,0.72) !important;
+  border: 1px solid rgb(61, 106, 255) !important;
+  color: #ffffff !important;
   font-size: 10px !important;
   box-shadow: none !important;
-  text-shadow: none !important;
-  transition: 0.5s ease !important;
+  transition: all 0.2s ease-in !important;
 }
 
 .arc-floating-topbar .btn-primary::before,
@@ -674,12 +669,11 @@ body::after {
 .arc-floating-topbar .btn-primary:hover,
 .arc-floating-topbar .btn-ghost:hover,
 .arc-floating-topbar .btn-outline-cyan:hover {
-  background: #008cff !important;
-  border-color: #008cff !important;
+  background: rgb(61, 106, 255) !important;
+  border-color: rgb(61, 106, 255) !important;
   color: #ffffff !important;
   transform: translateY(-1px);
-  text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff !important;
-  box-shadow: 0 0 5px #008cff, 0 0 20px #008cff, 0 0 50px #008cff, 0 0 100px #008cff !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
 }
 
 .arc-topbar-wallet-only .btn-primary {
