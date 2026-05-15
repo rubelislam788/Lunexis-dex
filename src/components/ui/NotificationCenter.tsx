@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 
 const READ_KEY = "lunexis.notifications.read.v1";
@@ -18,6 +18,7 @@ export default function NotificationCenter() {
   const { profile } = useProfile();
   const [open, setOpen] = useState(false);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setReadIds(getReadIds());
@@ -46,6 +47,27 @@ export default function NotificationCenter() {
 
   const unread = notifications.filter((item) => !readIds.has(item.id)).length;
 
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
   const markAllRead = () => {
     const next = new Set(notifications.map((item) => item.id));
     setReadIds(next);
@@ -53,7 +75,7 @@ export default function NotificationCenter() {
   };
 
   return (
-    <div className="lunexis-notification-center">
+    <div className="lunexis-notification-center" ref={rootRef}>
       <button type="button" className="arc-floating-action lunexis-icon-button" onClick={() => setOpen((value) => !value)} aria-label="Notifications">
         <span className="material-symbols-outlined" style={{ fontSize: 16 }}>notifications</span>
         {unread > 0 && <span className="lunexis-unread-dot">{unread > 9 ? "9+" : unread}</span>}

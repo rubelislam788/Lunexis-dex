@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const THEMES = [
   { id: "dark", label: "Dark" },
@@ -15,6 +15,7 @@ const STORAGE_KEY = "lunexis.theme.v1";
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState<ThemeId>("dark");
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeId | null;
@@ -23,6 +24,27 @@ export default function ThemeSwitcher() {
     document.body.dataset.lunexisTheme = next;
     document.documentElement.dataset.lunexisTheme = next;
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
 
   const selectTheme = (next: ThemeId) => {
     setTheme(next);
@@ -33,7 +55,7 @@ export default function ThemeSwitcher() {
   };
 
   return (
-    <div className="lunexis-theme-switcher">
+    <div className="lunexis-theme-switcher" ref={rootRef}>
       <button type="button" className="arc-floating-action lunexis-icon-button" onClick={() => setOpen((value) => !value)} aria-label="Switch theme">
         <span className="material-symbols-outlined" style={{ fontSize: 16 }}>palette</span>
         <span className="hidden sm:inline">{theme}</span>
