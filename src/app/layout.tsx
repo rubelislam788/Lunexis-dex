@@ -5,7 +5,7 @@ import "./globals.css";
 import Providers from "@/components/layout/Providers";
 
 export const metadata: Metadata = {
-  title: "Lunexis - ARC Chain DEX",
+  title: "Lunexis - ARC TESTNET DEX",
   description: "Lunexis is a modern decentralized exchange for the ARC Chain ecosystem with swap, liquidity, portfolio, and mission tooling.",
   keywords: ["Web3", "Lunexis", "ARC Chain", "DEX", "DeFi", "RainbowKit", "wagmi"],
 };

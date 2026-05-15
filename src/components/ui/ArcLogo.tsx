@@ -45,7 +45,7 @@ export default function ArcLogo({
             marginTop: 4,
           }}
         >
-          ARC Chain DEX
+          ARC TESTNET DEX
         </div>
       </div>
     </div>
