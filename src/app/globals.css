@@ -520,28 +520,26 @@ body::after {
   justify-content: center;
   gap: 7px;
   padding: 7px 12px !important;
-  border-radius: 13px !important;
-  background:
-    linear-gradient(180deg, rgba(15, 50, 122, 0.88) 0%, rgba(6, 21, 70, 0.94) 56%, rgba(3, 10, 34, 0.94) 100%) !important;
-  border: 1px solid rgba(90, 145, 255, 0.58) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, #4c7dff 0%, #3266f4 100%) !important;
+  border: 1px solid rgba(135, 176, 255, 0.74) !important;
   color: #ffffff !important;
   font-size: 10px !important;
   font-weight: 900 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
   white-space: nowrap;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 18px rgba(61,106,255,0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 10px 24px rgba(61,106,255,0.2) !important;
   transition: all 0.2s ease-in !important;
 }
 
 .arc-floating-nav-link:hover,
 .arc-floating-nav-link.is-active {
-  background:
-    linear-gradient(180deg, rgba(21, 67, 149, 0.94) 0%, rgba(8, 29, 91, 0.98) 56%, rgba(3, 12, 42, 0.98) 100%) !important;
-  border-color: rgba(148,217,255,0.7) !important;
+  background: linear-gradient(180deg, #5d8cff 0%, #275df1 100%) !important;
+  border-color: rgba(205, 226, 255, 0.88) !important;
   color: #ffffff !important;
   transform: translateY(-1px);
-  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.3) !important;
   transition: all 0.2s ease-out !important;
 }
 
@@ -550,11 +548,10 @@ body::after {
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 13px !important;
-  background:
-    linear-gradient(180deg, rgba(15, 50, 122, 0.88) 0%, rgba(6, 21, 70, 0.94) 56%, rgba(3, 10, 34, 0.94) 100%) !important;
-  border: 1px solid rgba(90, 145, 255, 0.58) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 18px rgba(61,106,255,0.14) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, #4c7dff 0%, #3266f4 100%) !important;
+  border: 1px solid rgba(135, 176, 255, 0.74) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 10px 24px rgba(61,106,255,0.2) !important;
   overflow: hidden !important;
   transition: all 0.2s ease-in !important;
 }
@@ -565,10 +562,9 @@ body::after {
 
 .arc-floating-menu-button:hover,
 .arc-floating-menu-button.is-active {
-  background:
-    linear-gradient(180deg, rgba(21, 67, 149, 0.94) 0%, rgba(8, 29, 91, 0.98) 56%, rgba(3, 12, 42, 0.98) 100%) !important;
-  border-color: rgba(148,217,255,0.7) !important;
-  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+  background: linear-gradient(180deg, #5d8cff 0%, #275df1 100%) !important;
+  border-color: rgba(205, 226, 255, 0.88) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.3) !important;
   transition: all 0.2s ease-out !important;
 }
 
@@ -616,27 +612,25 @@ body::after {
   justify-content: center;
   gap: 7px;
   padding: 7px 12px !important;
-  border-radius: 13px !important;
-  background:
-    linear-gradient(180deg, rgba(15, 50, 122, 0.88) 0%, rgba(6, 21, 70, 0.94) 56%, rgba(3, 10, 34, 0.94) 100%) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, #4c7dff 0%, #3266f4 100%) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(90, 145, 255, 0.58) !important;
+  border: 1px solid rgba(135, 176, 255, 0.74) !important;
   font-family: "Space Grotesk", sans-serif;
   font-size: 10px !important;
   font-weight: 900 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 18px rgba(61,106,255,0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 10px 24px rgba(61,106,255,0.2) !important;
   transition: all 0.2s ease-in !important;
 }
 
 .arc-floating-action:hover,
 .arc-floating-action.is-active {
-  background:
-    linear-gradient(180deg, rgba(21, 67, 149, 0.94) 0%, rgba(8, 29, 91, 0.98) 56%, rgba(3, 12, 42, 0.98) 100%) !important;
+  background: linear-gradient(180deg, #5d8cff 0%, #275df1 100%) !important;
   transform: translateY(-1px);
-  border-color: rgba(148,217,255,0.7) !important;
-  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+  border-color: rgba(205, 226, 255, 0.88) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.3) !important;
   transition: all 0.2s ease-out !important;
 }
 
@@ -644,13 +638,13 @@ body::after {
 .arc-floating-topbar .btn-ghost,
 .arc-floating-topbar .btn-outline-cyan {
   min-height: 34px !important;
-  border-radius: 13px !important;
+  border-radius: 8px !important;
   padding: 7px 12px !important;
-  background: linear-gradient(180deg, rgba(15, 50, 122, 0.88), rgba(3, 10, 34, 0.94)) !important;
-  border: 1px solid rgba(90,145,255,0.58) !important;
+  background: linear-gradient(180deg, #4c7dff 0%, #3266f4 100%) !important;
+  border: 1px solid rgba(135, 176, 255, 0.74) !important;
   color: #ffffff !important;
   font-size: 10px !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 18px rgba(61,106,255,0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 10px 24px rgba(61,106,255,0.2) !important;
 }
 
 .arc-floating-topbar .btn-primary::before,
@@ -665,8 +659,9 @@ body::after {
 .arc-floating-topbar .btn-primary:hover,
 .arc-floating-topbar .btn-ghost:hover,
 .arc-floating-topbar .btn-outline-cyan:hover {
-  background: linear-gradient(180deg, rgba(21, 67, 149, 0.94), rgba(3, 12, 42, 0.98)) !important;
+  background: linear-gradient(180deg, #5d8cff 0%, #275df1 100%) !important;
   transform: translateY(-1px);
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.52), inset 0 1px 0 rgba(255,255,255,0.3) !important;
 }
 
 .arc-topbar-wallet-only .btn-primary {
