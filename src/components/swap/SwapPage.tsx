@@ -370,7 +370,7 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
           >
             {price}
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {onQuickAmount && (
               <>
                 {[
