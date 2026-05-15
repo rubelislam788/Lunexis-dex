@@ -66,7 +66,6 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
 
         <button onClick={() => onNavigate("landing")} className="arc-floating-brand bg-transparent" aria-label="Go to home">
           <ArcLogo size={34} compact />
-          <span>Lunexis</span>
         </button>
 
         <div className="arc-topbar-right flex items-center gap-2">
