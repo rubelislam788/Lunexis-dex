@@ -38,6 +38,20 @@ export default function SwapPage() {
     if (balancesLoading || item?.isLoading) return "Loading...";
     return item?.displayAmount || `${item?.amount ?? "0"} ${symbol}`;
   };
+  const priceLabel = (symbol: TokenSymbol) => {
+    const item = balances.find((balance) => balance.token === symbol);
+    if (balancesLoading || item?.isLoading) return "Price syncing";
+    return item?.unitPrice || "Price syncing";
+  };
+  const quoteRate = (() => {
+    const amountIn = Number(state.amountIn || 0);
+    const amountOut = Number(estimatedOut || 0);
+    if (!Number.isFinite(amountIn) || !Number.isFinite(amountOut) || amountIn <= 0 || amountOut <= 0) {
+      return "Enter amount for live quote";
+    }
+    const rate = amountOut / amountIn;
+    return `1 ${fromToken.symbol} = ${rate.toLocaleString(undefined, { minimumFractionDigits: rate >= 1 ? 2 : 4, maximumFractionDigits: 6 })} ${toToken.symbol}`;
+  })();
   const fromBalanceAmount = balances.find((balance) => balance.token === fromToken.symbol)?.amount ?? "0";
   const setPercentAmount = (percent: number) => {
     const numeric = Number(fromBalanceAmount || 0);
@@ -127,6 +141,7 @@ export default function SwapPage() {
               token={fromToken.symbol}
               amount={state.amountIn}
               balance={balanceLabel(fromToken.symbol)}
+              price={priceLabel(fromToken.symbol)}
               onAmount={(amount) => updateState({ amountIn: amount })}
               onToken={() => setSelector("from")}
               onQuickAmount={setPercentAmount}
@@ -145,6 +160,7 @@ export default function SwapPage() {
               token={toToken.symbol}
               amount={quoteLoading ? "Loading..." : estimatedOut ? `~ ${estimatedOut}` : ""}
               balance={balanceLabel(toToken.symbol)}
+              price={priceLabel(toToken.symbol)}
               readOnly
               onToken={() => setSelector("to")}
             />
@@ -160,6 +176,12 @@ export default function SwapPage() {
             <div className="flex justify-between rounded-2xl p-4 mb-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <span style={{ color: "#849495" }}>Price Impact</span>
               <span style={{ color: estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? "< 0.1%" : "Onchain Quote"}</span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl p-4 mb-6" style={{ background: "rgba(0,220,229,0.055)", border: "1px solid rgba(56,189,248,0.14)" }}>
+              <span style={{ color: "#849495" }}>Swap Price</span>
+              <span style={{ color: estimatedOut ? "#38bdf8" : "#9fb2c4", fontFamily: "'Space Grotesk'", fontWeight: 900, fontSize: 13 }}>
+                {quoteLoading ? "Fetching onchain quote..." : quoteRate}
+              </span>
             </div>
 
             {needsApproval && currentChainId === requiredChainId && (
@@ -207,6 +229,7 @@ export default function SwapPage() {
                     <div style={{ fontFamily: "'Space Grotesk'", color: "#f8fbff", fontWeight: 900 }}>{symbol}</div>
                     <div style={{ color: "#849495", fontSize: 12 }}>{token.label}</div>
                     <div style={{ color: "#6f8699", fontSize: 11, marginTop: 4 }}>Balance: {balanceLabel(symbol)}</div>
+                    <div style={{ color: "#38bdf8", fontSize: 11, marginTop: 2, fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{priceLabel(symbol)}</div>
                   </div>
                 </button>
               );
@@ -270,7 +293,7 @@ export default function SwapPage() {
   );
 }
 
-function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
+function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; price: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
   return (
     <div className="rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
       <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "#849495", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
@@ -300,19 +323,35 @@ function TokenAmountPanel({ label, token, amount, balance, readOnly, onAmount, o
         </button>
       </div>
       <div className="mt-3 flex justify-end">
-        <div
-          className="rounded-full px-2.5 py-1"
-          style={{
-            background: "rgba(255,255,255,0.035)",
-            border: `1px solid ${TOKEN_META[token].accent}18`,
-            color: "#9fb2c4",
-            fontSize: 10,
-            fontFamily: "'Space Grotesk'",
-            fontWeight: 700,
-            letterSpacing: 0,
-          }}
-        >
-          Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
+        <div className="flex flex-col items-end gap-1">
+          <div
+            className="rounded-full px-2.5 py-1"
+            style={{
+              background: "rgba(255,255,255,0.035)",
+              border: `1px solid ${TOKEN_META[token].accent}18`,
+              color: "#9fb2c4",
+              fontSize: 10,
+              fontFamily: "'Space Grotesk'",
+              fontWeight: 700,
+              letterSpacing: 0,
+            }}
+          >
+            Bal <span style={{ color: "#dbeafe" }}>{balance}</span>
+          </div>
+          <div
+            className="rounded-full px-2.5 py-1"
+            style={{
+              background: `${TOKEN_META[token].accent}10`,
+              border: `1px solid ${TOKEN_META[token].accent}22`,
+              color: "#c9f3ff",
+              fontSize: 10,
+              fontFamily: "'Space Grotesk'",
+              fontWeight: 800,
+              letterSpacing: 0,
+            }}
+          >
+            {price}
+          </div>
         </div>
       </div>
       {onQuickAmount && (
