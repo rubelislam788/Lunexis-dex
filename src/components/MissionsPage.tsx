@@ -104,7 +104,7 @@ async function publishMissions(quests: Quest[]) {
 
 interface MissionsPageProps {
   onNavigate: (page: Page) => void;
-  onSelectQuest: (questId: string) => void;
+  onSelectQuest: (quest: Quest) => void;
 }
 
 export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
@@ -631,7 +631,7 @@ function MissionSection({
   title: string;
   quests: Quest[];
   profile: ReturnType<typeof useProfile>["profile"];
-  onSelectQuest: (questId: string) => void;
+  onSelectQuest: (quest: Quest) => void;
   onVerify: (quest: Quest) => void;
   onClaim: (quest: Quest) => void;
   saveProof: (key: string) => void;
@@ -687,7 +687,7 @@ function QuestCard({
   claimed?: boolean;
   verifyState: VerifyState;
   verifyMessage?: string;
-  onSelectQuest: (questId: string) => void;
+  onSelectQuest: (quest: Quest) => void;
   onVerify: () => void;
   onClaim: () => void;
   saveProof: (key: string) => void;
@@ -709,7 +709,7 @@ function QuestCard({
         border: `1px solid ${completed ? "rgba(34,197,94,0.42)" : featured ? "rgba(0,220,229,0.22)" : "rgba(255,255,255,0.06)"}`,
         boxShadow: completed ? "0 0 26px rgba(34,197,94,0.14)" : featured ? "0 0 20px rgba(0,220,229,0.08)" : "none",
       }}
-      onClick={() => onSelectQuest(quest.id)}
+      onClick={() => onSelectQuest(quest)}
     >
       <div className="flex justify-between gap-4">
         <div className="flex gap-4">

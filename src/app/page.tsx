@@ -12,8 +12,8 @@ import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
 import LeaderboardPage from "@/components/LeaderboardPage";
 import StatsPage from "@/components/StatsPage";
-import { QUESTS } from "@/lib/missions";
 import LunexisIntro from "@/components/ui/LunexisIntro";
+import type { Quest } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +64,7 @@ const SOCIAL_LINKS = [
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
-  const [selectedQuestId, setSelectedQuestId] = useState<string>("q2");
+  const [selectedQuest, setSelectedQuest] = useState<Quest | undefined>();
   const [isOverlaySidebar, setIsOverlaySidebar] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -88,14 +88,13 @@ export default function Home() {
     if (isOverlaySidebar) setSidebarOpen(false);
   };
 
-  const selectQuest = (questId: string) => {
-    setSelectedQuestId(questId);
+  const selectQuest = (quest: Quest) => {
+    setSelectedQuest(quest);
     setCurrentPage("quest-detail");
     if (isOverlaySidebar) setSidebarOpen(false);
   };
 
   const showSidebar = PAGES_WITH_SIDEBAR.includes(currentPage);
-  const selectedQuest = QUESTS.find((quest) => quest.id === selectedQuestId);
   const sidebarOffset = showSidebar && !isOverlaySidebar ? (sidebarCollapsed ? "5.75rem" : "15rem") : "0rem";
   const appShellStyle = { ["--arc-sidebar-offset" as any]: sidebarOffset } as CSSProperties;
 
