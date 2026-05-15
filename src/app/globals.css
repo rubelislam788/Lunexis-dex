@@ -1001,27 +1001,14 @@ html[data-lunexis-theme] .arc-floating-topbar {
   .arc-floating-topbar {
     width: min(100%, calc(100vw - 1rem)) !important;
     min-height: 54px;
-    grid-template-columns: 42px 1fr auto !important;
+    grid-template-columns: 1fr auto 1fr !important;
     gap: 0.45rem !important;
     padding: 0.45rem !important;
     border-radius: 999px !important;
   }
 
-  .arc-floating-topbar.has-no-sidebar-menu {
-    grid-template-columns: 1fr auto 1fr !important;
-  }
-
-  .arc-floating-topbar.has-no-sidebar-menu .arc-floating-brand {
-    grid-column: 2 !important;
-    justify-self: center !important;
-  }
-
-  .arc-floating-topbar.has-no-sidebar-menu .arc-topbar-right {
-    grid-column: 3 !important;
-    justify-self: end !important;
-  }
-
   .arc-floating-brand {
+    grid-column: 2 !important;
     justify-self: center !important;
     padding: 0.2rem !important;
   }
@@ -2475,33 +2462,22 @@ select.lunexis-staking-input {
 
 @media (max-width: 1023px) {
   .arc-floating-topbar {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto 1fr;
     width: min(720px, calc(100vw - 22px));
     gap: 10px;
     padding: 8px;
   }
 
   .arc-floating-brand {
-    justify-self: start;
+    grid-column: 2;
+    justify-self: center;
     font-size: 18px !important;
   }
 
   .arc-topbar-right {
-    gap: 6px;
-  }
-
-  .arc-floating-topbar.has-no-sidebar-menu {
-    grid-template-columns: 1fr auto 1fr;
-  }
-
-  .arc-floating-topbar.has-no-sidebar-menu .arc-floating-brand {
-    grid-column: 2;
-    justify-self: center;
-  }
-
-  .arc-floating-topbar.has-no-sidebar-menu .arc-topbar-right {
     grid-column: 3;
     justify-self: end;
+    gap: 6px;
   }
 }
 

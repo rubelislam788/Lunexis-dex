@@ -181,11 +181,6 @@ export default function Home() {
       <Header
         currentPage={currentPage}
         onNavigate={navigate}
-        showSidebar={showSidebar}
-        isOverlaySidebar={isOverlaySidebar}
-        sidebarOpen={sidebarOpen}
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={toggleSidebar}
       />
       <Sidebar
         currentPage={currentPage}

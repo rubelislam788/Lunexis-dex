@@ -13,11 +13,6 @@ const ArcSwapConnectButton = dynamic<{ onProfile?: () => void }>(() => import("@
 interface HeaderProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
-  showSidebar: boolean;
-  isOverlaySidebar: boolean;
-  sidebarOpen: boolean;
-  sidebarCollapsed: boolean;
-  onToggleSidebar: () => void;
 }
 
 const NAV_LINKS: Array<{ label: string; page: Page }> = [
@@ -28,7 +23,7 @@ const NAV_LINKS: Array<{ label: string; page: Page }> = [
   { label: "Staking", page: "staking" },
 ];
 
-export default function Header({ currentPage, onNavigate, showSidebar, isOverlaySidebar, sidebarOpen, sidebarCollapsed, onToggleSidebar }: HeaderProps) {
+export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -51,22 +46,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
         opacity: hidden ? 0 : 1,
       }}
     >
-      <div className={`arc-floating-topbar pointer-events-auto ${showSidebar ? "has-sidebar-menu" : "has-no-sidebar-menu"}`}>
-        {showSidebar && (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className={`arc-floating-menu-button arc-mobile-menu-trigger ${sidebarOpen && !sidebarCollapsed ? "is-active" : ""}`}
-            aria-label={isOverlaySidebar ? "Open menu" : "Toggle sidebar"}
-            aria-pressed={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
-          >
-            <span className="hamburger-label" aria-hidden="true">
-              <span className="line1" />
-              <span className="line2" />
-              <span className="line3" />
-            </span>
-          </button>
-        )}
+      <div className="arc-floating-topbar pointer-events-auto">
         <nav className="arc-topbar-left hidden lg:flex items-center gap-2">
           {NAV_LINKS.map(({ label, page }) => (
             <button
