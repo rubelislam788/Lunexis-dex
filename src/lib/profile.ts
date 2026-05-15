@@ -5,9 +5,9 @@ const STORAGE_KEY = "arcquest.profiles.v1";
 type ProfileStore = Record<string, UserProfile>;
 
 const DEFAULT_BALANCES: PortfolioBalance[] = [
-  { token: "ETH", amount: "0", value: "Live", chain: "Connected network" },
-  { token: "USDC", amount: "0", value: "$0.00", chain: "Connected network" },
-  { token: "EURC", amount: "0", value: "EUR 0.00", chain: "Connected network" },
+  { token: "ETH", amount: "0", value: "$0.00", unitPrice: "Price syncing", chain: "Connected network" },
+  { token: "USDC", amount: "0", value: "$0.00", unitPrice: "$1.00 / USDC", chain: "Connected network" },
+  { token: "EURC", amount: "0", value: "$0.00", unitPrice: "Price syncing", chain: "Connected network" },
 ];
 
 function normalizeAddress(address: string) {

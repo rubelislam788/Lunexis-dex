@@ -31,12 +31,15 @@ const tokenChains: Record<TokenSymbol, number> = {
   WETH: ARC_CHAIN_ID,
 };
 
+type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
+
 function emptyBalances(isLoading = false): PortfolioBalance[] {
   return PORTFOLIO_TOKENS.map((token) => ({
     token,
     amount: "0",
     displayAmount: `0.00 ${token}`,
-    value: token === "USDC" ? "$0.00" : token === "EURC" ? "EUR 0.00" : "Live",
+    value: "$0.00",
+    unitPrice: "Price syncing",
     chain: TOKEN_META[token].chain,
     isLoading,
   }));
@@ -61,11 +64,40 @@ function displayAmountFor(token: TokenSymbol, amount: string) {
   return `${formatted} ${token}`;
 }
 
-function valueFor(token: TokenSymbol, amount: string) {
+function formatUsd(value: number) {
+  if (!Number.isFinite(value)) return "Price unavailable";
+  return `$${value.toLocaleString(undefined, {
+    minimumFractionDigits: value >= 1 ? 2 : 4,
+    maximumFractionDigits: value >= 1 ? 2 : 6,
+  })}`;
+}
+
+function valueFor(token: TokenSymbol, amount: string, prices: TokenPriceMap) {
   const numeric = Number(amount || 0);
-  if (token === "USDC") return `$${numeric.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-  if (token === "EURC") return `EUR ${numeric.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-  return "Live";
+  const price = prices[token];
+  if (!Number.isFinite(price)) return token === "ARC" ? "Price unavailable" : "$0.00";
+  return formatUsd(numeric * Number(price));
+}
+
+function unitPriceFor(token: TokenSymbol, prices: TokenPriceMap) {
+  const price = prices[token];
+  if (!Number.isFinite(price)) return token === "ARC" ? "No market price" : "Price syncing";
+  return `${formatUsd(Number(price))} / ${token}`;
+}
+
+async function fetchTokenPrices(): Promise<TokenPriceMap> {
+  const response = await fetch("/api/token-prices").catch(() => null);
+  if (!response?.ok) {
+    return { USDC: 1, EURC: 1 };
+  }
+  const data = await response.json().catch(() => null);
+  return {
+    USDC: 1,
+    EURC: Number(data?.prices?.EURC) || 1,
+    ETH: Number(data?.prices?.ETH) || undefined,
+    WETH: Number(data?.prices?.WETH) || undefined,
+    ARC: Number(data?.prices?.ARC) || undefined,
+  };
 }
 
 async function readTokenBalance(address: Address, token: TokenSymbol) {
@@ -121,6 +153,7 @@ export function usePortfolioBalances(refreshMs = 12000) {
     setBalances((prev) => prev.length ? prev.map((item) => ({ ...item, isLoading: true })) : emptyBalances(true));
 
     try {
+      const prices = await fetchTokenPrices();
       const next = await Promise.all(PORTFOLIO_TOKENS.map(async (token) => {
         try {
           const { raw, decimals } = await readTokenBalance(address, token);
@@ -130,7 +163,8 @@ export function usePortfolioBalances(refreshMs = 12000) {
             token,
             amount,
             displayAmount: displayAmountFor(token, amount),
-            value: valueFor(token, amount),
+            value: valueFor(token, amount, prices),
+            unitPrice: unitPriceFor(token, prices),
             chain: TOKEN_META[token].chain,
             isLoading: false,
           };
@@ -139,7 +173,8 @@ export function usePortfolioBalances(refreshMs = 12000) {
             token,
             amount: "0",
             displayAmount: displayAmountFor(token, "0"),
-            value: valueFor(token, "0"),
+            value: valueFor(token, "0", prices),
+            unitPrice: unitPriceFor(token, prices),
             chain: TOKEN_META[token].chain,
             isLoading: false,
           };

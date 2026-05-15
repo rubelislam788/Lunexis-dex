@@ -120,7 +120,8 @@ export default function ProfilePage() {
                     <div style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginTop: 10 }}>
                       {balance.isLoading ? <span className="arc-skeleton inline-block w-16 h-4 rounded-full" /> : `${balance.amount} ${balance.token}`}
                     </div>
-                    <div style={{ color: "#849495", fontSize: 11 }}>{balance.value}</div>
+                    <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900 }}>{balance.value}</div>
+                    <div style={{ color: "#849495", fontSize: 10 }}>{balance.unitPrice}</div>
                     <div style={{ color: "#5f778b", fontSize: 10, marginTop: 3 }}>{balance.chain}</div>
                   </div>
                 ))}

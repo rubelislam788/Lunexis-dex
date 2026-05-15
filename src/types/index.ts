@@ -81,6 +81,7 @@ export interface PortfolioBalance {
   amount: string;
   displayAmount?: string;
   value: string;
+  unitPrice?: string;
   chain: string;
   isLoading?: boolean;
 }
