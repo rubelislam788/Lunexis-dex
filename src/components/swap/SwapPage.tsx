@@ -305,8 +305,7 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
           readOnly={readOnly}
           onChange={(event) => onAmount?.(event.target.value)}
           placeholder="0.00"
-          className="flex-1 bg-transparent border-none outline-none"
-          style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#f8fbff", background: "transparent", border: "none", boxShadow: "none" }}
+          className="arc-swap-amount-input flex-1"
         />
         <button
           onClick={onToken}
