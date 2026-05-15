@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const token = body?.token as TokenSymbol | undefined;
   const amount = Number(body?.amount);
   const recipient = body?.recipient as Address | undefined;
-  const requiredMissionIds = Array.isArray(body?.requiredMissionIds)
+  const requiredMissionIds: string[] = Array.isArray(body?.requiredMissionIds)
     ? body.requiredMissionIds
       .filter((id: unknown): id is string => typeof id === "string" && Boolean(id.trim()))
       .map((id: string) => id.trim())
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
   if (requiredMissionIds.length > 0) {
     const completedIds = new Set(profile?.completedMissionIds ?? []);
-    const missingIds = requiredMissionIds.filter((missionId) => !completedIds.has(missionId));
+    const missingIds = requiredMissionIds.filter((missionId: string) => !completedIds.has(missionId));
     if (missingIds.length > 0) {
       return NextResponse.json({ error: `Complete required mission tasks first: ${missingIds.join(", ")}` }, { status: 403 });
     }
