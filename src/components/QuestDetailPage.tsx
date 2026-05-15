@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { MissionTask, Page, Quest } from "@/types";
 
 const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
+const MISSION_STEP_PROOF_KEY = "arcquest.mission-step-proof.v1";
 
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
@@ -45,14 +46,18 @@ interface QuestDetailPageProps {
 
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
   const [storedTasks, setStoredTasks] = useState<MissionTask[] | null>(null);
+  const [verifiedTaskIds, setVerifiedTaskIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!quest) return;
     try {
       const stored = JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}") as Record<string, MissionTask[]>;
       setStoredTasks(stored[quest.id] ?? null);
+      const verified = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
+      setVerifiedTaskIds(verified[quest.id] ?? []);
     } catch {
       setStoredTasks(null);
+      setVerifiedTaskIds([]);
     }
   }, [quest]);
 
@@ -73,8 +78,25 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
 
   const displayQuest = storedTasks?.length ? { ...quest, tasks: storedTasks, totalSteps: storedTasks.length } : quest;
   const action = QUEST_ACTIONS[displayQuest.id] ?? { label: "Back to Missions", page: "missions" as Page, accent: "#00dce5" };
-  const steps = displayQuest.tasks?.map((task) => task.title) ?? QUEST_STEPS[displayQuest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."];
-  const progressPct = displayQuest.totalSteps > 0 ? Math.min(100, (displayQuest.progress / displayQuest.totalSteps) * 100) : 0;
+  const steps = displayQuest.tasks?.length
+    ? displayQuest.tasks
+    : (QUEST_STEPS[displayQuest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."]).map((title, index) => ({ id: `${displayQuest.id}-step-${index + 1}`, title }));
+  const verifiedSet = new Set(verifiedTaskIds);
+  const verifiedCount = steps.filter((step) => verifiedSet.has(step.id)).length;
+  const progressPct = steps.length > 0 ? Math.min(100, (verifiedCount / steps.length) * 100) : 0;
+  const allStepsVerified = steps.length > 0 && verifiedCount === steps.length;
+
+  const verifyTask = (taskId: string) => {
+    if (!quest) return;
+    const nextIds = Array.from(new Set([...verifiedTaskIds, taskId]));
+    setVerifiedTaskIds(nextIds);
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
+      window.localStorage.setItem(MISSION_STEP_PROOF_KEY, JSON.stringify({ ...stored, [quest.id]: nextIds }));
+    } catch {
+      // Local proof is a convenience layer; mission verification still happens on the main Missions page.
+    }
+  };
 
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
@@ -119,14 +141,28 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
               </div>
               <div className="flex flex-col gap-3">
                 {steps.map((step, index) => (
-                  <div key={step} className="flex gap-3">
-                    <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,220,229,0.1)", border: "1px solid rgba(0,220,229,0.3)", color: "#00dce5", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700 }}>
+                  <div key={step.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl p-3" style={{ background: verifiedSet.has(step.id) ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.035)", border: `1px solid ${verifiedSet.has(step.id) ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}` }}>
+                    <div className="flex gap-3 items-center min-w-0">
+                      <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: verifiedSet.has(step.id) ? "rgba(34,197,94,0.12)" : "rgba(0,220,229,0.1)", border: `1px solid ${verifiedSet.has(step.id) ? "rgba(34,197,94,0.34)" : "rgba(0,220,229,0.3)"}`, color: verifiedSet.has(step.id) ? "#22c55e" : "#00dce5", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700 }}>
                       {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span style={{ color: "#c8d6d6", fontSize: 13, lineHeight: 1.8 }}>{step}</span>
+                      </span>
+                      <span style={{ color: verifiedSet.has(step.id) ? "#d8ffe6" : "#c8d6d6", fontSize: 13, lineHeight: 1.8 }}>{step.title}</span>
+                    </div>
+                    <button
+                      onClick={() => verifyTask(step.id)}
+                      disabled={verifiedSet.has(step.id)}
+                      className="btn-outline-cyan px-4 py-2 rounded-xl text-xs"
+                    >
+                      {verifiedSet.has(step.id) ? "Verified" : "Verify Step"}
+                    </button>
                   </div>
                 ))}
               </div>
+              {allStepsVerified && (
+                <div className="mt-4 rounded-2xl px-4 py-3" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.22)", color: "#86efac", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800 }}>
+                  All mission steps are verified. Return to Missions to confirm the full mission.
+                </div>
+              )}
             </div>
 
             <button
@@ -162,7 +198,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
             <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex justify-between mb-2">
                 <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495" }}>Progress</span>
-                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5" }}>{displayQuest.progress}/{displayQuest.totalSteps}</span>
+                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5" }}>{verifiedCount}/{steps.length}</span>
               </div>
               <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
                 <div style={{ width: `${progressPct}%`, height: "100%", background: "#00dce5", borderRadius: 99 }} />
