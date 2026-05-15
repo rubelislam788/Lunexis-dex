@@ -997,6 +997,20 @@ html[data-lunexis-theme] .arc-floating-topbar {
     border-radius: 999px !important;
   }
 
+  .arc-floating-topbar.has-no-sidebar-menu {
+    grid-template-columns: 1fr auto 1fr !important;
+  }
+
+  .arc-floating-topbar.has-no-sidebar-menu .arc-floating-brand {
+    grid-column: 2 !important;
+    justify-self: center !important;
+  }
+
+  .arc-floating-topbar.has-no-sidebar-menu .arc-topbar-right {
+    grid-column: 3 !important;
+    justify-self: end !important;
+  }
+
   .arc-floating-brand {
     justify-self: center !important;
     padding: 0.2rem !important;
@@ -2464,6 +2478,20 @@ select.lunexis-staking-input {
 
   .arc-topbar-right {
     gap: 6px;
+  }
+
+  .arc-floating-topbar.has-no-sidebar-menu {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .arc-floating-topbar.has-no-sidebar-menu .arc-floating-brand {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .arc-floating-topbar.has-no-sidebar-menu .arc-topbar-right {
+    grid-column: 3;
+    justify-self: end;
   }
 }
 

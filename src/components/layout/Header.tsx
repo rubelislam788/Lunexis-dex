@@ -51,7 +51,7 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
         opacity: hidden ? 0 : 1,
       }}
     >
-      <div className="arc-floating-topbar pointer-events-auto">
+      <div className={`arc-floating-topbar pointer-events-auto ${showSidebar ? "has-sidebar-menu" : "has-no-sidebar-menu"}`}>
         {showSidebar && (
           <button
             type="button"
@@ -68,21 +68,6 @@ export default function Header({ currentPage, onNavigate, showSidebar, isOverlay
           </button>
         )}
         <nav className="arc-topbar-left hidden lg:flex items-center gap-2">
-          {showSidebar && (
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className={`arc-floating-menu-button ${sidebarOpen && !sidebarCollapsed ? "is-active" : ""}`}
-              aria-label={isOverlaySidebar ? "Open menu" : "Toggle sidebar"}
-              aria-pressed={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
-            >
-              <span className="hamburger-label" aria-hidden="true">
-                <span className="line1" />
-                <span className="line2" />
-                <span className="line3" />
-              </span>
-            </button>
-          )}
           {NAV_LINKS.map(({ label, page }) => (
             <button
               key={page}
