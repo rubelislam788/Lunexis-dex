@@ -196,7 +196,14 @@ export default function SwapPage() {
                 className="arc-icon-action w-12 h-12 rounded-full"
                 aria-label="Switch swap direction"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 25, fontWeight: 700 }}>swap_vert</span>
+                <svg className="arc-swap-direction-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 4v12" />
+                  <path d="M8 4 4.8 7.2" />
+                  <path d="M8 4l3.2 3.2" />
+                  <path d="M16 20V8" />
+                  <path d="M16 20l-3.2-3.2" />
+                  <path d="M16 20l3.2-3.2" />
+                </svg>
               </button>
             </div>
             <TokenAmountPanel
