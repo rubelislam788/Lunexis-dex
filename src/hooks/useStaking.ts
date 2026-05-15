@@ -269,7 +269,7 @@ export function useStaking() {
         address: managerAddress,
         abi: STAKING_MANAGER_ABI,
         functionName: "createPool",
-        args: [input.stakeToken, input.rewardToken, BigInt(aprBps), BigInt(lockDuration), BigInt(poolTypeValue(input.poolType)), input.metadata || "Lunexis ARC staking pool"],
+        args: [input.stakeToken, input.rewardToken, aprBps, BigInt(lockDuration), poolTypeValue(input.poolType), input.metadata || "Lunexis ARC staking pool"],
         account: walletClient.account!,
       });
       await publicClient.waitForTransactionReceipt({ hash });
