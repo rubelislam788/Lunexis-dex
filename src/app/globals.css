@@ -2261,7 +2261,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 }
 
 .lunexis-route-preview {
-  margin: 1rem 0;
+  margin: 1.6rem 0 1rem;
   border-radius: 22px;
   padding: 0.78rem 0.9rem;
   background: linear-gradient(135deg, rgba(0,220,229,0.075), rgba(61,106,255,0.08));

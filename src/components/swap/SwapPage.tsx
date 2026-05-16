@@ -336,14 +336,14 @@ export default function SwapPage() {
               onToken={() => setSelector("to")}
             />
 
-            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show={Boolean(state.amountIn || estimatedOut)} />
-
             {highPriceImpact && (
               <div className="lunexis-impact-warning mb-6">
                 <strong>High price impact detected</strong>
                 <span>Large trade may affect output. Consider reducing the amount.</span>
               </div>
             )}
+
+            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show={Boolean(state.amountIn || estimatedOut)} />
 
             {needsApproval && currentChainId === requiredChainId && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
