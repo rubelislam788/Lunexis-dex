@@ -29,7 +29,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         <div className="arc-hero-content relative z-10 max-w-5xl mx-auto arc-fade-up">
           <div className="arc-live-status inline-flex items-center gap-2 px-4 py-2 mb-8 glass-panel rounded-full" style={{ borderColor: "rgba(0,220,229,0.25)" }}>
             <span className="arc-live-dot w-2 h-2 rounded-full" style={{ background: "#00dce5", boxShadow: "0 0 8px rgba(0,220,229,0.8)" }} />
-            <span className="arc-shimmer-text" style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#00dce5" }}>
+            <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#00dce5" }}>
               NETWORK OPERATIONAL: V2.0.4
             </span>
           </div>
@@ -50,10 +50,10 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
           <div className="arc-hero-cta flex flex-col sm:flex-row items-center justify-center gap-4">
             <button className="arc-premium-cta btn-primary px-10 py-4 rounded-lg glow-cyan" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
-              <span className="arc-shimmer-text">Launch Operator Mode</span>
+              <span>Launch Operator Mode</span>
             </button>
             <button className="arc-premium-cta btn-ghost px-10 py-4 rounded-lg" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
-              <span className="arc-shimmer-text">View Missions</span>
+              <span>View Missions</span>
             </button>
             <FaucetButton label="Claim Faucet Tokens" />
           </div>
@@ -73,7 +73,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>swap_horiz</span>
-              <span className="arc-shimmer-text">Swap Tokens</span>
+              <span>Swap Tokens</span>
             </button>
           </div>
         </div>
@@ -87,14 +87,14 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 <span className="material-symbols-outlined" style={{ fontSize: 28, color }}>
                   {icon}
                 </span>
-                <span className="arc-shimmer-text" style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", color: `${color}66` }}>
+                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, letterSpacing: "0.1em", color: `${color}66` }}>
                   {tag}
                 </span>
               </div>
-              <div className="arc-shimmer-text" style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#849495", marginBottom: 6 }}>
+              <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#849495", marginBottom: 6 }}>
                 {label}
               </div>
-              <div className="arc-shimmer-text" style={{ fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 700, color: "#e5e2e3" }}>
+              <div style={{ fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 700, color: "#e5e2e3" }}>
                 {value}
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                   {title}
                 </h3>
                 <p style={{ fontSize: 14, color: "#849495", lineHeight: 1.6, marginBottom: 16 }}>{desc}</p>
-                <span className="arc-shimmer-text" style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color, letterSpacing: "0.05em" }}>
+                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 700, color, letterSpacing: "0.05em" }}>
                   {cta}
                 </span>
               </div>
