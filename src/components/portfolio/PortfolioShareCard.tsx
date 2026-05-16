@@ -59,9 +59,9 @@ export default function PortfolioShareCard() {
   <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
     <defs>
       <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-        <stop stop-color="${theme === "nebula" ? "#001d24" : "#090016"}"/>
-        <stop offset=".55" stop-color="#111a3f"/>
-        <stop offset="1" stop-color="${theme === "nebula" ? "#340028" : "#00324a"}"/>
+        <stop stop-color="${theme === "nebula" ? "#001d24" : "#f7fbf8"}"/>
+        <stop offset=".55" stop-color="${theme === "nebula" ? "#111a3f" : "#ffffff"}"/>
+        <stop offset="1" stop-color="${theme === "nebula" ? "#340028" : "#dff0ee"}"/>
       </linearGradient>
       <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
@@ -115,7 +115,7 @@ export default function PortfolioShareCard() {
           <h2>Social Portfolio Card</h2>
         </div>
         <div className="flex gap-2">
-          {["nebula", "cyber"].map((item) => (
+          {["nebula", "white"].map((item) => (
             <button key={item} onClick={() => setTheme(item)} className={theme === item ? "is-active" : ""}>{item}</button>
           ))}
         </div>

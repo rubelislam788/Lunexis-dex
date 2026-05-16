@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const THEMES = [
   { id: "dark", label: "Dark" },
-  { id: "cyber", label: "Cyber" },
+  { id: "white", label: "White" },
   { id: "neon", label: "Neon" },
   { id: "elysium", label: "Elysium" },
 ] as const;
@@ -30,6 +30,11 @@ function persistTheme(theme: ThemeId) {
   }).catch(() => null);
 }
 
+function normalizeTheme(value: string | null): ThemeId | null {
+  const migrated = value === "space" ? "elysium" : value === "cyber" ? "white" : value;
+  return THEMES.some((item) => item.id === migrated) ? migrated as ThemeId : null;
+}
+
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState<ThemeId>("dark");
   const [open, setOpen] = useState(false);
@@ -37,8 +42,8 @@ export default function ThemeSwitcher() {
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(STORAGE_KEY);
-    const stored = (storedValue === "space" ? "elysium" : storedValue) as ThemeId | null;
-    const next = THEMES.some((item) => item.id === stored) ? stored! : "dark";
+    const stored = normalizeTheme(storedValue);
+    const next = stored ?? "dark";
     setTheme(next);
     window.localStorage.setItem(STORAGE_KEY, next);
     document.body.dataset.lunexisTheme = next;
@@ -48,12 +53,12 @@ export default function ThemeSwitcher() {
     fetch(`/api/preferences?owner=${encodeURIComponent(owner)}&scope=theme`)
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
-        const remote = (data?.value === "space" ? "elysium" : data?.value) as ThemeId | null;
-        if (THEMES.some((item) => item.id === remote)) {
-          setTheme(remote!);
-          window.localStorage.setItem(STORAGE_KEY, remote!);
-          document.body.dataset.lunexisTheme = remote!;
-          document.documentElement.dataset.lunexisTheme = remote!;
+        const remote = normalizeTheme(typeof data?.value === "string" ? data.value : null);
+        if (remote) {
+          setTheme(remote);
+          window.localStorage.setItem(STORAGE_KEY, remote);
+          document.body.dataset.lunexisTheme = remote;
+          document.documentElement.dataset.lunexisTheme = remote;
         }
       })
       .catch(() => null);
