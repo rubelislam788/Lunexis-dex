@@ -28,14 +28,14 @@ export default function InteractiveBackground() {
       <div className="lunexis-bg-orb lunexis-bg-orb-c" />
       <div className="lunexis-bg-grid" />
       <div className="lunexis-bg-particles">
-        {Array.from({ length: 28 }).map((_, index) => (
+        {Array.from({ length: 22 }).map((_, index) => (
           <span
             key={index}
             style={{
               left: `${(index * 37) % 100}%`,
               top: `${(index * 19) % 100}%`,
-              animationDuration: `${8 + index * 0.22}s`,
-              animationDelay: `${index * -0.18}s`,
+              animationDuration: `${12 + index * 0.28}s`,
+              animationDelay: `${index * -0.24}s`,
             }}
           />
         ))}

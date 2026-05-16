@@ -25,10 +25,10 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       <span className="arc-floating-orb" style={{ width: 260, height: 260, left: "7%", top: "18%", background: "rgba(56,189,248,0.13)" }} />
       <span className="arc-floating-orb" style={{ width: 220, height: 220, right: "9%", top: "28%", background: "rgba(255,45,178,0.12)", animationDelay: "1.2s" }} />
 
-      <section className="relative flex flex-col items-center justify-center px-6 sm:px-8 text-center" style={{ minHeight: "80vh" }}>
-        <div className="relative z-10 max-w-5xl mx-auto arc-fade-up" style={{ paddingTop: 112, paddingBottom: 72 }}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 glass-panel rounded-full" style={{ borderColor: "rgba(0,220,229,0.25)" }}>
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#00dce5", boxShadow: "0 0 8px rgba(0,220,229,0.8)" }} />
+      <section className="arc-hero-section relative flex flex-col items-center justify-center px-6 sm:px-8 text-center">
+        <div className="arc-hero-content relative z-10 max-w-5xl mx-auto arc-fade-up">
+          <div className="arc-live-status inline-flex items-center gap-2 px-4 py-2 mb-8 glass-panel rounded-full" style={{ borderColor: "rgba(0,220,229,0.25)" }}>
+            <span className="arc-live-dot w-2 h-2 rounded-full" style={{ background: "#00dce5", boxShadow: "0 0 8px rgba(0,220,229,0.8)" }} />
             <span className="arc-shimmer-text" style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#00dce5" }}>
               NETWORK OPERATIONAL: V2.0.4
             </span>
@@ -48,11 +48,11 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             A cleaner ARC Chain operator surface for live token swaps, mission verification, and wallet-based portfolio tracking.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="btn-primary px-10 py-4 rounded-lg glow-cyan" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
+          <div className="arc-hero-cta flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button className="arc-premium-cta btn-primary px-10 py-4 rounded-lg glow-cyan" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
               <span className="arc-shimmer-text">Launch Operator Mode</span>
             </button>
-            <button className="btn-ghost px-10 py-4 rounded-lg" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
+            <button className="arc-premium-cta btn-ghost px-10 py-4 rounded-lg" style={{ fontSize: 13, minWidth: 220 }} onClick={() => onNavigate("missions")}>
               <span className="arc-shimmer-text">View Missions</span>
             </button>
             <FaucetButton label="Claim Faucet Tokens" />
