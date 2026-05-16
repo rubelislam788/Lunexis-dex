@@ -17,6 +17,12 @@ export default function LunexisIntro() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    const skipIntro = window.matchMedia("(max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce)").matches;
+    if (skipIntro) {
+      setVisible(false);
+      return;
+    }
+
     const timer = window.setTimeout(() => setVisible(false), 8200);
     return () => window.clearTimeout(timer);
   }, []);

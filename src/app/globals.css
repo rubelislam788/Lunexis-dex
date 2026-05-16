@@ -1828,6 +1828,45 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 
   body {
     background-size: 180% 180%;
+    background-attachment: scroll !important;
+    animation: none !important;
+  }
+
+  body::before,
+  body::after {
+    animation: none !important;
+    opacity: 0.22 !important;
+  }
+
+  .lunexis-interactive-bg {
+    opacity: 0.42 !important;
+  }
+
+  .lunexis-bg-orb {
+    filter: blur(30px) !important;
+    opacity: 0.34 !important;
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  .lunexis-bg-orb-b,
+  .lunexis-bg-orb-c,
+  .lunexis-bg-grid,
+  .scanline,
+  .arc-floating-orb {
+    display: none !important;
+  }
+
+  .lunexis-bg-particles span:nth-child(n + 9),
+  .lunexis-intro,
+  .arc-success-particle {
+    display: none !important;
+  }
+
+  .lunexis-bg-particles span {
+    animation-duration: 28s !important;
+    box-shadow: 0 0 8px rgba(56,189,248,0.34) !important;
   }
 
   .arc-topbar {
@@ -5411,10 +5450,14 @@ a.arc-uiverse-button:active,
   .arc-sidebar-backdrop {
     inset: 0 0 calc(5.8rem + env(safe-area-inset-bottom)) 0 !important;
     z-index: 54 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .arc-sidebar-shell.arc-sidebar-overlay {
     z-index: 56 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .arc-sidebar-tools-row {
@@ -5484,6 +5527,18 @@ a.arc-uiverse-button:active,
   .lunexis-staking-pool-card,
   .glass-panel {
     padding: clamp(0.95rem, 4vw, 1.25rem) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 14px 38px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    animation: none !important;
+  }
+
+  .arc-card:hover,
+  .glass-panel:hover,
+  .lunexis-staking-pool-card:hover,
+  .lunexis-premium-card:hover {
+    transform: none !important;
+    box-shadow: 0 14px 38px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.08) !important;
   }
 
   .arc-page-shell :where(.grid) {
@@ -5586,10 +5641,20 @@ a.arc-uiverse-button:active,
     max-height: min(86dvh, 42rem) !important;
   }
 
+  .lunexis-modal-overlay,
+  .arc-wallet-modal-backdrop,
+  .arc-success-backdrop {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .lunexis-mobile-bottom-nav {
     width: min(94vw, 430px) !important;
     bottom: calc(0.85rem + env(safe-area-inset-bottom)) !important;
     padding: 0.32rem !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.44), inset 0 1px 0 rgba(255,255,255,0.1) !important;
   }
 
   .lunexis-mobile-bottom-nav button {
@@ -5625,6 +5690,8 @@ a.arc-uiverse-button:active,
     right: 0.75rem !important;
     width: auto !important;
     max-height: min(72dvh, 34rem) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .lunexis-notification-list {
@@ -5636,6 +5703,40 @@ a.arc-uiverse-button:active,
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .arc-page-shell::before,
+  .arc-card::before,
+  .glass-panel::before,
+  .arc-mission-card::before,
+  .lunexis-staking-ambient,
+  .lunexis-chart-canvas::before {
+    animation: none !important;
+  }
+
+  .arc-page-shell :where(section, article, .arc-card, .lunexis-premium-card, .lunexis-staking-pool-card),
+  .arc-home-shimmer > section,
+  .arc-swap-card > *,
+  .arc-token-card,
+  .arc-live-status,
+  .arc-aurora-title,
+  .stat-bar,
+  .lunexis-mobile-bottom-nav button.is-active {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .lunexis-intro,
+  .arc-title-aurora,
+  .arc-title-aurora__item {
+    display: none !important;
   }
 }
 

@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 
 export default function InteractiveBackground() {
   const [mounted, setMounted] = useState(false);
+  const [particleCount, setParticleCount] = useState(22);
 
   useEffect(() => {
     setMounted(true);
+    const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setParticleCount(isMobile || reduceMotion ? 8 : 22);
+    if (isMobile || reduceMotion) return;
+
     const root = document.documentElement;
     const move = (event: PointerEvent) => {
       root.style.setProperty("--lunexis-pointer-x", `${(event.clientX / window.innerWidth) * 100}%`);
@@ -28,7 +34,7 @@ export default function InteractiveBackground() {
       <div className="lunexis-bg-orb lunexis-bg-orb-c" />
       <div className="lunexis-bg-grid" />
       <div className="lunexis-bg-particles">
-        {Array.from({ length: 22 }).map((_, index) => (
+        {Array.from({ length: particleCount }).map((_, index) => (
           <span
             key={index}
             style={{
