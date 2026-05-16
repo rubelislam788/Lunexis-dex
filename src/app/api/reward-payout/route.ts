@@ -4,7 +4,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnetChain } from "@/lib/onchain";
 import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URLS } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
-import type { TokenSymbol, UserProfile } from "@/types";
+import type { TokenSymbol } from "@/types";
 import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
 
 const PAYOUT_TOKENS = new Set<TokenSymbol>(["USDC", "EURC"]);
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     ...(profile ?? {}),
     completedMissionIds: profile?.completedMissionIds ?? [],
     claimedRewardIds: Array.from(claimedRewardIds),
-  } as UserProfile;
+  };
   await writePersistentValue<ProfileStore>(PROFILE_STORE_KEY, profileStore);
 
   return NextResponse.json({ hash, token, amount, recipient, from: account.address });
