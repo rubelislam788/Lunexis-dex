@@ -20,6 +20,14 @@ function readStoredRewards() {
   }
 }
 
+function rewardsSignature(rewards: RewardConfig[]) {
+  return JSON.stringify(normalizeRewards(rewards));
+}
+
+function isDefaultRewardSet(rewards: RewardConfig[]) {
+  return rewardsSignature(rewards) === rewardsSignature(DEFAULT_REWARDS);
+}
+
 function missionIdsToText(missionIds: string[]) {
   return missionIds.join(", ");
 }
@@ -31,7 +39,7 @@ function textToMissionIds(value: string) {
 export default function RewardsPage() {
   const { profile, isConnected, claim } = useProfile();
   const { address } = useAccount();
-  const [rewards, setRewards] = useState<RewardConfig[]>(() => DEFAULT_REWARDS);
+  const [rewards, setRewards] = useState<RewardConfig[]>(() => readStoredRewards());
   const [showRewardAdmin, setShowRewardAdmin] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
@@ -40,18 +48,33 @@ export default function RewardsPage() {
   const isRewardAdmin = isAdminWallet(address);
 
   useEffect(() => {
-    setRewards(readStoredRewards());
-    fetch("/api/rewards")
+    const localRewards = readStoredRewards();
+    setRewards(localRewards);
+    fetch("/api/rewards", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.rewards)) {
           const nextRewards = normalizeRewards(data.rewards);
+          if (!isDefaultRewardSet(localRewards) && isDefaultRewardSet(nextRewards)) {
+            setRewards(localRewards);
+            if (address && isAdminWallet(address)) {
+              void fetch("/api/rewards", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-admin-wallet": address,
+                },
+                body: JSON.stringify({ rewards: localRewards }),
+              }).catch(() => null);
+            }
+            return;
+          }
           setRewards(nextRewards);
           window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
         }
       })
       .catch(() => null);
-  }, []);
+  }, [address]);
 
   useEffect(() => {
     if (!isRewardAdmin) setShowRewardAdmin(false);
