@@ -789,22 +789,22 @@ html[data-lunexis-theme="morn"] body {
 html[data-lunexis-theme="morn"] .arc-page-shell,
 html[data-lunexis-theme="morn"] .hero-bg {
   background:
-    radial-gradient(ellipse at 22% 18%, rgba(255,255,255,0.72), transparent 17rem),
-    radial-gradient(ellipse at 78% 12%, rgba(205,230,238,0.74), transparent 26rem),
-    radial-gradient(ellipse at 50% 62%, rgba(238,246,240,0.55), transparent 26rem),
-    linear-gradient(180deg, #dfeaf0 0%, #edf4ef 42%, #d6ead2 70%, #b8d7b3 100%) !important;
+    radial-gradient(ellipse at 22% 18%, rgba(255,255,255,0.38), transparent 18rem),
+    radial-gradient(ellipse at 78% 12%, rgba(190,218,226,0.34), transparent 28rem),
+    radial-gradient(ellipse at 50% 62%, rgba(220,235,225,0.28), transparent 30rem),
+    linear-gradient(180deg, #d5e3e7 0%, #e8f0eb 44%, #d2e3cd 72%, #aac8a8 100%) !important;
 }
 
 html[data-lunexis-theme="morn"] .arc-floating-topbar {
   background:
-    radial-gradient(circle at 16% 18%, rgba(255,255,255,0.74), transparent 30%),
-    radial-gradient(circle at 82% 18%, rgba(126,214,208,0.26), transparent 34%),
-    linear-gradient(90deg, rgba(255,255,255,0.64), rgba(236,246,241,0.48), rgba(255,255,255,0.64)) !important;
-  border-color: rgba(255,255,255,0.72);
+    radial-gradient(circle at 16% 18%, rgba(255,255,255,0.48), transparent 30%),
+    radial-gradient(circle at 82% 18%, rgba(126,214,208,0.16), transparent 34%),
+    linear-gradient(90deg, rgba(245,250,247,0.72), rgba(226,238,233,0.62), rgba(245,250,247,0.72)) !important;
+  border-color: rgba(31,77,72,0.12);
   box-shadow:
-    0 20px 64px rgba(43,88,75,0.14),
-    0 0 42px rgba(126,214,208,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.76);
+    0 20px 64px rgba(43,88,75,0.12),
+    0 0 30px rgba(126,214,208,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.54);
   animation: mornGlassBreathe 8s ease-in-out infinite;
 }
 
@@ -816,11 +816,11 @@ html[data-lunexis-theme="morn"] .lunexis-staking-pool-card,
 html[data-lunexis-theme="morn"] .lunexis-staking-stats > div,
 html[data-lunexis-theme="morn"] .lunexis-staking-alert {
   background:
-    linear-gradient(145deg, rgba(255,255,255,0.58), rgba(232,244,236,0.34)) padding-box,
-    linear-gradient(135deg, rgba(255,255,255,0.78), rgba(126,214,208,0.34), rgba(216,122,154,0.18)) border-box !important;
+    linear-gradient(145deg, rgba(246,250,247,0.74), rgba(218,232,225,0.52)) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,0.48), rgba(97,169,158,0.24), rgba(184,103,132,0.12)) border-box !important;
   border-color: transparent !important;
   color: #173331 !important;
-  box-shadow: 0 22px 72px rgba(43,88,75,0.12), 0 0 38px rgba(126,214,208,0.1), inset 0 1px 0 rgba(255,255,255,0.66) !important;
+  box-shadow: 0 22px 72px rgba(43,88,75,0.12), 0 0 26px rgba(126,214,208,0.07), inset 0 1px 0 rgba(255,255,255,0.5) !important;
   backdrop-filter: blur(24px) saturate(1.22);
   -webkit-backdrop-filter: blur(24px) saturate(1.22);
 }
@@ -840,7 +840,7 @@ html[data-lunexis-theme="morn"] .btn-ghost,
 html[data-lunexis-theme="morn"] .btn-outline-cyan,
 html[data-lunexis-theme="morn"] a.arc-uiverse-button {
   border-color: rgba(255,255,255,0.64) !important;
-  background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(238,246,240,0.35), rgba(126,214,208,0.12)) !important;
+  background: linear-gradient(135deg, rgba(247,250,248,0.76), rgba(222,236,229,0.56), rgba(126,214,208,0.1)) !important;
   color: #173331 !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.64), 0 8px 22px rgba(43,88,75,0.08) !important;
 }
@@ -852,8 +852,8 @@ html[data-lunexis-theme="morn"] .arc-floating-action.is-active,
 html[data-lunexis-theme="morn"] .btn-primary:hover,
 html[data-lunexis-theme="morn"] .btn-ghost:hover,
 html[data-lunexis-theme="morn"] a.arc-uiverse-button:hover {
-  background: linear-gradient(135deg, rgba(126,214,208,0.82), rgba(184,211,193,0.72), rgba(216,122,154,0.38)) !important;
-  border-color: rgba(255,255,255,0.86) !important;
+  background: linear-gradient(135deg, rgba(118,198,188,0.62), rgba(184,211,193,0.54), rgba(204,116,147,0.24)) !important;
+  border-color: rgba(31,77,72,0.18) !important;
   color: #0d2624 !important;
   box-shadow: 0 12px 34px rgba(56,132,117,0.18), 0 0 32px rgba(126,214,208,0.22), inset 0 1px 0 rgba(255,255,255,0.76) !important;
 }
@@ -882,11 +882,67 @@ html[data-lunexis-theme="morn"] :where(p,small,label) {
   color: #496460 !important;
 }
 
+html[data-lunexis-theme="morn"] :where(input, textarea, select, .arc-swap-amount-input, .lunexis-staking-input, .lunexis-slippage-input, .lunexis-token-search) {
+  background: rgba(236, 246, 240, 0.76) !important;
+  border-color: rgba(31,77,72,0.14) !important;
+  color: #173331 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.48) !important;
+}
+
+html[data-lunexis-theme="morn"] :where(input, textarea, select)::placeholder {
+  color: rgba(73,100,96,0.62) !important;
+}
+
+html[data-lunexis-theme="morn"] .arc-token-amount-panel {
+  background:
+    linear-gradient(145deg, rgba(239,248,244,0.7), rgba(213,231,224,0.54)) !important;
+  border-color: rgba(31,77,72,0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 18px 52px rgba(43,88,75,0.1) !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-route-preview,
+html[data-lunexis-theme="morn"] .lunexis-amount-live-meta span,
+html[data-lunexis-theme="morn"] .lunexis-amount-live-meta strong,
+html[data-lunexis-theme="morn"] .lunexis-slippage-compact > button,
+html[data-lunexis-theme="morn"] .lunexis-slippage-menu {
+  background: rgba(236,246,240,0.72) !important;
+  border-color: rgba(31,77,72,0.13) !important;
+  color: #173331 !important;
+  box-shadow: 0 12px 34px rgba(43,88,75,0.08) !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-slippage-menu button {
+  background: rgba(255,255,255,0.48) !important;
+  border-color: rgba(31,77,72,0.12) !important;
+  color: #496460 !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-slippage-menu button.is-active {
+  background: rgba(118,198,188,0.34) !important;
+  color: #173331 !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-kicker,
+html[data-lunexis-theme="morn"] .lunexis-route-preview > span,
+html[data-lunexis-theme="morn"] .lunexis-slippage-compact > button span:first-child {
+  color: #28766e !important;
+}
+
+html[data-lunexis-theme="morn"] .arc-token-selector-column button {
+  background: rgba(245,250,247,0.72) !important;
+  border-color: rgba(31,77,72,0.16) !important;
+  box-shadow: 0 12px 32px rgba(43,88,75,0.1) !important;
+}
+
+html[data-lunexis-theme="morn"] .arc-token-selector-column button span {
+  color: #173331 !important;
+}
+
 html[data-lunexis-theme="morn"] .arc-aurora-title,
 html[data-lunexis-theme="morn"] .gradient-text,
 html[data-lunexis-theme="morn"] .arc-shimmer-text {
-  background-image: linear-gradient(90deg, #173331, #2f8f83, #d87a9a) !important;
-  text-shadow: 0 0 18px rgba(255,255,255,0.44);
+  background-image: linear-gradient(90deg, #12302e, #28766e, #a85d77) !important;
+  text-shadow: 0 1px 18px rgba(255,255,255,0.28);
 }
 
 .lunexis-interactive-bg {
@@ -961,54 +1017,54 @@ html[data-lunexis-theme="morn"] .lunexis-interactive-bg::after {
 
 html[data-lunexis-theme="morn"] .lunexis-interactive-bg::before {
   background:
-    radial-gradient(ellipse at 12% 26%, rgba(255,255,255,0.7) 0 3%, transparent 18%),
-    radial-gradient(ellipse at 74% 18%, rgba(255,255,255,0.48) 0 4%, transparent 19%),
-    radial-gradient(ellipse at 50% 32%, rgba(255,255,255,0.42) 0 7%, transparent 22%),
-    linear-gradient(100deg, transparent 0 42%, rgba(255,255,255,0.34) 45%, transparent 58%),
-    radial-gradient(ellipse at 50% 78%, rgba(107,160,111,0.34), transparent 42%);
+    radial-gradient(ellipse at 12% 26%, rgba(255,255,255,0.38) 0 3%, transparent 18%),
+    radial-gradient(ellipse at 74% 18%, rgba(255,255,255,0.26) 0 4%, transparent 19%),
+    radial-gradient(ellipse at 50% 32%, rgba(255,255,255,0.22) 0 7%, transparent 22%),
+    linear-gradient(100deg, transparent 0 42%, rgba(255,255,255,0.16) 45%, transparent 58%),
+    radial-gradient(ellipse at 50% 78%, rgba(107,160,111,0.2), transparent 42%);
   filter: blur(0.2px);
-  opacity: 0.96;
+  opacity: 0.72;
   animation: mornSkyDrift 30s ease-in-out infinite alternate;
 }
 
 html[data-lunexis-theme="morn"] .lunexis-interactive-bg::after {
   background:
-    radial-gradient(ellipse at 18% 62%, rgba(37,82,65,0.38) 0 10%, rgba(126,168,117,0.3) 11%, transparent 25%),
-    radial-gradient(ellipse at 52% 58%, rgba(255,255,255,0.42) 0 5%, rgba(126,168,117,0.26) 6%, transparent 23%),
-    radial-gradient(ellipse at 86% 60%, rgba(39,92,70,0.42) 0 12%, rgba(126,168,117,0.26) 13%, transparent 28%),
-    linear-gradient(180deg, transparent 0 45%, rgba(255,255,255,0.5) 46%, transparent 48%),
-    linear-gradient(90deg, rgba(126,214,208,0.1), rgba(255,255,255,0.18), rgba(216,122,154,0.08));
+    radial-gradient(ellipse at 18% 62%, rgba(37,82,65,0.24) 0 10%, rgba(126,168,117,0.18) 11%, transparent 25%),
+    radial-gradient(ellipse at 52% 58%, rgba(255,255,255,0.24) 0 5%, rgba(126,168,117,0.16) 6%, transparent 23%),
+    radial-gradient(ellipse at 86% 60%, rgba(39,92,70,0.28) 0 12%, rgba(126,168,117,0.16) 13%, transparent 28%),
+    linear-gradient(180deg, transparent 0 45%, rgba(255,255,255,0.24) 46%, transparent 48%),
+    linear-gradient(90deg, rgba(126,214,208,0.06), rgba(255,255,255,0.1), rgba(216,122,154,0.04));
   mask-image:
     linear-gradient(to bottom, transparent 0 28%, #000 42% 100%),
     radial-gradient(ellipse at 18% 62%, #000 0 24%, transparent 31%),
     radial-gradient(ellipse at 52% 58%, #000 0 22%, transparent 29%),
     radial-gradient(ellipse at 86% 60%, #000 0 24%, transparent 31%);
-  opacity: 0.86;
+  opacity: 0.58;
   animation: mornIslandFloat 24s ease-in-out infinite alternate;
 }
 
 html[data-lunexis-theme="morn"] .lunexis-bg-orb {
   filter: blur(76px);
-  opacity: 0.28;
+  opacity: 0.16;
   mix-blend-mode: multiply;
 }
 
 html[data-lunexis-theme="morn"] .lunexis-bg-grid {
   background-image:
-    linear-gradient(rgba(41,116,104,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(41,116,104,0.08) 1px, transparent 1px),
-    radial-gradient(circle, rgba(255,255,255,0.42) 1px, transparent 1.5px),
-    linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,0.28) 49%, transparent 54%);
+    linear-gradient(rgba(41,116,104,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(41,116,104,0.04) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.22) 1px, transparent 1.5px),
+    linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,0.12) 49%, transparent 54%);
   background-size: 118px 118px, 118px 118px, 84px 84px, 260% 260%;
-  opacity: 0.72;
+  opacity: 0.38;
   animation: mornGridFlow 34s linear infinite;
 }
 
 html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   width: 4px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 0 18px rgba(126,214,208,0.72), 0 0 30px rgba(216,122,154,0.18);
+  background: rgba(255, 255, 255, 0.52);
+  box-shadow: 0 0 14px rgba(126,214,208,0.36), 0 0 22px rgba(216,122,154,0.1);
 }
 
 .lunexis-premium-card,
