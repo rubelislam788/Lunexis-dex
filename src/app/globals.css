@@ -6456,6 +6456,7 @@ a.arc-uiverse-button .arc-shimmer-text,
 .arc-aurora-title .arc-title-plain {
   background: none !important;
   background-image: none !important;
+  background-color: transparent !important;
   -webkit-background-clip: initial !important;
   background-clip: initial !important;
   -webkit-text-fill-color: #e9feff !important;
@@ -6463,9 +6464,12 @@ a.arc-uiverse-button .arc-shimmer-text,
 }
 
 .arc-aurora-title .arc-title-gradient {
-  background: linear-gradient(135deg, #f8fbff 0%, #38d8ff 38%, #8b5cf6 68%, #ff6bcf 100%) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  color: transparent !important;
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: #50dfff !important;
+  color: #50dfff !important;
+  text-shadow: 0 0 22px rgba(80, 223, 255, 0.24), 0 0 40px rgba(139, 92, 246, 0.16);
 }
