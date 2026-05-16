@@ -37,8 +37,9 @@ function normalizeQuest(value: unknown): Quest | null {
 }
 
 export async function GET() {
-  const store = await readPersistentValue<MissionStore>(STORE_KEY, { quests: QUESTS });
-  return NextResponse.json({ quests: Array.isArray(store.quests) && store.quests.length ? store.quests : QUESTS });
+  const store = await readPersistentValue<MissionStore | null>(STORE_KEY, null);
+  const hasSavedQuests = Boolean(store && Array.isArray(store.quests) && store.quests.length);
+  return NextResponse.json({ quests: hasSavedQuests ? store!.quests : QUESTS, isDefault: !hasSavedQuests });
 }
 
 export async function POST(request: Request) {

@@ -13,6 +13,15 @@ import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchai
 import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import { formatRewardAmount } from "@/lib/rewards";
+import {
+  DEFAULT_MISSION_DAYS,
+  addDaysIso,
+  ensureMissionSchedule,
+  hasLocalMissionDrafts,
+  loadLocalMissions,
+  saveLocalMissions,
+  type EditableQuestPatch,
+} from "@/lib/mission-storage";
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
 type SocialProof = Record<string, boolean>;
@@ -37,19 +46,6 @@ const MISSION_ICONS: Record<string, string> = {
 };
 
 const PROOF_KEY = "arcquest.social-proof.v1";
-const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
-const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
-const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
-const MISSION_REMOVED_KEY = "arcquest.mission-removed.v1";
-const DEFAULT_MISSION_DAYS = 7;
-
-type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt" | "socialLinks">>;
-
-const addDaysIso = (date: Date, days: number) => {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next.toISOString();
-};
 
 const toDateTimeInputValue = (value?: string) => {
   if (!value) return "";
@@ -75,26 +71,6 @@ const formatMissionDate = (value?: string) => {
 };
 
 const normalizeExternalUrl = (url: string) => /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
-
-function mergeStoredMissions(base: Quest[], storedTasks: Record<string, MissionTask[]>, storedCustom: Record<string, EditableQuestPatch>, storedCreated: Quest[], removedIds: string[]): Quest[] {
-  const baseIds = new Set(base.map((quest) => quest.id));
-  const created = storedCreated.filter((quest) => !baseIds.has(quest.id));
-  const removed = new Set(removedIds);
-  return ensureMissionSchedule([...base, ...created].filter((quest) => !removed.has(quest.id)).map((quest) => {
-    const custom = storedCustom[quest.id] ?? {};
-    const tasks = storedTasks[quest.id]?.length ? storedTasks[quest.id] : quest.tasks ?? [];
-    return { ...quest, ...custom, tasks, totalSteps: Math.max(1, tasks.length || quest.totalSteps) };
-  }));
-}
-
-function ensureMissionSchedule(quests: Quest[]) {
-  const createdAt = new Date();
-  return quests.map((quest) => {
-    const startsAt = quest.startsAt ?? createdAt.toISOString();
-    const endsAt = quest.endsAt ?? addDaysIso(new Date(startsAt), DEFAULT_MISSION_DAYS);
-    return { ...quest, startsAt, endsAt };
-  });
-}
 
 async function publishMissions(quests: Quest[], adminAddress?: string) {
   await fetch("/api/missions", {
@@ -127,13 +103,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   useEffect(() => {
     try {
       setProof(JSON.parse(window.localStorage.getItem(PROOF_KEY) || "{}"));
-      setQuests(mergeStoredMissions(
-        QUESTS,
-        JSON.parse(window.localStorage.getItem(MISSION_TASKS_KEY) || "{}"),
-        JSON.parse(window.localStorage.getItem(MISSION_CUSTOM_KEY) || "{}"),
-        JSON.parse(window.localStorage.getItem(MISSION_CREATED_KEY) || "[]"),
-        JSON.parse(window.localStorage.getItem(MISSION_REMOVED_KEY) || "[]"),
-      ));
+      setQuests(loadLocalMissions(QUESTS));
     } catch {
       setProof({});
     }
@@ -142,6 +112,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.quests) && data.quests.length > 0) {
+          if (data.isDefault && hasLocalMissionDrafts()) return;
           setQuests(ensureMissionSchedule(data.quests));
         }
       })
@@ -160,33 +131,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   }, [isMissionAdmin]);
 
   const persistMissions = (nextQuests: Quest[]) => {
-    const stored = nextQuests.reduce<Record<string, EditableQuestPatch>>((acc, quest) => {
-      acc[quest.id] = {
-        title: quest.title,
-        description: quest.description,
-        reward: quest.reward,
-        rewardAmt: quest.rewardAmt,
-        xp: quest.xp,
-        difficulty: quest.difficulty,
-        category: quest.category,
-        tags: quest.tags,
-        startsAt: quest.startsAt,
-        endsAt: quest.endsAt,
-        socialLinks: quest.socialLinks ?? [],
-      };
-      return acc;
-    }, {});
-    const storedTasks = nextQuests.reduce<Record<string, MissionTask[]>>((acc, quest) => {
-      acc[quest.id] = quest.tasks ?? [];
-      return acc;
-    }, {});
-    const baseIds = new Set(QUESTS.map((quest) => quest.id));
-    const created = nextQuests.filter((quest) => !baseIds.has(quest.id));
-    const removed = QUESTS.filter((quest) => !nextQuests.some((item) => item.id === quest.id)).map((quest) => quest.id);
-    window.localStorage.setItem(MISSION_CUSTOM_KEY, JSON.stringify(stored));
-    window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(storedTasks));
-    window.localStorage.setItem(MISSION_CREATED_KEY, JSON.stringify(created));
-    window.localStorage.setItem(MISSION_REMOVED_KEY, JSON.stringify(removed));
+    saveLocalMissions(nextQuests, QUESTS);
     void publishMissions(nextQuests, address);
   };
 

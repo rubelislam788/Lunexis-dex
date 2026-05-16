@@ -18,6 +18,7 @@ import InteractiveBackground from "@/components/ui/InteractiveBackground";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import type { Quest } from "@/types";
 import { QUESTS } from "@/lib/missions";
+import { hasLocalMissionDrafts, loadLocalMissions } from "@/lib/mission-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -128,10 +129,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (hasLocalMissionDrafts()) {
+      setQuests(loadLocalMissions(QUESTS));
+    }
+
     fetch("/api/missions")
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.quests) && data.quests.length > 0) {
+          if (data.isDefault && hasLocalMissionDrafts()) return;
           setQuests(data.quests);
           setSelectedQuest((current) => current ? data.quests.find((quest: Quest) => quest.id === current.id) ?? current : current);
         }
