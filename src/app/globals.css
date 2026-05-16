@@ -6514,3 +6514,29 @@ a.arc-uiverse-button .arc-shimmer-text,
   color: #50dfff !important;
   text-shadow: 0 0 22px rgba(80, 223, 255, 0.24), 0 0 40px rgba(139, 92, 246, 0.16);
 }
+
+html[data-lunexis-theme] .arc-hero-section .arc-aurora-title,
+html[data-lunexis-theme] .arc-hero-section .arc-aurora-title span,
+html[data-lunexis-theme] .arc-home-shimmer .arc-hero-section .arc-aurora-title,
+html[data-lunexis-theme] .arc-home-shimmer .arc-hero-section .arc-aurora-title span {
+  background: transparent !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  box-decoration-break: initial !important;
+  -webkit-box-decoration-break: initial !important;
+  padding: 0 !important;
+  animation: none !important;
+}
+
+html[data-lunexis-theme] .arc-hero-section .arc-aurora-title,
+html[data-lunexis-theme] .arc-hero-section .arc-title-plain {
+  -webkit-text-fill-color: #e9feff !important;
+  color: #e9feff !important;
+}
+
+html[data-lunexis-theme] .arc-hero-section .arc-title-gradient {
+  -webkit-text-fill-color: #50dfff !important;
+  color: #50dfff !important;
+}
