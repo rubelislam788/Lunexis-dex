@@ -35,13 +35,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
 
           <h1 className="arc-aurora-title" style={{ fontFamily: "'Space Grotesk'", fontSize: "clamp(36px,6vw,64px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: 0, color: "#e9feff", marginBottom: 24 }}>
-            Lunexis <span>Operator Control.</span>
-            <span className="arc-title-aurora" aria-hidden="true">
-              <span className="arc-title-aurora__item" />
-              <span className="arc-title-aurora__item" />
-              <span className="arc-title-aurora__item" />
-              <span className="arc-title-aurora__item" />
-            </span>
+            <span className="arc-title-plain">Lunexis</span>{" "}
+            <span className="arc-title-gradient">Operator Control.</span>
           </h1>
 
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "#b9caca", maxWidth: 600, margin: "0 auto 40px" }}>
