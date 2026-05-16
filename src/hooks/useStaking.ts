@@ -69,9 +69,12 @@ export function useStaking() {
   const [status, setStatus] = useState<TxStatus>("idle");
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
+  const [ownerAddress, setOwnerAddress] = useState<Address | undefined>();
 
   const managerReady = Boolean(STAKING_MANAGER_ADDRESS);
-  const isAdmin = Boolean(address && STAKING_ADMIN_WALLET && address.toLowerCase() === STAKING_ADMIN_WALLET);
+  const isConfiguredAdmin = Boolean(address && STAKING_ADMIN_WALLET && address.toLowerCase() === STAKING_ADMIN_WALLET);
+  const isContractOwner = Boolean(address && ownerAddress && isAddressEqual(address, ownerAddress));
+  const isAdmin = isConfiguredAdmin || isContractOwner;
   const wrongNetwork = isConnected && chainId !== STAKING_CHAIN_ID;
 
   const ensureArcNetwork = useCallback(async () => {
@@ -139,6 +142,9 @@ export function useStaking() {
       setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
       return;
     }
+
+    const owner = await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "owner" }).catch(() => undefined);
+    setOwnerAddress(typeof owner === "string" && isAddress(owner) ? owner as Address : undefined);
 
     const count = Number(await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "poolCount" }).catch(() => BigInt(0)));
     const nextPools = await Promise.all(Array.from({ length: count }).map(async (_, id) => {
@@ -294,6 +300,7 @@ export function useStaking() {
     lastUpdated,
     managerAddress: STAKING_MANAGER_ADDRESS ?? zeroAddress,
     managerReady,
+    ownerAddress,
     pools,
     refresh,
     setError,

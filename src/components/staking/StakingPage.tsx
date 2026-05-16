@@ -354,7 +354,7 @@ function EmptyStakingGuide({
                 {status === "creating" ? "Creating..." : `Create ${token.symbol} Pool`}
               </button>
             ) : (
-              <small className="lunexis-staking-warning">Connect admin wallet to initialize this pool.</small>
+              <small className="lunexis-staking-warning">Connect the staking manager owner wallet once to initialize this pool.</small>
             )}
           </article>
         ))}
