@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatUnits } from "viem";
-import { arcPublicClient, sepoliaPublicClient } from "@/lib/onchain";
+import { arcPublicClient } from "@/lib/onchain";
 import { loadAllProfiles, loadRemoteProfiles } from "@/lib/profile";
 import type { UserProfile } from "@/types";
 
@@ -14,7 +14,6 @@ export interface AppStats {
   swaps: number;
   bridges: number;
   arcBlock: string;
-  sepoliaBlock: string;
   arcGasPrice: string;
   lastSynced: string;
   isLoading: boolean;
@@ -39,7 +38,6 @@ export function useAppStats(refreshMs = 15000): AppStats & { refresh: () => Prom
   const [snapshot, setSnapshot] = useState<Omit<AppStats, "isLoading">>({
     ...getProfileTotals(),
     arcBlock: "0",
-    sepoliaBlock: "0",
     arcGasPrice: "0",
     lastSynced: "",
   });
@@ -48,9 +46,8 @@ export function useAppStats(refreshMs = 15000): AppStats & { refresh: () => Prom
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [arcBlock, sepoliaBlock, arcGasPrice] = await Promise.all([
+      const [arcBlock, arcGasPrice] = await Promise.all([
         arcPublicClient.getBlockNumber().catch(() => BigInt(0)),
-        sepoliaPublicClient.getBlockNumber().catch(() => BigInt(0)),
         arcPublicClient.getGasPrice().catch(() => BigInt(0)),
       ]);
 
@@ -59,7 +56,6 @@ export function useAppStats(refreshMs = 15000): AppStats & { refresh: () => Prom
       setSnapshot({
         ...getProfileTotals(remoteProfiles),
         arcBlock: arcBlock.toLocaleString(),
-        sepoliaBlock: sepoliaBlock.toLocaleString(),
         arcGasPrice: `${Number(formatUnits(arcGasPrice, 18)).toLocaleString(undefined, { maximumFractionDigits: 8 })} USDC`,
         lastSynced: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       });

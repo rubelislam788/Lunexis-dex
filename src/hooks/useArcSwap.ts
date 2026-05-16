@@ -204,7 +204,7 @@ export function useArcSwap() {
     if (currentChainId !== ARC_CHAIN_ID) throw new Error("Switch your wallet to ARC Chain to approve swap tokens.");
     if (!walletClient || !publicClient) throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     if (!router || !fromTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress)) {
-      throw new Error("Swap router or token address is not configured.");
+      throw new Error("Swap route is temporarily unavailable. Refresh and try again.");
     }
     const account = walletClient.account;
     if (!account) throw new Error("Wallet signer account is not available.");
@@ -240,11 +240,11 @@ export function useArcSwap() {
 
       if (!router || !fromTokenAddress || !toTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress) || isAddressEqual(toTokenAddress, zeroAddress)) {
         if (!canUseAppKitSwap) {
-          throw new Error("Swap router or token addresses are not configured.");
+          throw new Error("Swap route is temporarily unavailable for this token pair.");
         }
 
         if (!appKitKey) {
-          throw new Error("Set NEXT_PUBLIC_ARC_KIT_KEY to enable App Kit swap fallback for USDC and EURC.");
+          throw new Error("Swap route is warming up. Try again in a moment.");
         }
 
         const adapter = await getBrowserViemAdapter();

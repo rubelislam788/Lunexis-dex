@@ -11,9 +11,9 @@ export interface RewardConfig {
 
 export const DEFAULT_REWARDS: RewardConfig[] = [
   { id: "reward-social", title: "Social Signal Pack", amount: 6.5, token: "USDC", requirement: "Complete all social missions", missionIds: ["social-follow", "social-rubel-post", "social-arc-post"] },
-  { id: "reward-bridge", title: "Bridge Operator Bonus", amount: 8, token: "USDC", requirement: "Complete Bridge the Arc Gate", missionIds: ["q2"] },
+  { id: "reward-bridge", title: "Portfolio Operator Bonus", amount: 8, token: "USDC", requirement: "Complete Arc Liquidity Signal", missionIds: ["q2"] },
   { id: "reward-swap", title: "Swap Pilot Bonus", amount: 5, token: "EURC", requirement: "Complete Lunexis Swap Initiation", missionIds: ["q1"] },
-  { id: "reward-route", title: "Route Pathfinder Bonus", amount: 25, token: "USDC", requirement: "Complete swap and bridge route mission", missionIds: ["q4"] },
+  { id: "reward-route", title: "Route Pathfinder Bonus", amount: 25, token: "USDC", requirement: "Complete advanced swap route mission", missionIds: ["q4"] },
 ];
 
 export function normalizeRewards(value: unknown): RewardConfig[] {

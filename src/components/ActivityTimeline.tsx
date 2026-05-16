@@ -9,7 +9,7 @@ export default function ActivityTimeline({ activities }: { activities: ActivityI
   const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null);
 
   if (activities.length === 0) {
-    return <p style={{ color: "#849495", fontSize: 13 }}>No activity yet. Connect, swap, bridge, or complete missions to start your timeline.</p>;
+    return <p style={{ color: "#849495", fontSize: 13 }}>No activity yet. Connect, swap, stake, or complete missions to start your timeline.</p>;
   }
 
   return (

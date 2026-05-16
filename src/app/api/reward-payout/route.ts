@@ -60,12 +60,12 @@ export async function POST(request: Request) {
 
   const privateKey = getPrivateKey();
   if (!privateKey) {
-    return NextResponse.json({ error: "Reward payout wallet is not configured. Add REWARD_PAYOUT_PRIVATE_KEY in Vercel environment variables." }, { status: 503 });
+    return NextResponse.json({ error: "Reward payouts are temporarily unavailable. Please try again later." }, { status: 503 });
   }
 
   const tokenAddress = TOKEN_CONTRACTS[token]?.[ARC_TESTNET_CHAIN_ID];
   if (!tokenAddress) {
-    return NextResponse.json({ error: `${token} contract address is not configured.` }, { status: 503 });
+    return NextResponse.json({ error: `${token} rewards are temporarily unavailable.` }, { status: 503 });
   }
 
   const account = privateKeyToAccount(privateKey);
