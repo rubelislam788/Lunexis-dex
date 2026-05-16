@@ -6478,7 +6478,10 @@ a.arc-uiverse-button .arc-shimmer-text,
 }
 
 .arc-aurora-title {
-  display: inline !important;
+  display: block !important;
+  width: min(100%, 980px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
   background: none !important;
   background-image: none !important;
   -webkit-background-clip: initial !important;
@@ -6486,6 +6489,10 @@ a.arc-uiverse-button .arc-shimmer-text,
   -webkit-text-fill-color: #e9feff !important;
   color: #e9feff !important;
   overflow: visible !important;
+  text-align: center !important;
+  text-wrap: balance;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
   text-shadow: 0 0 24px rgba(56, 189, 248, 0.26), 0 0 44px rgba(139, 92, 246, 0.14);
 }
 
@@ -6495,6 +6502,7 @@ a.arc-uiverse-button .arc-shimmer-text,
 }
 
 .arc-aurora-title .arc-title-plain {
+  display: inline !important;
   background: none !important;
   background-image: none !important;
   background-color: transparent !important;
@@ -6505,6 +6513,8 @@ a.arc-uiverse-button .arc-shimmer-text,
 }
 
 .arc-aurora-title .arc-title-gradient {
+  display: inline-block !important;
+  white-space: nowrap !important;
   background: none !important;
   background-image: none !important;
   background-color: transparent !important;
@@ -6539,4 +6549,11 @@ html[data-lunexis-theme] .arc-hero-section .arc-title-plain {
 html[data-lunexis-theme] .arc-hero-section .arc-title-gradient {
   -webkit-text-fill-color: #50dfff !important;
   color: #50dfff !important;
+}
+
+@media (max-width: 520px) {
+  .arc-hero-section .arc-aurora-title {
+    font-size: clamp(34px, 11vw, 46px) !important;
+    line-height: 1.08 !important;
+  }
 }
