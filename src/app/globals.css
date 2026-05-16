@@ -3697,6 +3697,8 @@ select.lunexis-staking-input {
 .arc-topbar-wallet {
   position: relative;
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 .arc-topbar-wallet > .relative > button {
@@ -3706,10 +3708,25 @@ select.lunexis-staking-input {
   max-width: 178px;
 }
 
+.arc-topbar-wallet > .relative > .lunexis-wallet-trigger.is-connected {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 3px !important;
+  gap: 0 !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+.arc-topbar-wallet > .relative > .lunexis-wallet-trigger.is-connected > div {
+  display: none !important;
+}
+
 .arc-topbar-wallet > .relative > button img,
 .arc-topbar-wallet > .relative > button > span:last-child {
-  width: 30px !important;
-  height: 30px !important;
+  width: 32px !important;
+  height: 32px !important;
 }
 
 .lunexis-header-profile-panel {
