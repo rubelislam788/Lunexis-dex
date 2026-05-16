@@ -3576,14 +3576,14 @@ select.lunexis-staking-input {
 
 .arc-floating-topbar {
   position: relative;
-  width: min(1080px, calc(100vw - 28px));
+  width: min(1180px, calc(100vw - 28px));
   min-height: 52px;
   margin: 0 auto;
-  padding: 6px 10px;
+  padding: 6px 14px;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  column-gap: clamp(20px, 3vw, 42px);
+  column-gap: clamp(36px, 4.5vw, 72px);
   border-radius: 999px;
   background:
     radial-gradient(circle at 14% 20%, rgba(0, 220, 229, 0.14), transparent 28%),
@@ -3643,6 +3643,7 @@ select.lunexis-staking-input {
   gap: 0;
   min-width: 0;
   min-height: 40px;
+  margin-inline: clamp(12px, 1.8vw, 28px) !important;
   padding: 3px 14px !important;
   border-radius: 999px !important;
   background: transparent !important;
@@ -3671,7 +3672,7 @@ select.lunexis-staking-input {
 .arc-topbar-left {
   justify-self: start;
   min-width: 0;
-  padding-right: 6px;
+  padding-right: clamp(10px, 1.4vw, 22px);
 }
 
 .arc-topbar-right {
@@ -3679,13 +3680,13 @@ select.lunexis-staking-input {
   min-width: 0;
   position: relative;
   align-items: center;
-  padding-left: 6px;
+  padding-left: clamp(10px, 1.4vw, 22px);
 }
 
 .arc-topbar-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -5323,7 +5324,18 @@ a.arc-uiverse-button:active,
 }
 
 /* Mobile production polish: keep every feature usable on phones/tablets without changing the Lunexis identity. */
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
+  .arc-floating-topbar {
+    width: min(1120px, calc(100vw - 24px));
+    column-gap: clamp(42px, 4.8vw, 64px);
+  }
+
+  .arc-floating-nav-link {
+    padding-inline: 0.7rem !important;
+  }
+}
+
+@media (max-width: 1240px) {
   .arc-topbar-nav {
     display: none !important;
   }
