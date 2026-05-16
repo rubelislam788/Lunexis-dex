@@ -3195,7 +3195,7 @@ select.lunexis-staking-input {
 
 .arc-floating-topbar {
   position: relative;
-  width: min(760px, calc(100vw - 28px));
+  width: min(1080px, calc(100vw - 28px));
   min-height: 52px;
   margin: 0 auto;
   padding: 6px 10px;
@@ -3297,6 +3297,17 @@ select.lunexis-staking-input {
   min-width: 0;
   position: relative;
   align-items: center;
+}
+
+.arc-topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.arc-topbar-nav-actions {
+  margin-right: 2px;
 }
 
 .lunexis-header-profile-panel {
@@ -3560,6 +3571,10 @@ select.lunexis-staking-input {
     grid-column: 3;
     justify-self: end;
     gap: 5px;
+  }
+
+  .arc-topbar-nav {
+    display: none;
   }
 }
 

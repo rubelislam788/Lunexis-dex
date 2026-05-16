@@ -8,6 +8,15 @@ import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
 import { useProfile } from "@/hooks/useProfile";
 import type { Page } from "@/types";
 
+const TOP_NAV_ITEMS: Array<{ page: Page; label: string; icon: string }> = [
+  { page: "missions", label: "Missions", icon: "assignment_turned_in" },
+  { page: "leaderboard", label: "Leaderboard", icon: "leaderboard" },
+  { page: "rewards", label: "Rewards", icon: "workspace_premium" },
+  { page: "stats", label: "Stats", icon: "query_stats" },
+  { page: "staking", label: "Stake", icon: "account_balance" },
+  { page: "swap", label: "Swap", icon: "swap_horiz" },
+];
+
 interface HeaderProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
@@ -61,7 +70,7 @@ export default function Header({ currentPage, onNavigate, onToggleSidebar, sideb
       }}
     >
       <div className="arc-floating-topbar pointer-events-auto">
-        <div className="arc-topbar-left flex items-center">
+        <div className="arc-topbar-left flex items-center gap-2">
           {sidebarAvailable ? (
             <button
               type="button"
@@ -79,6 +88,19 @@ export default function Header({ currentPage, onNavigate, onToggleSidebar, sideb
           ) : (
             <span className="arc-topbar-left-spacer" aria-hidden="true" />
           )}
+          <nav className="arc-topbar-nav" aria-label="Primary navigation">
+            {TOP_NAV_ITEMS.slice(0, 4).map((item) => (
+              <button
+                key={item.page}
+                type="button"
+                onClick={() => goTo(item.page)}
+                className={`arc-floating-nav-link ${currentPage === item.page ? "is-active" : ""}`}
+              >
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
 
         <button onClick={() => onNavigate("landing")} className="arc-floating-brand bg-transparent" aria-label="Go to home">
@@ -86,6 +108,19 @@ export default function Header({ currentPage, onNavigate, onToggleSidebar, sideb
         </button>
 
         <div className="arc-topbar-right flex items-center gap-2">
+          <nav className="arc-topbar-nav arc-topbar-nav-actions" aria-label="Trading navigation">
+            {TOP_NAV_ITEMS.slice(4).map((item) => (
+              <button
+                key={item.page}
+                type="button"
+                onClick={() => goTo(item.page)}
+                className={`arc-floating-nav-link ${currentPage === item.page ? "is-active" : ""}`}
+              >
+                <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
           <NotificationCenter />
           <ThemeSwitcher />
           <button
