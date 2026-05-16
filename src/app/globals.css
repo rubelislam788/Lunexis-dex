@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @tailwind base;
@@ -261,18 +261,26 @@ html {
 
 html[data-lunexis-theme="dark"],
 :root {
-  --lunexis-bg-a: rgba(0, 220, 229, 0.16);
-  --lunexis-bg-b: rgba(102, 51, 238, 0.2);
-  --lunexis-bg-c: rgba(255, 45, 178, 0.12);
-  --lunexis-bg-base: linear-gradient(135deg, #000 0%, #05070d 45%, #000 100%);
-  --lunexis-card-a: rgba(0, 20, 24, 0.76);
-  --lunexis-card-b: rgba(18, 22, 64, 0.72);
-  --lunexis-border-a: rgba(0,220,229,0.9);
-  --lunexis-border-b: rgba(61,106,255,0.72);
-  --lunexis-border-c: rgba(255,45,178,0.65);
-  --lunexis-orb-a: #00dce5;
-  --lunexis-orb-b: #7c3cff;
-  --lunexis-orb-c: #ff2db2;
+  --arc-cyan: #4A9EE8;
+  --arc-purple: #2A6AAA;
+  --arc-pink: #7EC8F0;
+  --arc-blue: #4A9EE8;
+  --arc-navy: #0F1319;
+  --surface: #0F1319;
+  --surface-low: #141920;
+  --surface-container: #1A2130;
+  --lunexis-bg-a: rgba(74, 158, 232, 0.14);
+  --lunexis-bg-b: rgba(126, 200, 240, 0.08);
+  --lunexis-bg-c: rgba(61, 204, 142, 0.045);
+  --lunexis-bg-base: linear-gradient(135deg, #0F1319 0%, #141920 48%, #0b0f15 100%);
+  --lunexis-card-a: rgba(20, 25, 32, 0.9);
+  --lunexis-card-b: rgba(26, 33, 48, 0.78);
+  --lunexis-border-a: rgba(74,158,232,0.58);
+  --lunexis-border-b: rgba(42,64,96,0.74);
+  --lunexis-border-c: rgba(30,48,80,0.72);
+  --lunexis-orb-a: #4A9EE8;
+  --lunexis-orb-b: #2A6AAA;
+  --lunexis-orb-c: #7EC8F0;
 }
 
 html[data-lunexis-theme="cyber"] {
@@ -384,26 +392,31 @@ html[data-lunexis-theme] .lunexis-mobile-bottom-nav {
 
 html[data-lunexis-theme="dark"] body {
   background:
-    radial-gradient(circle at 50% -12%, rgba(255,255,255,0.045), transparent 24rem),
-    radial-gradient(circle at 18% 24%, rgba(70, 88, 108, 0.13), transparent 28rem),
-    linear-gradient(135deg, #000 0%, #050505 46%, #0b0d10 100%) !important;
+    radial-gradient(circle at 20% 16%, rgba(74,158,232,0.13), transparent 24rem),
+    radial-gradient(circle at 82% 18%, rgba(126,200,240,0.07), transparent 30rem),
+    radial-gradient(circle at 55% 82%, rgba(61,204,142,0.04), transparent 28rem),
+    linear-gradient(135deg, #0F1319 0%, #141920 48%, #0a0e14 100%) !important;
+  color: #E4EEF8;
+  font-family: "DM Sans", "Inter", sans-serif;
 }
 
 html[data-lunexis-theme="dark"] .arc-page-shell,
 html[data-lunexis-theme="dark"] .hero-bg {
   background:
-    radial-gradient(circle at 20% 16%, rgba(255,255,255,0.055), transparent 25rem),
-    radial-gradient(circle at 78% 24%, rgba(86,112,145,0.11), transparent 30rem),
-    linear-gradient(135deg, #000 0%, #060708 50%, #101216 100%) !important;
+    repeating-linear-gradient(45deg, transparent 0, transparent 118px, rgba(74,158,232,0.05) 119px, rgba(74,158,232,0.05) 120px),
+    repeating-linear-gradient(-45deg, transparent 0, transparent 118px, rgba(74,158,232,0.04) 119px, rgba(74,158,232,0.04) 120px),
+    radial-gradient(circle at 20% 16%, rgba(74,158,232,0.12), transparent 25rem),
+    radial-gradient(circle at 78% 24%, rgba(126,200,240,0.06), transparent 30rem),
+    linear-gradient(135deg, #0F1319 0%, #141920 52%, #0b0f15 100%) !important;
 }
 
 html[data-lunexis-theme="dark"] .arc-floating-topbar {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.025)),
-    linear-gradient(90deg, rgba(10,11,13,0.82), rgba(24,26,30,0.7), rgba(8,9,11,0.82)) !important;
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 20px 64px rgba(0,0,0,0.64), 0 0 22px rgba(136,171,211,0.08), inset 0 1px 0 rgba(255,255,255,0.14);
-  animation: darkMatteBreath 8s ease-in-out infinite;
+    linear-gradient(180deg, rgba(228,238,248,0.07), rgba(228,238,248,0.018)),
+    linear-gradient(90deg, rgba(15,19,25,0.92), rgba(20,25,32,0.78), rgba(15,19,25,0.92)) !important;
+  border-color: rgba(30,48,80,0.9);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.62), 0 0 24px rgba(74,158,232,0.11), inset 0 1px 0 rgba(228,238,248,0.11);
+  animation: darkMatteBreath 9s cubic-bezier(0.16,1,0.3,1) infinite;
 }
 
 html[data-lunexis-theme="dark"] .glass-panel,
@@ -412,41 +425,93 @@ html[data-lunexis-theme="dark"] .lunexis-premium-card,
 html[data-lunexis-theme="dark"] .lunexis-profile-card,
 html[data-lunexis-theme="dark"] .lunexis-staking-pool-card {
   background:
-    linear-gradient(145deg, rgba(8,9,11,0.88), rgba(28,31,36,0.68)) padding-box,
-    linear-gradient(135deg, rgba(255,255,255,0.16), rgba(105,133,165,0.2), rgba(255,255,255,0.08)) border-box !important;
-  box-shadow: 0 24px 76px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.09) !important;
+    linear-gradient(145deg, rgba(20,25,32,0.9), rgba(26,33,48,0.74)) padding-box,
+    linear-gradient(135deg, rgba(74,158,232,0.46), rgba(42,64,96,0.62), rgba(30,48,80,0.52)) border-box !important;
+  box-shadow: 0 24px 76px rgba(0,0,0,0.54), inset 0 1px 0 rgba(228,238,248,0.08) !important;
 }
 
 html[data-lunexis-theme="dark"] .arc-card:hover,
 html[data-lunexis-theme="dark"] .glass-panel:hover,
 html[data-lunexis-theme="dark"] .lunexis-premium-card:hover {
-  box-shadow: 0 30px 88px rgba(0,0,0,0.68), 0 0 26px rgba(190,220,255,0.11), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+  box-shadow: 0 30px 88px rgba(0,0,0,0.66), 0 0 26px rgba(74,158,232,0.16), inset 0 1px 0 rgba(228,238,248,0.12) !important;
 }
 
 html[data-lunexis-theme="dark"] .lunexis-bg-grid {
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1.5px),
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px);
-  background-size: 120px 120px, 160px 160px;
-  opacity: 0.48;
-  animation: darkShadowDrift 30s linear infinite;
+    repeating-linear-gradient(45deg, transparent 0, transparent 119px, rgba(74,158,232,0.18) 119px, rgba(74,158,232,0.18) 120px),
+    repeating-linear-gradient(-45deg, transparent 0, transparent 119px, rgba(74,158,232,0.14) 119px, rgba(74,158,232,0.14) 120px);
+  background-size: 120px 120px;
+  opacity: 0.28;
+  animation: darkShadowDrift 36s linear infinite;
 }
 
 html[data-lunexis-theme="dark"] .lunexis-bg-particles span {
-  background: rgba(230,240,255,0.78);
-  box-shadow: 0 0 12px rgba(190,220,255,0.38);
-  animation-duration: 18s !important;
+  background: rgba(126,200,240,0.72);
+  box-shadow: 0 0 12px rgba(74,158,232,0.42);
+  animation-duration: 20s !important;
 }
 
 html[data-lunexis-theme="dark"] .lunexis-mobile-bottom-nav {
-  background: linear-gradient(180deg, rgba(28,31,36,0.74), rgba(5,6,7,0.68));
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 24px 86px rgba(0,0,0,0.72), 0 0 18px rgba(190,220,255,0.08), inset 0 1px 0 rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(26,33,48,0.76), rgba(15,19,25,0.72));
+  border-color: rgba(30,48,80,0.9);
+  box-shadow: 0 24px 86px rgba(0,0,0,0.7), 0 0 18px rgba(74,158,232,0.12), inset 0 1px 0 rgba(228,238,248,0.1);
 }
 
 html[data-lunexis-theme="dark"] .lunexis-mobile-bottom-nav button.is-active {
-  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(89,110,135,0.18));
-  box-shadow: 0 0 22px rgba(190,220,255,0.14), inset 0 1px 0 rgba(255,255,255,0.16);
+  background: linear-gradient(180deg, rgba(74,158,232,0.24), rgba(42,106,170,0.16));
+  box-shadow: 0 0 22px rgba(74,158,232,0.2), inset 0 1px 0 rgba(228,238,248,0.14);
+}
+
+html[data-lunexis-theme="dark"] .arc-floating-nav-link,
+html[data-lunexis-theme="dark"] .arc-floating-action,
+html[data-lunexis-theme="dark"] .arc-floating-menu-button,
+html[data-lunexis-theme="dark"] .btn-primary,
+html[data-lunexis-theme="dark"] .btn-ghost,
+html[data-lunexis-theme="dark"] .btn-outline-cyan,
+html[data-lunexis-theme="dark"] a.arc-uiverse-button {
+  border-color: rgba(42,64,96,0.78) !important;
+  color: #E4EEF8 !important;
+  background: rgba(20,25,32,0.36) !important;
+  box-shadow: inset 0 1px 0 rgba(228,238,248,0.06) !important;
+}
+
+html[data-lunexis-theme="dark"] .arc-floating-nav-link:hover,
+html[data-lunexis-theme="dark"] .arc-floating-nav-link.is-active,
+html[data-lunexis-theme="dark"] .arc-floating-action:hover,
+html[data-lunexis-theme="dark"] .arc-floating-action.is-active,
+html[data-lunexis-theme="dark"] .arc-floating-menu-button:hover,
+html[data-lunexis-theme="dark"] .arc-floating-menu-button.is-active,
+html[data-lunexis-theme="dark"] .btn-primary:hover,
+html[data-lunexis-theme="dark"] .btn-ghost:hover,
+html[data-lunexis-theme="dark"] .btn-outline-cyan:hover,
+html[data-lunexis-theme="dark"] a.arc-uiverse-button:hover {
+  background: #4A9EE8 !important;
+  border-color: #4A9EE8 !important;
+  color: #0A1A2C !important;
+  box-shadow: 0 0 24px rgba(74,158,232,0.34), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+
+html[data-lunexis-theme="dark"] .arc-sidebar-shell {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(74,158,232,0.1), transparent 12rem),
+    linear-gradient(180deg, rgba(20,25,32,0.96), rgba(15,19,25,0.96)) !important;
+  border-color: rgba(30,48,80,0.88);
+  box-shadow: 0 28px 82px rgba(0,0,0,0.58), inset 0 1px 0 rgba(228,238,248,0.08);
+}
+
+html[data-lunexis-theme="dark"] .arc-sidebar-nav-item:hover,
+html[data-lunexis-theme="dark"] .arc-sidebar-nav-item.is-active,
+html[data-lunexis-theme="dark"] .arc-sidebar-profile:hover {
+  background: #4A9EE8;
+  color: #0A1A2C;
+  box-shadow: 0 0 24px rgba(74,158,232,0.3);
+}
+
+html[data-lunexis-theme="dark"] .gradient-text,
+html[data-lunexis-theme="dark"] .arc-shimmer-text,
+html[data-lunexis-theme="dark"] .arc-aurora-title {
+  background-image: linear-gradient(90deg, #E4EEF8, #7EC8F0, #4A9EE8) !important;
+  text-shadow: 0 0 22px rgba(74,158,232,0.18);
 }
 
 html[data-lunexis-theme="cyber"] body {

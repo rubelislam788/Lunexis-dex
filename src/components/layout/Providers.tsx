@@ -18,8 +18,8 @@ export default function Providers({ children }: { children: ReactNode }) {
           initialChain={arcChain}
           modalSize="compact"
           theme={darkTheme({
-            accentColor: "#7c3aed",
-            accentColorForeground: "#f8fbff",
+            accentColor: "#4A9EE8",
+            accentColorForeground: "#0A1A2C",
             borderRadius: "large",
             overlayBlur: "small",
           })}
