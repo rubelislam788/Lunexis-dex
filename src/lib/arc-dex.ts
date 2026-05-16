@@ -35,7 +35,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "USDC",
     name: "USD Coin",
-    address: "0x3600000000000000000000000000000000000000",
+    address: "0xD8fBdB46F9230B952Ad820697ac940373208ea3e",
     decimals: 6,
     accent: "#2775ca",
     icon: "/arc-assets/usdc.png",
@@ -44,7 +44,7 @@ export const ARC_SWAP_TOKENS: ArcSwapToken[] = [
   {
     symbol: "EURO",
     name: "EURO",
-    address: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a",
+    address: "0x588c08138f0d079E2B8457ea0Bf30861890875fb",
     decimals: 6,
     accent: "#38bdf8",
     icon: "/arc-assets/circle-usdc.jpeg",
