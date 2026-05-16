@@ -36,6 +36,28 @@ function textToMissionIds(value: string) {
   return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
+function createRewardId() {
+  return `reward-custom-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+}
+
+function normalizeMissionKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function missionKeyAliases(value: string) {
+  const key = normalizeMissionKey(value);
+  if (!key) return [];
+  const aliases = new Set([key]);
+  if (key.startsWith("custom-")) aliases.add(key.slice("custom-".length));
+  else if (/^\d+$/.test(key)) aliases.add(`custom-${key}`);
+  return Array.from(aliases);
+}
+
+function isMissionRequirementMet(requiredMissionId: string, completedMissionIds: string[]) {
+  const completedKeys = new Set(completedMissionIds.flatMap(missionKeyAliases));
+  return missionKeyAliases(requiredMissionId).some((key) => completedKeys.has(key));
+}
+
 export default function RewardsPage() {
   const { profile, isConnected, claim } = useProfile();
   const { address } = useAccount();
@@ -108,7 +130,7 @@ export default function RewardsPage() {
   const addReward = () => {
     if (!isRewardAdmin) return;
     const reward: RewardConfig = {
-      id: `reward-custom-${Date.now()}`,
+      id: createRewardId(),
       title: `Custom Reward ${rewards.length + 1}`,
       amount: 5,
       token: "USDC",
@@ -154,6 +176,7 @@ export default function RewardsPage() {
     setClaimMessage("");
     try {
       await syncProfileBeforePayout();
+      const completedMissionIds = profile?.completedMissionIds ?? [];
       const response = await fetch("/api/reward-payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,6 +186,7 @@ export default function RewardsPage() {
           amount: reward.amount,
           recipient: address,
           requiredMissionIds: reward.missionIds,
+          completedMissionIds,
         }),
       });
       const data = await response.json().catch(() => null);
@@ -277,7 +301,8 @@ export default function RewardsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {rewards.map((reward) => {
             const claimed = Boolean(profile?.claimedRewardIds.includes(reward.id));
-            const missingMissionIds = reward.missionIds.filter((id) => !profile?.completedMissionIds.includes(id));
+            const completedMissionIds = profile?.completedMissionIds ?? [];
+            const missingMissionIds = reward.missionIds.filter((id) => !isMissionRequirementMet(id, completedMissionIds));
             const eligible = Boolean(isConnected && profile && missingMissionIds.length === 0);
             const isClaiming = claimingRewardId === reward.id;
             const rewardStatus = claimed

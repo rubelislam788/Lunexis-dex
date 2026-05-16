@@ -19,6 +19,15 @@ function getPrivateKey() {
   return key.startsWith("0x") ? key as `0x${string}` : `0x${key}` as `0x${string}`;
 }
 
+function missionKeyAliases(value: string) {
+  const key = value.trim().toLowerCase();
+  if (!key) return [];
+  const aliases = new Set([key]);
+  if (key.startsWith("custom-")) aliases.add(key.slice("custom-".length));
+  else if (/^\d+$/.test(key)) aliases.add(`custom-${key}`);
+  return Array.from(aliases);
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const rewardId = typeof body?.rewardId === "string" ? body.rewardId : "";
@@ -53,11 +62,12 @@ export async function POST(request: Request) {
   const recipientKey = recipient.toLowerCase();
   const profile = profileStore[recipientKey];
   const completedIds = new Set([...(profile?.completedMissionIds ?? []), ...submittedCompletedMissionIds]);
+  const completedMissionKeys = new Set(Array.from(completedIds).flatMap(missionKeyAliases));
   if (profile?.claimedRewardIds?.includes(rewardId)) {
     return NextResponse.json({ error: "Reward already claimed." }, { status: 409 });
   }
   if (requiredMissionIds.length > 0) {
-    const missingIds = requiredMissionIds.filter((missionId: string) => !completedIds.has(missionId));
+    const missingIds = requiredMissionIds.filter((missionId: string) => !missionKeyAliases(missionId).some((key) => completedMissionKeys.has(key)));
     if (missingIds.length > 0) {
       return NextResponse.json({ error: `Complete required mission tasks first: ${missingIds.join(", ")}` }, { status: 403 });
     }
