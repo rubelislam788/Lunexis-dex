@@ -276,15 +276,34 @@ export default function RewardsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {rewards.map((reward) => {
-            const claimed = profile?.claimedRewardIds.includes(reward.id);
-            const eligible = Boolean(isConnected && profile && (reward.missionIds.length === 0 || reward.missionIds.every((id) => profile.completedMissionIds.includes(id))));
+            const claimed = Boolean(profile?.claimedRewardIds.includes(reward.id));
+            const missingMissionIds = reward.missionIds.filter((id) => !profile?.completedMissionIds.includes(id));
+            const eligible = Boolean(isConnected && profile && missingMissionIds.length === 0);
             const isClaiming = claimingRewardId === reward.id;
+            const rewardStatus = claimed
+              ? "Reward already claimed by this wallet"
+              : eligible
+                ? "Ready to claim from verified missions"
+                : !isConnected
+                  ? "Connect wallet to claim"
+                  : missingMissionIds.length
+                    ? `Complete mission first: ${missingMissionIds.join(", ")}`
+                    : "Connect wallet to claim";
+            const rewardButtonLabel = isClaiming
+              ? "Paying..."
+              : claimed
+                ? "Claimed"
+                : !isConnected
+                  ? "Connect Wallet"
+                  : missingMissionIds.length
+                    ? "Complete Mission First"
+                    : "Claim Reward";
             return (
               <div key={reward.id} className="arc-card rounded-3xl p-6">
                 <div style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>{reward.title}</div>
                 <p style={{ color: "#849495", fontSize: 13, marginTop: 8 }}>{reward.requirement}</p>
-                <p style={{ color: eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
-                  {eligible ? "Eligible from verified missions" : reward.missionIds.length ? `Complete mission ID: ${reward.missionIds.join(", ")}` : "Connect wallet to claim"}
+                <p style={{ color: claimed ? "#94a3b8" : eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
+                  {rewardStatus}
                 </p>
                 <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{formatRewardAmount(reward.amount, reward.token)}</div>
                 <button
@@ -292,7 +311,7 @@ export default function RewardsPage() {
                   onClick={() => claimTokenReward(reward)}
                   className="btn-primary w-full mt-5 py-3 rounded-xl"
                 >
-                  {claimed ? "Completed" : isClaiming ? "Paying..." : "Claim Reward"}
+                  {rewardButtonLabel}
                 </button>
               </div>
             );
