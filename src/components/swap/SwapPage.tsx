@@ -88,6 +88,7 @@ export default function SwapPage() {
   const [tokenSearch, setTokenSearch] = useState("");
   const [recentTokens, setRecentTokens] = useState<TokenSymbol[]>(SWAP_TOKENS);
   const [customSlippage, setCustomSlippage] = useState("");
+  const [showSlippageMenu, setShowSlippageMenu] = useState(false);
 
   const fromToken = TOKEN_META[state.fromToken as TokenSymbol] ?? TOKEN_META.USDC;
   const toToken = TOKEN_META[state.toToken as TokenSymbol] ?? TOKEN_META.EURC;
@@ -279,14 +280,29 @@ export default function SwapPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 justify-center lg:grid-cols-[minmax(0,760px)] gap-6">
+        <div className="grid grid-cols-1 justify-center xl:grid-cols-[minmax(0,760px)_minmax(320px,420px)] gap-6 items-start">
           <section className="arc-card arc-swap-card rounded-[28px] p-6">
+            <div className="lunexis-swap-top-row">
+              <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show />
+              <SlippageSelector
+                value={state.slippage}
+                customValue={customSlippage}
+                open={showSlippageMenu}
+                onOpen={setShowSlippageMenu}
+                onSelect={setSlippage}
+                onCustom={applyCustomSlippage}
+              />
+            </div>
+
             <TokenAmountPanel
               label="You Pay"
               token={fromToken.symbol}
               amount={state.amountIn}
               balance={balanceLabel(fromToken.symbol)}
               price={amountValueLabel(fromToken.symbol, state.amountIn)}
+              quote={quoteLoading ? "Fetching quote..." : quoteRate}
+              impact={estimatedOut ? `${priceImpact.toFixed(2)}% impact` : "Impact pending"}
+              impactTone={highPriceImpact ? "warning" : estimatedOut ? "success" : "muted"}
               onAmount={(amount) => updateState({ amountIn: amount })}
               onToken={() => setSelector("from")}
               onQuickAmount={setPercentAmount}
@@ -315,49 +331,16 @@ export default function SwapPage() {
               amount={quoteLoading ? "Loading..." : estimatedOut ? `~ ${estimatedOut}` : ""}
               balance={balanceLabel(toToken.symbol)}
               price={amountValueLabel(toToken.symbol, estimatedOut)}
+              quote={estimatedOut ? `Receive ${estimatedOut} ${toToken.symbol}` : "Output updates live"}
               readOnly
               onToken={() => setSelector("to")}
             />
-
-            <div className="lunexis-swap-settings my-6">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <span>Slippage</span>
-                <strong>{state.slippage}</strong>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {["0.1%", "0.5%", "1%"].map((slippage) => (
-                  <button key={slippage} onClick={() => setSlippage(slippage)} className={`btn-ghost rounded-full py-3 ${state.slippage === slippage ? "is-active" : ""}`} style={{ color: state.slippage === slippage ? "#38bdf8" : "#849495", fontSize: 12 }}>
-                  {slippage}
-                </button>
-              ))}
-              </div>
-              <input
-                value={customSlippage}
-                onChange={(event) => applyCustomSlippage(event.target.value)}
-                placeholder="Custom slippage %"
-                inputMode="decimal"
-                className="lunexis-slippage-input"
-              />
-            </div>
-
-            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show={Boolean(state.amountIn && !quoteLoading)} />
-
-            <div className="flex justify-between rounded-2xl p-4 mb-6" style={{ background: highPriceImpact ? "rgba(255,156,0,0.1)" : "rgba(255,255,255,0.03)", border: highPriceImpact ? "1px solid rgba(255,156,0,0.35)" : "1px solid rgba(255,255,255,0.06)" }}>
-              <span style={{ color: "#849495" }}>Price Impact</span>
-              <span style={{ color: highPriceImpact ? "#ffb020" : estimatedOut ? "#22c55e" : "#849495", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{estimatedOut ? `${priceImpact.toFixed(2)}%` : "Onchain Quote"}</span>
-            </div>
             {highPriceImpact && (
               <div className="lunexis-impact-warning mb-6">
                 <strong>High price impact detected</strong>
                 <span>Large trade may affect output. Consider reducing the amount.</span>
               </div>
             )}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl p-4 mb-6" style={{ background: "rgba(0,220,229,0.055)", border: "1px solid rgba(56,189,248,0.14)" }}>
-              <span style={{ color: "#849495" }}>Swap Price</span>
-              <span style={{ color: estimatedOut ? "#38bdf8" : "#9fb2c4", fontFamily: "'Space Grotesk'", fontWeight: 900, fontSize: 13 }}>
-                {quoteLoading ? "Fetching onchain quote..." : quoteRate}
-              </span>
-            </div>
 
             {needsApproval && currentChainId === requiredChainId && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
@@ -490,6 +473,55 @@ export default function SwapPage() {
   );
 }
 
+function SlippageSelector({
+  value,
+  customValue,
+  open,
+  onOpen,
+  onSelect,
+  onCustom,
+}: {
+  value: string;
+  customValue: string;
+  open: boolean;
+  onOpen: (value: boolean) => void;
+  onSelect: (value: string) => void;
+  onCustom: (value: string) => void;
+}) {
+  return (
+    <div className="lunexis-slippage-compact">
+      <button type="button" onClick={() => onOpen(!open)} className="btn-ghost rounded-full">
+        <span>Slippage</span>
+        <strong>{value}</strong>
+        <span className="material-symbols-outlined" aria-hidden="true">expand_more</span>
+      </button>
+      {open && (
+        <div className="lunexis-slippage-menu">
+          {["0.1%", "0.5%", "1%"].map((slippage) => (
+            <button
+              key={slippage}
+              type="button"
+              onClick={() => {
+                onSelect(slippage);
+                onOpen(false);
+              }}
+              className={value === slippage ? "is-active" : ""}
+            >
+              {slippage}
+            </button>
+          ))}
+          <input
+            value={customValue}
+            onChange={(event) => onCustom(event.target.value)}
+            placeholder="Custom %"
+            inputMode="decimal"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RoutePreview({ fromToken, toToken, show }: { fromToken: TokenSymbol; toToken: TokenSymbol; show: boolean }) {
   if (!show || !SWAP_TOKENS.includes(fromToken) || !SWAP_TOKENS.includes(toToken)) return null;
   return (
@@ -543,7 +575,7 @@ function SmartErrorPopup({ error, onClose }: { error: SmartError; onClose: () =>
   );
 }
 
-function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; price: string; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
+function TokenAmountPanel({ label, token, amount, balance, price, quote, impact, impactTone = "muted", readOnly, onAmount, onToken, onQuickAmount }: { label: string; token: TokenSymbol; amount: string; balance: string; price: string; quote?: string; impact?: string; impactTone?: "success" | "warning" | "muted"; readOnly?: boolean; onAmount?: (amount: string) => void; onToken: () => void; onQuickAmount?: (percent: number) => void }) {
   return (
     <div className="arc-token-amount-panel rounded-3xl p-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[token].accent}44` }}>
       <div className="mb-3">
@@ -560,21 +592,10 @@ function TokenAmountPanel({ label, token, amount, balance, price, readOnly, onAm
             placeholder="0.00"
             className="arc-swap-amount-input"
           />
-          <div
-            className="mt-2 inline-flex rounded-full px-3 py-1"
-            style={{
-              background: `${TOKEN_META[token].accent}12`,
-              border: `1px solid ${TOKEN_META[token].accent}26`,
-              boxShadow: `0 0 18px ${TOKEN_META[token].accent}10`,
-              color: "#d9fbff",
-              fontSize: 10,
-              fontFamily: "'Space Grotesk'",
-              fontWeight: 900,
-              letterSpacing: 0,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {price}
+          <div className="lunexis-amount-live-meta">
+            <span>{price}</span>
+            {quote && <span>{quote}</span>}
+            {impact && <strong className={`is-${impactTone}`}>{impact}</strong>}
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {onQuickAmount && (
