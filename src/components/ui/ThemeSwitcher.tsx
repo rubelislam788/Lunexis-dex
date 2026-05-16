@@ -6,7 +6,7 @@ const THEMES = [
   { id: "dark", label: "Dark" },
   { id: "white", label: "White" },
   { id: "neon", label: "Neon" },
-  { id: "elysium", label: "Elysium" },
+  { id: "morn", label: "Morn" },
 ] as const;
 
 type ThemeId = (typeof THEMES)[number]["id"];
@@ -31,7 +31,7 @@ function persistTheme(theme: ThemeId) {
 }
 
 function normalizeTheme(value: string | null): ThemeId | null {
-  const migrated = value === "space" ? "elysium" : value === "cyber" ? "white" : value;
+  const migrated = value === "space" || value === "elysium" ? "morn" : value === "cyber" ? "white" : value;
   return THEMES.some((item) => item.id === migrated) ? migrated as ThemeId : null;
 }
 
