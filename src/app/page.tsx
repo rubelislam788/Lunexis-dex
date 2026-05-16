@@ -171,15 +171,16 @@ export default function Home() {
   };
 
   const showSidebar = PAGES_WITH_SIDEBAR.includes(currentPage);
+  const renderSidebar = showSidebar || isOverlaySidebar;
   const sidebarOffset = showSidebar && !isOverlaySidebar ? (sidebarCollapsed ? "5.75rem" : "15rem") : "0rem";
   const appShellStyle = { ["--arc-sidebar-offset" as any]: sidebarOffset } as CSSProperties;
 
   const toggleSidebar = () => {
-    if (!showSidebar) return;
     if (isOverlaySidebar) {
       setSidebarOpen((value) => !value);
       return;
     }
+    if (!showSidebar) return;
     setSidebarCollapsed((value) => !value);
   };
 
@@ -194,11 +195,14 @@ export default function Home() {
       <Header
         currentPage={currentPage}
         onNavigate={navigate}
+        onToggleSidebar={toggleSidebar}
+        sidebarOpen={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
+        sidebarAvailable={renderSidebar}
       />
       <Sidebar
         currentPage={currentPage}
         onNavigate={navigate}
-        show={showSidebar}
+        show={renderSidebar}
         isOverlaySidebar={isOverlaySidebar}
         isOpen={isOverlaySidebar ? sidebarOpen : true}
         isCollapsed={sidebarCollapsed}

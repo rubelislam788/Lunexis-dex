@@ -4,6 +4,8 @@
 import type { Page } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
 import FaucetButton from "@/components/ui/FaucetButton";
+import NotificationCenter from "@/components/ui/NotificationCenter";
+import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
 
 interface SidebarProps {
   currentPage: Page;
@@ -81,6 +83,19 @@ export default function Sidebar({
             );
           })}
         </nav>
+
+        {isOverlaySidebar && (
+          <div className="arc-sidebar-tools">
+            <div className="arc-sidebar-tools-label">Controls</div>
+            <div className="arc-sidebar-tools-row">
+              <NotificationCenter />
+              <ThemeSwitcher />
+              <button type="button" onClick={() => handleNavigate("profile")} className="arc-floating-action" aria-label="Settings">
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>settings</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="arc-sidebar-spacer" />
 
