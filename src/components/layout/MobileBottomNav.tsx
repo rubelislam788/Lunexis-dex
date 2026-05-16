@@ -10,13 +10,24 @@ const MOBILE_TABS: Array<{ page: Page; label: string; icon: string }> = [
   { page: "profile", label: "Profile", icon: "account_circle" },
 ];
 
-export default function MobileBottomNav({ currentPage, onNavigate }: { currentPage: Page; onNavigate: (page: Page) => void }) {
+interface MobileBottomNavProps {
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
+  onToggleMenu: () => void;
+  menuOpen: boolean;
+}
+
+export default function MobileBottomNav({ currentPage, onNavigate, onToggleMenu, menuOpen }: MobileBottomNavProps) {
   return (
     <nav className="lunexis-mobile-bottom-nav" aria-label="Mobile navigation">
+      <button type="button" onClick={onToggleMenu} className={`lunexis-mobile-menu-tab ${menuOpen ? "is-active" : ""}`} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-pressed={menuOpen}>
+        <span className="material-symbols-outlined">{menuOpen ? "close" : "menu"}</span>
+        <small>Menu</small>
+      </button>
       {MOBILE_TABS.map((tab) => {
         const active = currentPage === tab.page || (currentPage === "quest-detail" && tab.page === "missions");
         return (
-          <button key={tab.page} onClick={() => onNavigate(tab.page)} className={active ? "is-active" : ""}>
+          <button key={tab.page} type="button" onClick={() => onNavigate(tab.page)} className={active ? "is-active" : ""}>
             <span className="material-symbols-outlined">{tab.icon}</span>
             <small>{tab.label}</small>
           </button>

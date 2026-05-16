@@ -1596,7 +1596,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
     z-index: 55;
     transform: translateX(-50%);
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     width: min(91vw, 420px);
     padding: 0.42rem 0.48rem;
     border-radius: 999px;
@@ -5281,6 +5281,10 @@ a.arc-uiverse-button:active,
 }
 
 @media (max-width: 768px) {
+  .arc-topbar {
+    display: none !important;
+  }
+
   .arc-app-root,
   .arc-page-shell,
   .arc-with-sidebar-page,
@@ -5302,10 +5306,6 @@ a.arc-uiverse-button:active,
   canvas,
   video {
     max-width: 100%;
-  }
-
-  .arc-topbar {
-    z-index: 70;
   }
 
   .arc-floating-topbar {
@@ -5398,10 +5398,21 @@ a.arc-uiverse-button:active,
   }
 
   .arc-sidebar-shell.arc-sidebar-overlay {
+    top: max(0.75rem, env(safe-area-inset-top)) !important;
+    left: 0.65rem !important;
     width: min(88vw, 19rem) !important;
-    height: min(78dvh, calc(100dvh - 6rem)) !important;
-    max-height: calc(100dvh - 6rem) !important;
+    height: min(82dvh, calc(100dvh - 6.6rem - env(safe-area-inset-bottom))) !important;
+    max-height: calc(100dvh - 6.6rem - env(safe-area-inset-bottom)) !important;
     padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+  }
+
+  .arc-sidebar-backdrop {
+    inset: 0 0 calc(5.8rem + env(safe-area-inset-bottom)) 0 !important;
+    z-index: 54 !important;
+  }
+
+  .arc-sidebar-shell.arc-sidebar-overlay {
+    z-index: 56 !important;
   }
 
   .arc-sidebar-tools-row {
@@ -5418,8 +5429,21 @@ a.arc-uiverse-button:active,
   }
 
   .arc-with-sidebar-page {
-    padding-top: 4.6rem !important;
+    padding-top: 0.8rem !important;
     padding-bottom: calc(6.8rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .arc-home-shimmer {
+    padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
+  }
+
+  .arc-hero-section {
+    min-height: auto !important;
+  }
+
+  .arc-hero-content {
+    padding-top: 1.25rem !important;
+    padding-bottom: 3.5rem !important;
   }
 
   .arc-with-sidebar-page > .relative,
@@ -5563,11 +5587,11 @@ a.arc-uiverse-button:active,
   .lunexis-mobile-bottom-nav {
     width: min(94vw, 430px) !important;
     bottom: calc(0.85rem + env(safe-area-inset-bottom)) !important;
-    padding: 0.36rem !important;
+    padding: 0.32rem !important;
   }
 
   .lunexis-mobile-bottom-nav button {
-    min-height: 2.85rem !important;
+    min-height: 2.75rem !important;
     min-width: 0 !important;
     padding-inline: 0.12rem !important;
   }
@@ -5614,6 +5638,18 @@ a.arc-uiverse-button:active,
 }
 
 @media (max-width: 390px) {
+  .lunexis-mobile-bottom-nav {
+    width: min(96vw, 360px) !important;
+  }
+
+  .lunexis-mobile-bottom-nav .material-symbols-outlined {
+    font-size: 1rem !important;
+  }
+
+  .lunexis-mobile-bottom-nav button {
+    min-height: 2.55rem !important;
+  }
+
   .arc-floating-topbar {
     grid-template-columns: 40px minmax(0, 44px) minmax(112px, 1fr) !important;
     padding-inline: 0.32rem !important;

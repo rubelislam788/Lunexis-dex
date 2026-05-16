@@ -228,7 +228,12 @@ export default function Home() {
         {currentPage === "quest-detail" && <QuestDetailPage quest={selectedQuest} onNavigate={navigate} />}
       </div>
 
-      <MobileBottomNav currentPage={currentPage} onNavigate={navigate} />
+      <MobileBottomNav
+        currentPage={currentPage}
+        onNavigate={navigate}
+        onToggleMenu={toggleSidebar}
+        menuOpen={isOverlaySidebar ? sidebarOpen : false}
+      />
 
       <footer
         className="arc-footer-shell py-8 px-6 md:px-12 flex flex-col gap-4 md:flex-row md:justify-between md:items-center border-t"

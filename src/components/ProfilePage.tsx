@@ -13,6 +13,7 @@ import SmartPortfolioAssistant from "@/components/portfolio/SmartPortfolioAssist
 import PortfolioShareCard from "@/components/portfolio/PortfolioShareCard";
 import AiProfileCard from "@/components/profile/AiProfileCard";
 import WalletSecurityChecker from "@/components/security/WalletSecurityChecker";
+import WalletButton from "@/components/ui/WalletButton";
 
 export default function ProfilePage() {
   const { profile, address, isConnected, update } = useProfile();
@@ -46,6 +47,9 @@ export default function ProfilePage() {
           <div className="arc-card rounded-3xl p-10">
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 36, fontWeight: 900, color: "#f8fbff" }}>Connect Wallet</h1>
             <p style={{ color: "#849495", marginTop: 10 }}>Your editable profile, rewards, balances, and history appear after wallet connection.</p>
+            <div className="mt-6 flex justify-center">
+              <WalletButton />
+            </div>
           </div>
         </div>
       </div>
