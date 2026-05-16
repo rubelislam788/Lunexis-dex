@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import type { ActivityItem, UserProfile } from "@/types";
-import { addActivity, addWalletToProfile, claimReward, completeMission, loadProfile, saveProfile, updateProfile } from "@/lib/profile";
+import { addActivity, addWalletToProfile, claimReward, completeMission, loadProfile, loadRemoteProfile, saveProfile, updateProfile } from "@/lib/profile";
 
 export function useProfile() {
   const { address, isConnected } = useAccount();
@@ -20,7 +20,12 @@ export function useProfile() {
   }, [refresh]);
 
   useEffect(() => {
-    if (isConnected && address) setProfile(addWalletToProfile(address, address));
+    if (isConnected && address) {
+      setProfile(addWalletToProfile(address, address));
+      void loadRemoteProfile(address).then((remote) => {
+        if (remote) setProfile(addWalletToProfile(address, address));
+      });
+    }
     if (!isConnected) setProfile(null);
   }, [address, isConnected]);
 

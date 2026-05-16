@@ -96,10 +96,10 @@ function ensureMissionSchedule(quests: Quest[]) {
   });
 }
 
-async function publishMissions(quests: Quest[]) {
+async function publishMissions(quests: Quest[], adminAddress?: string) {
   await fetch("/api/missions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(adminAddress ? { "x-admin-wallet": adminAddress } : {}) },
     body: JSON.stringify({ quests }),
   }).catch(() => null);
 }
@@ -187,7 +187,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.localStorage.setItem(MISSION_TASKS_KEY, JSON.stringify(storedTasks));
     window.localStorage.setItem(MISSION_CREATED_KEY, JSON.stringify(created));
     window.localStorage.setItem(MISSION_REMOVED_KEY, JSON.stringify(removed));
-    void publishMissions(nextQuests);
+    void publishMissions(nextQuests, address);
   };
 
   const updateMission = (questId: string, patch: EditableQuestPatch) => {

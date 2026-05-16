@@ -26,17 +26,17 @@ const NAV_STORAGE_KEY = "lunexis.current-page.v1";
 const QUEST_HASH_PREFIX = "quest/";
 const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "staking", "profile"];
 
-function findQuestById(questId?: string) {
+function findQuestById(questId: string | undefined, quests: Quest[]) {
   if (!questId) return undefined;
-  return QUESTS.find((quest) => quest.id === questId);
+  return quests.find((quest) => quest.id === questId);
 }
 
-function readNavigationFromLocation() {
+function readNavigationFromLocation(quests: Quest[]) {
   if (typeof window === "undefined") return { page: "landing" as Page, quest: undefined as Quest | undefined };
   const hash = window.location.hash.replace(/^#\/?/, "");
 
   if (hash.startsWith(QUEST_HASH_PREFIX)) {
-    const quest = findQuestById(decodeURIComponent(hash.slice(QUEST_HASH_PREFIX.length)));
+    const quest = findQuestById(decodeURIComponent(hash.slice(QUEST_HASH_PREFIX.length)), quests);
     return { page: quest ? "quest-detail" as Page : "missions" as Page, quest };
   }
 
@@ -111,6 +111,7 @@ export default function Home() {
   const [isOverlaySidebar, setIsOverlaySidebar] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [quests, setQuests] = useState<Quest[]>(QUESTS);
 
   useEffect(() => {
     const syncLayout = () => {
@@ -127,8 +128,20 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    fetch("/api/missions")
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (Array.isArray(data?.quests) && data.quests.length > 0) {
+          setQuests(data.quests);
+          setSelectedQuest((current) => current ? data.quests.find((quest: Quest) => quest.id === current.id) ?? current : current);
+        }
+      })
+      .catch(() => null);
+  }, []);
+
+  useEffect(() => {
     const syncNavigation = () => {
-      const next = readNavigationFromLocation();
+      const next = readNavigationFromLocation(quests);
       setCurrentPage(next.page);
       setSelectedQuest(next.quest);
       setNavReady(true);
@@ -141,7 +154,7 @@ export default function Home() {
       window.removeEventListener("hashchange", syncNavigation);
       window.removeEventListener("popstate", syncNavigation);
     };
-  }, []);
+  }, [quests]);
 
   const navigate = (page: Page) => {
     setCurrentPage(page);

@@ -39,6 +39,37 @@ function writeStore(store: ProfileStore) {
   window.dispatchEvent(new Event("arc-profile-updated"));
 }
 
+function mergeUnique<T>(a: T[] = [], b: T[] = []) {
+  return Array.from(new Set([...a, ...b]));
+}
+
+function mergeProfile(current: UserProfile | null | undefined, next: UserProfile): UserProfile {
+  if (!current) return next;
+  const activityMap = new Map([...(next.activities ?? []), ...(current.activities ?? [])].map((activity) => [activity.id, activity]));
+  const defaultUsername = `Operator ${next.walletAddress.slice(2, 6).toUpperCase()}`;
+  return {
+    ...current,
+    ...next,
+    avatarDataUrl: next.avatarDataUrl ?? current.avatarDataUrl,
+    username: next.username && next.username !== defaultUsername ? next.username : current.username || next.username,
+    xUsername: next.xUsername || current.xUsername || "",
+    githubUsername: next.githubUsername || current.githubUsername || "",
+    xp: Math.max(current.xp ?? 0, next.xp ?? 0),
+    rewardsEarned: Math.max(current.rewardsEarned ?? 0, next.rewardsEarned ?? 0),
+    rewardTokenTotals: (["USDC", "EURC", "WETH", "ETH", "ARC"] as TokenSymbol[]).reduce<Partial<Record<TokenSymbol, number>>>((totals, token) => {
+      const amount = Math.max(Number(current.rewardTokenTotals?.[token] ?? 0), Number(next.rewardTokenTotals?.[token] ?? 0));
+      if (amount > 0) totals[token] = amount;
+      return totals;
+    }, {}),
+    wallets: mergeUnique(current.wallets ?? [], next.wallets ?? []),
+    completedMissionIds: mergeUnique(current.completedMissionIds ?? [], next.completedMissionIds ?? []),
+    claimedRewardIds: mergeUnique(current.claimedRewardIds ?? [], next.claimedRewardIds ?? []),
+    activities: Array.from(activityMap.values())
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 60),
+  };
+}
+
 export async function loadRemoteProfiles(): Promise<UserProfile[]> {
   const localProfiles = loadAllProfiles();
   const response = await fetch("/api/profiles").catch(() => null);
@@ -49,6 +80,20 @@ export async function loadRemoteProfiles(): Promise<UserProfile[]> {
   localProfiles.forEach((profile) => merged.set(normalizeAddress(profile.walletAddress), profile));
   (data.profiles as UserProfile[]).forEach((profile) => merged.set(normalizeAddress(profile.walletAddress), profile));
   return Array.from(merged.values());
+}
+
+export async function loadRemoteProfile(address: string): Promise<UserProfile | null> {
+  const key = normalizeAddress(address);
+  const local = loadProfile(address);
+  const response = await fetch(`/api/profiles?address=${encodeURIComponent(address)}`).catch(() => null);
+  if (!response?.ok) return local;
+  const data = await response.json().catch(() => null);
+  if (!data?.profile) return local;
+  const merged = mergeProfile(local, data.profile as UserProfile);
+  const store = readStore();
+  store[key] = merged;
+  writeStore(store);
+  return merged;
 }
 
 function publishProfile(profile: UserProfile) {
@@ -107,17 +152,18 @@ export function loadProfile(address?: string): UserProfile | null {
   if (!store[key]) {
     store[key] = profile;
     writeStore(store);
-    publishProfile(profile);
   }
   return profile;
 }
 
 export function saveProfile(profile: UserProfile): UserProfile {
   const store = readStore();
-  store[normalizeAddress(profile.walletAddress)] = profile;
+  const key = normalizeAddress(profile.walletAddress);
+  const next = mergeProfile(store[key], profile);
+  store[key] = next;
   writeStore(store);
-  publishProfile(profile);
-  return profile;
+  publishProfile(next);
+  return next;
 }
 
 export function updateProfile(address: string, patch: Partial<UserProfile>): UserProfile {

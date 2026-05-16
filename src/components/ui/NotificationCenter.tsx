@@ -4,6 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 
 const READ_KEY = "lunexis.notifications.read.v1";
+const CLIENT_KEY = "lunexis.client-id.v1";
+
+function getClientId() {
+  const existing = window.localStorage.getItem(CLIENT_KEY);
+  if (existing) return existing;
+  const next = `client-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+  window.localStorage.setItem(CLIENT_KEY, next);
+  return next;
+}
 
 function getReadIds() {
   if (typeof window === "undefined") return new Set<string>();
@@ -22,6 +31,17 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     setReadIds(getReadIds());
+    const owner = getClientId();
+    fetch(`/api/preferences?owner=${encodeURIComponent(owner)}&scope=notifications-read`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (Array.isArray(data?.value)) {
+          const next = new Set(data.value.filter((id: unknown): id is string => typeof id === "string"));
+          setReadIds(next);
+          window.localStorage.setItem(READ_KEY, JSON.stringify(Array.from(next)));
+        }
+      })
+      .catch(() => null);
   }, []);
 
   const notifications = useMemo(() => {
@@ -71,7 +91,13 @@ export default function NotificationCenter() {
   const markAllRead = () => {
     const next = new Set(notifications.map((item) => item.id));
     setReadIds(next);
-    window.localStorage.setItem(READ_KEY, JSON.stringify(Array.from(next)));
+    const value = Array.from(next);
+    window.localStorage.setItem(READ_KEY, JSON.stringify(value));
+    void fetch("/api/preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ owner: getClientId(), scope: "notifications-read", value }),
+    }).catch(() => null);
   };
 
   return (

@@ -57,10 +57,29 @@ export default function RewardsPage() {
     if (!isRewardAdmin) setShowRewardAdmin(false);
   }, [isRewardAdmin]);
 
+  const persistRewards = async (next: RewardConfig[]) => {
+    if (!isRewardAdmin || !address) return;
+    const nextRewards = normalizeRewards(next);
+    window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
+    setSaveState("saving");
+    const response = await fetch("/api/rewards", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-wallet": address,
+      },
+      body: JSON.stringify({ rewards: nextRewards }),
+    }).catch(() => null);
+    setSaveState(response?.ok ? "saved" : "error");
+  };
+
   const updateReward = (rewardId: string, patch: Partial<RewardConfig>) => {
     if (!isRewardAdmin) return;
-    setRewards((current) => current.map((reward) => reward.id === rewardId ? { ...reward, ...patch } : reward));
-    setSaveState("idle");
+    setRewards((current) => {
+      const next = current.map((reward) => reward.id === rewardId ? { ...reward, ...patch } : reward);
+      void persistRewards(next);
+      return next;
+    });
   };
 
   const addReward = () => {
@@ -73,14 +92,20 @@ export default function RewardsPage() {
       requirement: "Admin configured reward",
       missionIds: [],
     };
-    setRewards((current) => [...current, reward]);
-    setSaveState("idle");
+    setRewards((current) => {
+      const next = [...current, reward];
+      void persistRewards(next);
+      return next;
+    });
   };
 
   const removeReward = (rewardId: string) => {
     if (!isRewardAdmin || rewards.length <= 1) return;
-    setRewards((current) => current.filter((reward) => reward.id !== rewardId));
-    setSaveState("idle");
+    setRewards((current) => {
+      const next = current.filter((reward) => reward.id !== rewardId);
+      void persistRewards(next);
+      return next;
+    });
   };
 
   const syncProfileBeforePayout = async () => {
@@ -97,21 +122,7 @@ export default function RewardsPage() {
     const nextRewards = normalizeRewards(rewards);
     setRewards(nextRewards);
     window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
-    setSaveState("saving");
-    const response = await fetch("/api/rewards", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-wallet": address,
-      },
-      body: JSON.stringify({ rewards: nextRewards }),
-    }).catch(() => null);
-
-    if (response?.ok) {
-      setSaveState("saved");
-      return;
-    }
-    setSaveState("error");
+    await persistRewards(nextRewards);
   };
 
   const claimTokenReward = async (reward: RewardConfig) => {

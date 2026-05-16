@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
 import { ADMIN_WALLET_ADDRESS } from "@/lib/admin";
 import { DEFAULT_REWARDS, normalizeRewards, type RewardConfig } from "@/lib/rewards";
+import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
 
-const STORE_KEY = "__lunexisRewardStore";
+const STORE_KEY = "lunexis:rewards:v1";
+export const dynamic = "force-dynamic";
 
 type RewardStore = {
   rewards: RewardConfig[];
 };
 
-function getStore(): RewardStore {
-  const globalStore = globalThis as typeof globalThis & { __lunexisRewardStore?: RewardStore };
-  if (!globalStore[STORE_KEY]) {
-    globalStore[STORE_KEY] = { rewards: DEFAULT_REWARDS };
-  }
-  return globalStore[STORE_KEY];
-}
-
 export async function GET() {
-  return NextResponse.json({ rewards: getStore().rewards });
+  const store = await readPersistentValue<RewardStore>(STORE_KEY, { rewards: DEFAULT_REWARDS });
+  return NextResponse.json({ rewards: normalizeRewards(store.rewards) });
 }
 
 export async function POST(request: Request) {
@@ -31,6 +26,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid reward payload" }, { status: 400 });
   }
 
-  getStore().rewards = normalizeRewards(body.rewards);
-  return NextResponse.json({ rewards: getStore().rewards });
+  const store = await writePersistentValue<RewardStore>(STORE_KEY, { rewards: normalizeRewards(body.rewards) });
+  return NextResponse.json({ rewards: store.rewards });
 }

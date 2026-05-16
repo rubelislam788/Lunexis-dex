@@ -4,11 +4,14 @@ import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnetChain } from "@/lib/onchain";
 import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URLS } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
-import type { TokenSymbol } from "@/types";
+import type { TokenSymbol, UserProfile } from "@/types";
+import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
 
 const PAYOUT_TOKENS = new Set<TokenSymbol>(["USDC", "EURC"]);
 type ProfileRecord = { completedMissionIds?: string[]; claimedRewardIds?: string[] } & Record<string, unknown>;
 type ProfileStore = Record<string, ProfileRecord>;
+const PROFILE_STORE_KEY = "lunexis:profiles:v1";
+export const dynamic = "force-dynamic";
 
 function getPrivateKey() {
   const key = process.env.REWARD_PAYOUT_PRIVATE_KEY || process.env.ARC_REWARD_PAYOUT_PRIVATE_KEY || "";
@@ -41,8 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Reward id is required." }, { status: 400 });
   }
 
-  const globalStore = globalThis as typeof globalThis & { __lunexisProfileStore?: ProfileStore };
-  const profileStore = globalStore.__lunexisProfileStore ?? (globalStore.__lunexisProfileStore = {});
+  const profileStore = await readPersistentValue<ProfileStore>(PROFILE_STORE_KEY, {});
   const recipientKey = recipient.toLowerCase();
   const profile = profileStore[recipientKey];
   if (profile?.claimedRewardIds?.includes(rewardId)) {
@@ -105,7 +107,8 @@ export async function POST(request: Request) {
     ...(profile ?? {}),
     completedMissionIds: profile?.completedMissionIds ?? [],
     claimedRewardIds: Array.from(claimedRewardIds),
-  };
+  } as UserProfile;
+  await writePersistentValue<ProfileStore>(PROFILE_STORE_KEY, profileStore);
 
   return NextResponse.json({ hash, token, amount, recipient, from: account.address });
 }

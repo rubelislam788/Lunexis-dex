@@ -11,6 +11,24 @@ const THEMES = [
 
 type ThemeId = (typeof THEMES)[number]["id"];
 const STORAGE_KEY = "lunexis.theme.v1";
+const CLIENT_KEY = "lunexis.client-id.v1";
+
+function getClientId() {
+  const existing = window.localStorage.getItem(CLIENT_KEY);
+  if (existing) return existing;
+  const next = `client-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+  window.localStorage.setItem(CLIENT_KEY, next);
+  return next;
+}
+
+function persistTheme(theme: ThemeId) {
+  const owner = getClientId();
+  void fetch("/api/preferences", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ owner, scope: "theme", value: theme }),
+  }).catch(() => null);
+}
 
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState<ThemeId>("dark");
@@ -25,6 +43,20 @@ export default function ThemeSwitcher() {
     window.localStorage.setItem(STORAGE_KEY, next);
     document.body.dataset.lunexisTheme = next;
     document.documentElement.dataset.lunexisTheme = next;
+
+    const owner = getClientId();
+    fetch(`/api/preferences?owner=${encodeURIComponent(owner)}&scope=theme`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        const remote = (data?.value === "space" ? "elysium" : data?.value) as ThemeId | null;
+        if (THEMES.some((item) => item.id === remote)) {
+          setTheme(remote!);
+          window.localStorage.setItem(STORAGE_KEY, remote!);
+          document.body.dataset.lunexisTheme = remote!;
+          document.documentElement.dataset.lunexisTheme = remote!;
+        }
+      })
+      .catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -53,6 +85,7 @@ export default function ThemeSwitcher() {
     window.localStorage.setItem(STORAGE_KEY, next);
     document.body.dataset.lunexisTheme = next;
     document.documentElement.dataset.lunexisTheme = next;
+    persistTheme(next);
     setOpen(false);
   };
 
