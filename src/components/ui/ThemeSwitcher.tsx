@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const THEMES = [
   { id: "dark", label: "Dark" },
@@ -38,7 +39,9 @@ function normalizeTheme(value: string | null): ThemeId | null {
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState<ThemeId>("dark");
   const [open, setOpen] = useState(false);
+  const [mobileOverlay, setMobileOverlay] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem(STORAGE_KEY);
@@ -65,10 +68,19 @@ export default function ThemeSwitcher() {
   }, []);
 
   useEffect(() => {
+    const query = window.matchMedia("(max-width: 768px), (pointer: coarse)");
+    const sync = () => setMobileOverlay(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
 
     const closeOnOutsideClick = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target) && !panelRef.current?.contains(target)) {
         setOpen(false);
       }
     };
@@ -95,6 +107,16 @@ export default function ThemeSwitcher() {
   };
 
   const activeTheme = THEMES.find((item) => item.id === theme)?.label ?? "Dark";
+  const menu = (
+    <div ref={panelRef} className={`lunexis-theme-menu ${mobileOverlay ? "lunexis-mobile-overlay-panel" : ""}`}>
+      {THEMES.map((item) => (
+        <button key={item.id} type="button" onClick={() => selectTheme(item.id)} className={theme === item.id ? "is-active" : ""}>
+          <span />
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="lunexis-theme-switcher" ref={rootRef}>
@@ -102,16 +124,7 @@ export default function ThemeSwitcher() {
         <span className="material-symbols-outlined" style={{ fontSize: 16 }}>palette</span>
         <span className="hidden sm:inline">{activeTheme}</span>
       </button>
-      {open && (
-        <div className="lunexis-theme-menu">
-          {THEMES.map((item) => (
-            <button key={item.id} type="button" onClick={() => selectTheme(item.id)} className={theme === item.id ? "is-active" : ""}>
-              <span />
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {open && (mobileOverlay ? createPortal(menu, document.body) : menu)}
     </div>
   );
 }
