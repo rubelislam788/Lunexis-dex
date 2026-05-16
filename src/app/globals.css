@@ -255,6 +255,19 @@ body::after {
   color: #00dce5 !important;
 }
 
+button .arc-shimmer-text,
+a.arc-uiverse-button .arc-shimmer-text,
+.btn-primary .arc-shimmer-text,
+.btn-ghost .arc-shimmer-text,
+.btn-outline-cyan .arc-shimmer-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: inherit !important;
+  animation: none !important;
+}
+
 html {
   transition: background 0.45s ease, color 0.45s ease;
 }
