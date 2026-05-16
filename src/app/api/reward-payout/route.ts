@@ -75,12 +75,12 @@ export async function POST(request: Request) {
 
   const privateKey = getPrivateKey();
   if (!privateKey) {
-    return NextResponse.json({ error: "Reward payouts are temporarily unavailable. Please try again later." }, { status: 503 });
+    return NextResponse.json({ code: "PAYOUT_WALLET_OFFLINE", error: "Reward wallet is warming up. Please try again soon." }, { status: 503 });
   }
 
   const tokenAddress = TOKEN_CONTRACTS[token]?.[ARC_TESTNET_CHAIN_ID];
   if (!tokenAddress) {
-    return NextResponse.json({ error: `${token} rewards are temporarily unavailable.` }, { status: 503 });
+    return NextResponse.json({ code: "REWARD_TOKEN_OFFLINE", error: `${token} reward token is not ready yet.` }, { status: 503 });
   }
 
   const account = privateKeyToAccount(privateKey);

@@ -66,6 +66,7 @@ export default function RewardsPage() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
   const [claimMessage, setClaimMessage] = useState("");
+  const [claimErrors, setClaimErrors] = useState<Record<string, string>>({});
   const [successReward, setSuccessReward] = useState<{ amount: string; txHash?: string } | null>(null);
   const isRewardAdmin = isAdminWallet(address);
 
@@ -174,6 +175,11 @@ export default function RewardsPage() {
     if (!address || claimingRewardId) return;
     setClaimingRewardId(reward.id);
     setClaimMessage("");
+    setClaimErrors((current) => {
+      const next = { ...current };
+      delete next[reward.id];
+      return next;
+    });
     try {
       await syncProfileBeforePayout();
       const completedMissionIds = profile?.completedMissionIds ?? [];
@@ -191,13 +197,19 @@ export default function RewardsPage() {
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(data?.error || "Reward payout failed.");
+        const fallback = response.status === 503
+          ? "Reward wallet is syncing. Please try again soon."
+          : "Reward payout failed.";
+        throw new Error(data?.error || fallback);
       }
       claim(reward.id, reward.amount, reward.token, data?.hash);
       setClaimMessage(`${formatRewardAmount(reward.amount, reward.token)} paid to your wallet.`);
       setSuccessReward({ amount: formatRewardAmount(reward.amount, reward.token), txHash: data?.hash });
     } catch (error: any) {
-      setClaimMessage(error?.message || "Reward payout failed.");
+      setClaimErrors((current) => ({
+        ...current,
+        [reward.id]: error?.message || "Reward payout failed.",
+      }));
     } finally {
       setClaimingRewardId(null);
     }
@@ -305,6 +317,7 @@ export default function RewardsPage() {
             const missingMissionIds = reward.missionIds.filter((id) => !isMissionRequirementMet(id, completedMissionIds));
             const eligible = Boolean(isConnected && profile && missingMissionIds.length === 0);
             const isClaiming = claimingRewardId === reward.id;
+            const claimError = claimErrors[reward.id];
             const rewardStatus = claimed
               ? "Reward already claimed by this wallet"
               : eligible
@@ -330,6 +343,11 @@ export default function RewardsPage() {
                 <p style={{ color: claimed ? "#94a3b8" : eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
                   {rewardStatus}
                 </p>
+                {claimError && (
+                  <p className="rounded-2xl px-4 py-3" style={{ color: "#ffb7eb", background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)", fontSize: 12, marginTop: 12 }}>
+                    {claimError}
+                  </p>
+                )}
                 <div style={{ color: "#ff2db2", fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, marginTop: 18 }}>{formatRewardAmount(reward.amount, reward.token)}</div>
                 <button
                   disabled={!eligible || claimed || Boolean(claimingRewardId)}
