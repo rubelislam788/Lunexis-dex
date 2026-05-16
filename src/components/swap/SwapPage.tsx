@@ -377,7 +377,7 @@ export default function SwapPage() {
       </div>
 
       {selector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }} onClick={() => setSelector(null)}>
+        <div className="lunexis-modal-overlay fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(10px)" }} onClick={() => setSelector(null)}>
           <div className="arc-card rounded-3xl p-6 w-[min(440px,92vw)]" onClick={(event) => event.stopPropagation()}>
             <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Select Token</h3>
             <input
@@ -422,7 +422,7 @@ export default function SwapPage() {
 
       {showNetworkSwitchModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          className="lunexis-modal-overlay fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ background: "rgba(0,0,0,0.78)", backdropFilter: "blur(14px)" }}
           onClick={() => setShowNetworkSwitchModal(false)}
         >

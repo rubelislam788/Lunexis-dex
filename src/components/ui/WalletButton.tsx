@@ -100,7 +100,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
       <div className="relative">
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="flex items-center gap-3 px-3 sm:px-4 py-2 rounded-xl max-w-[calc(100vw-1rem)]"
+          className="lunexis-wallet-trigger is-connected flex items-center gap-3 px-3 sm:px-4 py-2 rounded-xl max-w-[calc(100vw-1rem)]"
           style={{
             background: "rgba(56,189,248,0.1)",
             border: "1px solid rgba(56,189,248,0.35)",
@@ -230,7 +230,7 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
   return (
     <>
       <button
-        className="btn-primary px-5 py-2 rounded-xl"
+        className="lunexis-wallet-trigger is-connect btn-primary px-5 py-2 rounded-xl"
         style={{ fontSize: 11, minWidth: 132 }}
         onClick={() => setShowWallets(true)}
         disabled={isPending || connectors.length === 0}
