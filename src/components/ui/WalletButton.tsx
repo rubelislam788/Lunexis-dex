@@ -1,7 +1,8 @@
 // src/components/ui/WalletButton.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAccount, useBalance, useConnect, useDisconnect } from "wagmi";
 import type { Page } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
@@ -17,17 +18,67 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
   const { data: balance } = useBalance({ address });
   const { profile } = useProfile();
   const { balances, isLoading: balancesLoading } = usePortfolioBalances();
+  const [mounted, setMounted] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showWallets, setShowWallets] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
 
-  const walletOptions = [
-    { id: "metaMask", label: "MetaMask", hint: "Browser extension", connector: connectors.find((item) => item.id === "metaMask" || item.name.toLowerCase().includes("metamask")), installed: typeof window !== "undefined" && Boolean((window as any).ethereum?.isMetaMask) },
-    { id: "walletConnect", label: "WalletConnect", hint: "Mobile and QR wallets", connector: connectors.find((item) => item.id === "walletConnect" || item.name.toLowerCase().includes("walletconnect")), installed: true },
-    { id: "coinbase", label: "Coinbase Wallet", hint: "Coinbase extension/app", connector: connectors.find((item) => item.name.toLowerCase().includes("coinbase")), installed: true },
-    { id: "rabby", label: "Rabby Wallet", hint: "Injected wallet", connector: connectors.find((item) => item.id === "injected"), installed: typeof window !== "undefined" && Boolean((window as any).ethereum?.isRabby) },
-    { id: "okx", label: "OKX Wallet", hint: "Injected wallet", connector: connectors.find((item) => item.id === "injected"), installed: typeof window !== "undefined" && Boolean((window as any).okxwallet || (window as any).ethereum?.isOkxWallet) },
-  ];
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!showWallets) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showWallets]);
+
+  const walletOptions = useMemo(() => {
+    const injected = connectors.find((item) => item.id === "injected");
+    const byName = (name: string) => connectors.find((item) => item.name.toLowerCase().includes(name));
+    const hasWindow = typeof window !== "undefined";
+    const ethereum = hasWindow ? (window as any).ethereum : undefined;
+
+    return [
+      {
+        id: "metaMask",
+        label: "MetaMask",
+        hint: "Extension or mobile browser",
+        connector: byName("metamask") ?? (ethereum?.isMetaMask ? injected : undefined),
+        installed: Boolean(ethereum?.isMetaMask),
+      },
+      {
+        id: "walletConnect",
+        label: "WalletConnect",
+        hint: "Mobile wallets and QR connect",
+        connector: connectors.find((item) => item.id === "walletConnect" || item.name.toLowerCase().includes("walletconnect")),
+        installed: true,
+      },
+      {
+        id: "coinbase",
+        label: "Coinbase Wallet",
+        hint: "Coinbase app or extension",
+        connector: byName("coinbase"),
+        installed: true,
+      },
+      {
+        id: "injected",
+        label: "Browser Wallet",
+        hint: "Detected injected wallet",
+        connector: injected,
+        installed: Boolean(ethereum),
+      },
+      {
+        id: "okx",
+        label: "OKX Wallet",
+        hint: "OKX app or extension",
+        connector: hasWindow && ((window as any).okxwallet || ethereum?.isOkxWallet) ? injected : undefined,
+        installed: hasWindow && Boolean((window as any).okxwallet || ethereum?.isOkxWallet),
+      },
+    ].filter((wallet, index, list) => wallet.connector || index < 3 || wallet.installed)
+      .filter((wallet, index, list) => list.findIndex((item) => item.id === wallet.id) === index);
+  }, [connectors]);
 
   const handleConnect = (id: string, connector: typeof connectors[number] | undefined) => {
     if (!connector) return;
@@ -35,10 +86,11 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
     connect(
       { connector },
       {
-        onSettled: () => {
+        onSuccess: () => {
           setConnectingWallet(null);
           setShowWallets(false);
         },
+        onError: () => setConnectingWallet(null),
       }
     );
   };
@@ -137,19 +189,10 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
     );
   }
 
-  return (
-    <>
-      <button
-        className="btn-primary px-5 py-2 rounded-xl"
-        style={{ fontSize: 11, minWidth: 132 }}
-        onClick={() => setShowWallets(true)}
-        disabled={isPending || connectors.length === 0}
-      >
-        {isPending ? "Connecting..." : "Connect Wallet"}
-      </button>
-      {showWallets && (
-        <div className="arc-wallet-modal-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={() => setShowWallets(false)}>
-          <div className="arc-wallet-modal-panel arc-fade-up rounded-3xl p-5 sm:p-6 w-[min(28rem,100%)] text-left max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+  const walletModal = showWallets && mounted
+    ? createPortal(
+        <div className="arc-wallet-modal-backdrop fixed inset-0 z-[1000] flex items-center justify-center p-4" onClick={() => setShowWallets(false)}>
+          <div className="arc-wallet-modal-panel arc-fade-up rounded-3xl p-5 sm:p-6 w-[min(28rem,calc(100vw-2rem))] text-left max-h-[min(90dvh,44rem)] overflow-y-auto" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Connect wallet">
             <div className="flex items-start justify-between gap-4 mb-5">
               <ArcLogo size={46} compact />
               <button onClick={() => setShowWallets(false)} className="arc-icon-action w-10 h-10 rounded-2xl" aria-label="Close wallet modal">
@@ -166,21 +209,35 @@ export default function WalletButton({ onNavigate }: { onNavigate?: (page: Page)
                   disabled={!wallet.connector || connectingWallet !== null}
                   onClick={() => handleConnect(wallet.id, wallet.connector)}
                   className="flex items-center justify-between rounded-2xl p-4 transition-all btn-ghost"
-                  style={{ color: "#f8fbff", textTransform: "none", letterSpacing: "0" }}
+                  style={{ color: "#f8fbff", textTransform: "none", letterSpacing: "0", minHeight: 68 }}
                 >
                   <span>
                     <span style={{ display: "block", fontFamily: "'Space Grotesk'", fontSize: 14, fontWeight: 900 }}>{wallet.label}</span>
                     <span style={{ display: "block", color: "#849495", fontSize: 11 }}>{wallet.hint}</span>
                   </span>
-                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: wallet.installed ? "#38bdf8" : "#849495", textTransform: "uppercase" }}>
-                    {connectingWallet === wallet.id ? "Loading" : wallet.installed ? "Detected" : "Connect"}
+                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: wallet.connector ? "#38bdf8" : "#849495", textTransform: "uppercase" }}>
+                    {connectingWallet === wallet.id ? "Loading" : wallet.connector ? wallet.installed ? "Detected" : "Connect" : "Unavailable"}
                   </span>
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <>
+      <button
+        className="btn-primary px-5 py-2 rounded-xl"
+        style={{ fontSize: 11, minWidth: 132 }}
+        onClick={() => setShowWallets(true)}
+        disabled={isPending || connectors.length === 0}
+      >
+        {isPending ? "Connecting..." : "Connect Wallet"}
+      </button>
+      {walletModal}
     </>
   );
 }

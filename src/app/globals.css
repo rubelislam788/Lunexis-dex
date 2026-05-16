@@ -4337,9 +4337,17 @@ a.arc-uiverse-button:active,
 }
 
 .arc-wallet-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid !important;
+  place-items: center !important;
   background: rgba(0,0,0,0.74);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)) !important;
 }
 
 .arc-wallet-modal-panel {
@@ -4348,6 +4356,9 @@ a.arc-uiverse-button:active,
   background: linear-gradient(145deg, rgba(13, 25, 48, 0.92), rgba(3, 7, 18, 0.9));
   border: 1px solid rgba(148, 217, 255, 0.2);
   box-shadow: 0 34px 120px rgba(0,0,0,0.58), 0 0 54px rgba(56,189,248,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: min(90dvh, 44rem);
+  overscroll-behavior: contain;
 }
 
 .arc-wallet-modal-panel::before {
@@ -4356,6 +4367,18 @@ a.arc-uiverse-button:active,
   inset: -1px;
   background: radial-gradient(circle at 16% 10%, rgba(56,189,248,0.18), transparent 26%), radial-gradient(circle at 86% 14%, rgba(255,45,178,0.14), transparent 30%);
   pointer-events: none;
+}
+
+.arc-wallet-modal-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 520px) {
+  .arc-wallet-modal-panel {
+    border-radius: 1.35rem !important;
+    width: min(25rem, calc(100vw - 1.25rem));
+  }
 }
 
 .lunexis-header-logo {
