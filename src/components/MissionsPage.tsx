@@ -12,7 +12,6 @@ import { QUESTS } from "@/lib/missions";
 import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchain";
 import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
-import { formatRewardAmount } from "@/lib/rewards";
 import {
   DEFAULT_MISSION_DAYS,
   addDaysIso,
@@ -86,7 +85,7 @@ interface MissionsPageProps {
 }
 
 export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
-  const { profile, isConnected, markMissionComplete, claim } = useProfile();
+  const { profile, isConnected, markMissionComplete } = useProfile();
   const { address } = useAccount();
   const { balances } = usePortfolioBalances();
   const [proof, setProof] = useState<SocialProof>({});
@@ -219,36 +218,18 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
   const claimQuestReward = async (quest: Quest) => {
     if (!address || claimingQuestId) return;
-    const token = quest.reward.includes("EURC") ? "EURC" : "USDC";
     setClaimingQuestId(quest.id);
-    setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Paying ${quest.reward} to your wallet...` }));
+    setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Syncing mission ID for Rewards eligibility..." }));
     try {
-      const completedMissionIds = Array.from(new Set([...(profile?.completedMissionIds ?? []), quest.id]));
       await syncProfileBeforePayout(quest.id);
-      const response = await fetch("/api/reward-payout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rewardId: quest.id,
-          token,
-          amount: quest.rewardAmt,
-          recipient: address,
-          requiredMissionIds: [quest.id],
-          completedMissionIds,
-        }),
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(data?.error || "Reward payout failed.");
-      claim(quest.id, quest.rewardAmt, token, data?.hash);
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: `${quest.reward} paid to your wallet.` }));
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Mission ID ${quest.id} synced. Claim USDC/EURC rewards from Rewards.` }));
       setSuccessReward({
-        title: "Congratulations",
-        amount: formatRewardAmount(quest.rewardAmt, token),
-        message: "Your mission reward has been paid to your connected wallet.",
-        txHash: data?.hash,
+        title: "Mission Synced",
+        amount: `+${quest.xp} XP`,
+        message: "This mission ID is ready for Rewards eligibility. Open Rewards to claim USDC or EURC payouts.",
       });
     } catch (error: any) {
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: error?.message || "Reward payout failed." }));
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: error?.message || "Mission ID sync failed." }));
     } finally {
       setClaimingQuestId(null);
     }
@@ -668,7 +649,6 @@ function MissionSection({
             key={quest.id}
             quest={quest}
             completed={profile?.completedMissionIds.includes(quest.id)}
-            claimed={profile?.claimedRewardIds.includes(quest.id)}
             verifyState={verifyStates[quest.id] ?? "idle"}
             verifyMessage={verifyMessages[quest.id]}
             onSelectQuest={onSelectQuest}
@@ -688,7 +668,6 @@ function MissionSection({
 function QuestCard({
   quest,
   completed,
-  claimed,
   verifyState,
   verifyMessage,
   onSelectQuest,
@@ -701,7 +680,6 @@ function QuestCard({
 }: {
   quest: Quest;
   completed?: boolean;
-  claimed?: boolean;
   verifyState: VerifyState;
   verifyMessage?: string;
   onSelectQuest: (quest: Quest) => void;
@@ -818,8 +796,8 @@ function QuestCard({
           <button disabled={completed || isChecking || isTimeLocked} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
             {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
           </button>
-          <button disabled={!completed || claimed || isTimeLocked} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-            {claimed ? "Claimed" : isTimeLocked ? timeState : "Claim"}
+          <button disabled={!completed || isTimeLocked} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            {isTimeLocked ? timeState : "Rewards"}
           </button>
         </div>
       </div>
