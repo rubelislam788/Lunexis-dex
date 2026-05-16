@@ -36,7 +36,7 @@ export default function NotificationCenter() {
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.value)) {
-          const next = new Set(data.value.filter((id: unknown): id is string => typeof id === "string"));
+          const next = new Set<string>(data.value.filter((id: unknown): id is string => typeof id === "string"));
           setReadIds(next);
           window.localStorage.setItem(READ_KEY, JSON.stringify(Array.from(next)));
         }
