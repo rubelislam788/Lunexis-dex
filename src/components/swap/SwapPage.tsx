@@ -282,8 +282,8 @@ export default function SwapPage() {
 
         <div className="grid grid-cols-1 justify-center xl:grid-cols-[minmax(0,760px)_minmax(320px,420px)] gap-6 items-start">
           <section className="arc-card arc-swap-card rounded-[28px] p-6">
-            <div className="lunexis-swap-top-row">
-              <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show />
+            <div className="lunexis-swap-top-row is-slippage-only">
+              <span aria-hidden="true" />
               <SlippageSelector
                 value={state.slippage}
                 customValue={customSlippage}
@@ -335,6 +335,9 @@ export default function SwapPage() {
               readOnly
               onToken={() => setSelector("to")}
             />
+
+            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show={Boolean(state.amountIn || estimatedOut)} />
+
             {highPriceImpact && (
               <div className="lunexis-impact-warning mb-6">
                 <strong>High price impact detected</strong>

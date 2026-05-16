@@ -2129,6 +2129,10 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   margin-bottom: 1rem;
 }
 
+.lunexis-swap-top-row.is-slippage-only {
+  margin-bottom: 0.7rem;
+}
+
 .lunexis-slippage-compact {
   position: relative;
   z-index: 5;
@@ -2227,7 +2231,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 }
 
 .lunexis-route-preview {
-  margin-bottom: 0;
+  margin: 1rem 0;
   border-radius: 22px;
   padding: 0.78rem 0.9rem;
   background: linear-gradient(135deg, rgba(0,220,229,0.075), rgba(61,106,255,0.08));
