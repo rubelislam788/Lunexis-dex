@@ -95,6 +95,17 @@ export default function StakingPage() {
     }));
   };
 
+  const createStablePool = (token: StakingToken, lockDays = "0") => {
+    run(`${token.symbol} pool created`, () => staking.createPool({
+      stakeToken: token.address,
+      rewardToken: token.address,
+      apr: token.symbol === "USDC" ? "12" : "14",
+      lockDays,
+      poolType: lockDays === "0" ? "Flexible" : "Locked",
+      metadata: `Lunexis ${token.symbol} ARC Testnet staking pool`,
+    }));
+  };
+
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <ToastContainer />
@@ -148,7 +159,12 @@ export default function StakingPage() {
               </div>
 
               {staking.pools.length === 0 ? (
-                <EmptyStakingGuide />
+                <EmptyStakingGuide
+                  tokens={staking.tokens.filter((token) => token.symbol === "USDC" || token.symbol === "EURC")}
+                  isAdmin={staking.isAdmin}
+                  status={staking.status}
+                  onCreatePool={createStablePool}
+                />
               ) : (
                 <div className="lunexis-staking-pool-grid">
                   {staking.pools.map((pool) => (
@@ -306,15 +322,43 @@ function PoolCard({
   );
 }
 
-function EmptyStakingGuide() {
+function EmptyStakingGuide({
+  tokens,
+  isAdmin,
+  status,
+  onCreatePool,
+}: {
+  tokens: StakingToken[];
+  isAdmin: boolean;
+  status: string;
+  onCreatePool: (token: StakingToken, lockDays?: string) => void;
+}) {
   return (
     <div className="lunexis-staking-empty">
       <span className="material-symbols-outlined">lock_open</span>
-      <strong>Staking pools are initializing</strong>
-      <p>New ARC Testnet pools are being prepared. Check back soon for flexible and locked staking opportunities.</p>
-      {["Pool discovery active", "Rewards engine warming up", "ARC token vaults syncing", "User staking opens soon"].map((step, index) => (
-        <div key={step}><b>{index + 1}</b>{step}</div>
-      ))}
+      <strong>USDC and EURC pools need initialization</strong>
+      <p>Create the first ARC Testnet staking pools for USDC and EURC. After pool creation, users can approve, stake, unstake, and claim from real wallet transactions.</p>
+      <div className="lunexis-starter-pool-grid">
+        {tokens.map((token) => (
+          <article key={token.address} className="lunexis-starter-pool-card">
+            <div>
+              {tokenAvatar(token, 38)}
+              <span>
+                <strong>{token.symbol}</strong>
+                <small>Balance {token.balance ?? "0"}</small>
+              </span>
+            </div>
+            <p>{token.symbol} rewards paid in {token.symbol}. Flexible ARC Testnet pool.</p>
+            {isAdmin ? (
+              <button onClick={() => onCreatePool(token, "0")} disabled={status !== "idle"} className="btn-primary w-full py-3 rounded-2xl">
+                {status === "creating" ? "Creating..." : `Create ${token.symbol} Pool`}
+              </button>
+            ) : (
+              <small className="lunexis-staking-warning">Connect admin wallet to initialize this pool.</small>
+            )}
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
