@@ -6,7 +6,7 @@ const THEMES = [
   { id: "dark", label: "Dark" },
   { id: "cyber", label: "Cyber" },
   { id: "neon", label: "Neon" },
-  { id: "space", label: "Space" },
+  { id: "elysium", label: "Elysium" },
 ] as const;
 
 type ThemeId = (typeof THEMES)[number]["id"];
@@ -18,9 +18,11 @@ export default function ThemeSwitcher() {
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeId | null;
+    const storedValue = window.localStorage.getItem(STORAGE_KEY);
+    const stored = (storedValue === "space" ? "elysium" : storedValue) as ThemeId | null;
     const next = THEMES.some((item) => item.id === stored) ? stored! : "dark";
     setTheme(next);
+    window.localStorage.setItem(STORAGE_KEY, next);
     document.body.dataset.lunexisTheme = next;
     document.documentElement.dataset.lunexisTheme = next;
   }, []);
@@ -54,11 +56,13 @@ export default function ThemeSwitcher() {
     setOpen(false);
   };
 
+  const activeTheme = THEMES.find((item) => item.id === theme)?.label ?? "Dark";
+
   return (
     <div className="lunexis-theme-switcher" ref={rootRef}>
       <button type="button" className="arc-floating-action lunexis-icon-button" onClick={() => setOpen((value) => !value)} aria-label="Switch theme">
         <span className="material-symbols-outlined" style={{ fontSize: 16 }}>palette</span>
-        <span className="hidden sm:inline">{theme}</span>
+        <span className="hidden sm:inline">{activeTheme}</span>
       </button>
       {open && (
         <div className="lunexis-theme-menu">

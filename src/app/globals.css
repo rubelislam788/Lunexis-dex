@@ -311,22 +311,24 @@ html[data-lunexis-theme="neon"] {
   --lunexis-orb-c: #ff2db2;
 }
 
-html[data-lunexis-theme="space"] {
-  --arc-cyan: #8fe8ff;
-  --arc-purple: #7b61ff;
-  --arc-pink: #b49cff;
-  --lunexis-bg-a: rgba(143, 232, 255, 0.14);
-  --lunexis-bg-b: rgba(123, 97, 255, 0.22);
-  --lunexis-bg-c: rgba(180, 156, 255, 0.12);
-  --lunexis-bg-base: linear-gradient(135deg, #000 0%, #050316 52%, #000 100%);
-  --lunexis-card-a: rgba(6, 12, 34, 0.78);
-  --lunexis-card-b: rgba(22, 16, 58, 0.72);
-  --lunexis-border-a: rgba(143,232,255,0.78);
-  --lunexis-border-b: rgba(123,97,255,0.78);
-  --lunexis-border-c: rgba(180,156,255,0.62);
-  --lunexis-orb-a: #8fe8ff;
-  --lunexis-orb-b: #7b61ff;
-  --lunexis-orb-c: #b49cff;
+html[data-lunexis-theme="elysium"] {
+  --arc-cyan: #b9f5ff;
+  --arc-purple: #b8c7ff;
+  --arc-pink: #ffd3ee;
+  --lunexis-bg-a: rgba(185, 245, 255, 0.22);
+  --lunexis-bg-b: rgba(217, 230, 255, 0.18);
+  --lunexis-bg-c: rgba(255, 211, 238, 0.14);
+  --lunexis-bg-base:
+    radial-gradient(circle at 50% -12%, rgba(255,255,255,0.2), transparent 28rem),
+    linear-gradient(135deg, #030b12 0%, #071723 42%, #111226 74%, #05070c 100%);
+  --lunexis-card-a: rgba(232, 250, 255, 0.13);
+  --lunexis-card-b: rgba(159, 192, 218, 0.09);
+  --lunexis-border-a: rgba(217,250,255,0.72);
+  --lunexis-border-b: rgba(185,245,255,0.56);
+  --lunexis-border-c: rgba(255,211,238,0.48);
+  --lunexis-orb-a: #d9fbff;
+  --lunexis-orb-b: #b8c7ff;
+  --lunexis-orb-c: #ffd3ee;
 }
 
 html[data-lunexis-theme] body {
@@ -362,6 +364,96 @@ html[data-lunexis-theme] .arc-floating-topbar {
     radial-gradient(circle at 14% 20%, color-mix(in srgb, var(--arc-cyan) 18%, transparent), transparent 28%),
     radial-gradient(circle at 84% 20%, color-mix(in srgb, var(--arc-pink) 14%, transparent), transparent 28%),
     linear-gradient(90deg, rgba(3, 8, 14, 0.72), color-mix(in srgb, var(--arc-purple) 14%, rgba(8, 17, 31, 0.66)), rgba(3, 8, 14, 0.72)) !important;
+}
+
+html[data-lunexis-theme="elysium"] body {
+  color: #f7fcff;
+}
+
+html[data-lunexis-theme="elysium"] .arc-page-shell,
+html[data-lunexis-theme="elysium"] .hero-bg {
+  background:
+    radial-gradient(circle at 26% 12%, rgba(255,255,255,0.2), transparent 18rem),
+    radial-gradient(circle at 78% 20%, rgba(185,245,255,0.2), transparent 28rem),
+    radial-gradient(circle at 62% 78%, rgba(255,211,238,0.14), transparent 28rem),
+    linear-gradient(135deg, rgba(5,14,22,0.98), rgba(9,26,37,0.95) 44%, rgba(17,18,38,0.96) 100%) !important;
+}
+
+html[data-lunexis-theme="elysium"] .arc-floating-topbar {
+  background:
+    linear-gradient(115deg, rgba(255,255,255,0.24), transparent 28%, rgba(185,245,255,0.14) 52%, transparent 72%),
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,0.22), transparent 32%),
+    linear-gradient(90deg, rgba(242,251,255,0.16), rgba(185,245,255,0.12), rgba(255,211,238,0.1)) !important;
+  border-color: rgba(234, 252, 255, 0.28);
+  box-shadow:
+    0 18px 58px rgba(0,0,0,0.34),
+    0 0 44px rgba(185,245,255,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.34);
+  animation: elysiumGlassBreathe 7s ease-in-out infinite;
+}
+
+html[data-lunexis-theme="elysium"] .glass-panel,
+html[data-lunexis-theme="elysium"] .arc-card,
+html[data-lunexis-theme="elysium"] .lunexis-premium-card,
+html[data-lunexis-theme="elysium"] .lunexis-profile-card,
+html[data-lunexis-theme="elysium"] .lunexis-staking-pool-card,
+html[data-lunexis-theme="elysium"] .lunexis-staking-stats > div,
+html[data-lunexis-theme="elysium"] .lunexis-staking-alert {
+  background:
+    linear-gradient(145deg, rgba(238, 252, 255, 0.14), rgba(185, 215, 232, 0.08)) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,0.64), rgba(185,245,255,0.52), rgba(255,211,238,0.46)) border-box !important;
+  border-color: transparent !important;
+  box-shadow: 0 24px 74px rgba(0,0,0,0.34), 0 0 42px rgba(185,245,255,0.12), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+}
+
+html[data-lunexis-theme="elysium"] .arc-card:hover,
+html[data-lunexis-theme="elysium"] .glass-panel:hover,
+html[data-lunexis-theme="elysium"] .lunexis-premium-card:hover,
+html[data-lunexis-theme="elysium"] .lunexis-profile-card:hover {
+  box-shadow: 0 28px 82px rgba(0,0,0,0.36), 0 0 54px rgba(185,245,255,0.22), 0 0 28px rgba(255,211,238,0.12) !important;
+}
+
+html[data-lunexis-theme="elysium"] .arc-floating-nav-link,
+html[data-lunexis-theme="elysium"] .arc-floating-action,
+html[data-lunexis-theme="elysium"] .btn-primary,
+html[data-lunexis-theme="elysium"] .btn-ghost,
+html[data-lunexis-theme="elysium"] .btn-outline-cyan,
+html[data-lunexis-theme="elysium"] a.arc-uiverse-button {
+  border-color: rgba(234,252,255,0.24) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(185,245,255,0.11), rgba(255,211,238,0.07)) !important;
+  color: #f7fcff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 22px rgba(185,245,255,0.08) !important;
+}
+
+html[data-lunexis-theme="elysium"] .arc-floating-nav-link:hover,
+html[data-lunexis-theme="elysium"] .arc-floating-nav-link.is-active,
+html[data-lunexis-theme="elysium"] .arc-floating-action:hover,
+html[data-lunexis-theme="elysium"] .arc-floating-action.is-active,
+html[data-lunexis-theme="elysium"] .btn-primary:hover,
+html[data-lunexis-theme="elysium"] .btn-ghost:hover,
+html[data-lunexis-theme="elysium"] a.arc-uiverse-button:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(185,245,255,0.24), rgba(255,211,238,0.18)) !important;
+  border-color: rgba(255,255,255,0.52) !important;
+  box-shadow: 0 0 32px rgba(185,245,255,0.34), 0 0 58px rgba(255,211,238,0.14), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-mobile-bottom-nav {
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(185,245,255,0.1), rgba(255,211,238,0.08));
+  border-color: rgba(234,252,255,0.28);
+  box-shadow: 0 24px 86px rgba(0,0,0,0.46), 0 0 44px rgba(185,245,255,0.2), inset 0 1px 0 rgba(255,255,255,0.26);
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-mobile-bottom-nav button.is-active {
+  background: linear-gradient(135deg, rgba(255,255,255,0.24), rgba(185,245,255,0.32), rgba(255,211,238,0.18));
+  box-shadow: 0 0 30px rgba(185,245,255,0.34), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+html[data-lunexis-theme="elysium"] .arc-aurora-title,
+html[data-lunexis-theme="elysium"] .gradient-text,
+html[data-lunexis-theme="elysium"] .arc-shimmer-text {
+  text-shadow: 0 0 20px rgba(185,245,255,0.28);
 }
 
 .lunexis-interactive-bg {
@@ -424,6 +516,65 @@ html[data-lunexis-theme] .arc-floating-topbar {
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
   animation-direction: alternate;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-interactive-bg::before,
+html[data-lunexis-theme="elysium"] .lunexis-interactive-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-interactive-bg::before {
+  background:
+    radial-gradient(ellipse at 18% 30%, rgba(255,255,255,0.2) 0 2%, transparent 18%),
+    radial-gradient(ellipse at 82% 24%, rgba(185,245,255,0.18) 0 3%, transparent 20%),
+    linear-gradient(180deg, transparent 0 42%, rgba(185,245,255,0.06) 42% 43%, transparent 44%),
+    linear-gradient(110deg, transparent 0 48%, rgba(255,255,255,0.12) 49%, transparent 56%),
+    radial-gradient(ellipse at 50% 78%, rgba(140,190,170,0.18), transparent 34%);
+  filter: blur(0.2px);
+  opacity: 0.95;
+  animation: elysiumSkyDrift 28s ease-in-out infinite alternate;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-interactive-bg::after {
+  background:
+    linear-gradient(180deg, transparent 0 46%, rgba(218,250,255,0.18) 47%, transparent 49%),
+    radial-gradient(ellipse at 16% 60%, rgba(190,255,215,0.2) 0 5%, rgba(185,245,255,0.12) 6%, transparent 18%),
+    radial-gradient(ellipse at 50% 54%, rgba(255,255,255,0.18) 0 3%, rgba(185,245,255,0.1) 4%, transparent 16%),
+    radial-gradient(ellipse at 82% 64%, rgba(255,211,238,0.18) 0 4%, rgba(185,245,255,0.1) 5%, transparent 18%),
+    linear-gradient(90deg, transparent, rgba(185,245,255,0.08), transparent);
+  mask-image:
+    linear-gradient(to bottom, transparent 0 24%, #000 38% 100%),
+    radial-gradient(ellipse at 16% 60%, #000 0 16%, transparent 22%),
+    radial-gradient(ellipse at 50% 54%, #000 0 15%, transparent 21%),
+    radial-gradient(ellipse at 82% 64%, #000 0 16%, transparent 22%);
+  opacity: 0.78;
+  animation: elysiumIslandFloat 22s ease-in-out infinite alternate;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-bg-orb {
+  filter: blur(82px);
+  opacity: 0.3;
+  mix-blend-mode: screen;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-bg-grid {
+  background-image:
+    linear-gradient(rgba(217,250,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(217,250,255,0.08) 1px, transparent 1px),
+    linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,0.12) 49%, transparent 54%);
+  background-size: 118px 118px, 118px 118px, 260% 260%;
+  opacity: 0.82;
+  animation: elysiumGridFlow 32s linear infinite;
+}
+
+html[data-lunexis-theme="elysium"] .lunexis-bg-particles span {
+  width: 4px;
+  height: 4px;
+  background: rgba(246, 254, 255, 0.96);
+  box-shadow: 0 0 18px rgba(185,245,255,0.85), 0 0 30px rgba(255,211,238,0.32);
 }
 
 .lunexis-premium-card,
@@ -1002,6 +1153,26 @@ html[data-lunexis-theme] .arc-floating-topbar {
 @keyframes lunexisProfilePanelIn {
   from { opacity: 0; transform: translateY(-8px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes elysiumSkyDrift {
+  from { transform: translate3d(-1.5rem, -0.4rem, 0) scale(1); opacity: 0.82; }
+  to { transform: translate3d(1.8rem, 0.8rem, 0) scale(1.035); opacity: 1; }
+}
+
+@keyframes elysiumIslandFloat {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(0, -1.2rem, 0) scale(1.015); }
+}
+
+@keyframes elysiumGridFlow {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 118px 59px, 118px 59px, 260% 120%; }
+}
+
+@keyframes elysiumGlassBreathe {
+  0%, 100% { box-shadow: 0 18px 58px rgba(0,0,0,0.34), 0 0 34px rgba(185,245,255,0.14), inset 0 1px 0 rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 18px 58px rgba(0,0,0,0.34), 0 0 54px rgba(185,245,255,0.24), inset 0 1px 0 rgba(255,255,255,0.38); }
 }
 
 @keyframes lunexisCardSweep {
