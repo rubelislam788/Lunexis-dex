@@ -8,7 +8,7 @@ import type { TokenSymbol } from "@/types";
 import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
 
 const PAYOUT_TOKENS = new Set<TokenSymbol>(["USDC", "EURC"]);
-type ProfileRecord = { completedMissionIds?: string[]; claimedRewardIds?: string[] } & Record<string, unknown>;
+type ProfileRecord = { completedMissionIds?: string[]; claimedRewardIds?: string[]; xp?: number; xpConverted?: number } & Record<string, unknown>;
 type ProfileStore = Record<string, ProfileRecord>;
 const PROFILE_STORE_KEY = "lunexis:profiles:v1";
 export const dynamic = "force-dynamic";
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   const rewardId = typeof body?.rewardId === "string" ? body.rewardId : "";
   const token = body?.token as TokenSymbol | undefined;
   const amount = Number(body?.amount);
+  const xpCost = Number(body?.xpCost ?? 0);
   const recipient = body?.recipient as Address | undefined;
   const requiredMissionIds: string[] = Array.isArray(body?.requiredMissionIds)
     ? body.requiredMissionIds
@@ -57,6 +58,9 @@ export async function POST(request: Request) {
   if (!rewardId) {
     return NextResponse.json({ error: "Reward id is required." }, { status: 400 });
   }
+  if (!Number.isFinite(xpCost) || xpCost < 0) {
+    return NextResponse.json({ error: "XP cost must be zero or greater." }, { status: 400 });
+  }
 
   const profileStore = await readPersistentValue<ProfileStore>(PROFILE_STORE_KEY, {});
   const recipientKey = recipient.toLowerCase();
@@ -65,6 +69,12 @@ export async function POST(request: Request) {
   const completedMissionKeys = new Set(Array.from(completedIds).flatMap(missionKeyAliases));
   if (profile?.claimedRewardIds?.includes(rewardId)) {
     return NextResponse.json({ error: "Reward already claimed." }, { status: 409 });
+  }
+  if (xpCost > 0) {
+    const availableXp = Number(profile?.xp ?? 0) - Number(profile?.xpConverted ?? 0);
+    if (!profile || availableXp < xpCost) {
+      return NextResponse.json({ error: `You need ${xpCost.toLocaleString()} available XP to claim this reward.` }, { status: 403 });
+    }
   }
   if (requiredMissionIds.length > 0) {
     const missingIds = requiredMissionIds.filter((missionId: string) => !missionKeyAliases(missionId).some((key) => completedMissionKeys.has(key)));
@@ -122,6 +132,7 @@ export async function POST(request: Request) {
     ...(profile ?? {}),
     completedMissionIds: Array.from(completedIds),
     claimedRewardIds: Array.from(claimedRewardIds),
+    xpConverted: Number(profile?.xpConverted ?? 0) + xpCost,
   };
   await writePersistentValue<ProfileStore>(PROFILE_STORE_KEY, profileStore);
 

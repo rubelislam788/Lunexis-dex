@@ -55,6 +55,7 @@ function mergeProfile(current: UserProfile | null | undefined, next: UserProfile
     xUsername: next.xUsername || current.xUsername || "",
     githubUsername: next.githubUsername || current.githubUsername || "",
     xp: Math.max(current.xp ?? 0, next.xp ?? 0),
+    xpConverted: Math.max(current.xpConverted ?? 0, next.xpConverted ?? 0),
     rewardsEarned: Math.max(current.rewardsEarned ?? 0, next.rewardsEarned ?? 0),
     rewardTokenTotals: (["USDC", "EURC", "WETH", "ETH", "ARC"] as TokenSymbol[]).reduce<Partial<Record<TokenSymbol, number>>>((totals, token) => {
       const amount = Math.max(Number(current.rewardTokenTotals?.[token] ?? 0), Number(next.rewardTokenTotals?.[token] ?? 0));
@@ -133,6 +134,7 @@ export function getDefaultProfile(address: string): UserProfile {
     githubUsername: "",
     wallets: [address],
     xp: 0,
+    xpConverted: 0,
     rewardsEarned: 0,
     rewardTokenTotals: {},
     completedMissionIds: [],
@@ -217,6 +219,27 @@ export function claimReward(address: string, rewardId: string, amount: number, t
     claimedRewardIds: [...current.claimedRewardIds, rewardId],
     activities: [
       createActivity("reward", "Reward claimed", `${amount.toLocaleString()} ${token} paid to your wallet.`, token, "completed", txHash),
+      ...current.activities,
+    ],
+  });
+}
+
+export function convertXpReward(address: string, rewardId: string, xpCost: number, amount: number, token: TokenSymbol = "USDC", txHash?: string): UserProfile {
+  const current = loadProfile(address) ?? getDefaultProfile(address);
+  if (current.claimedRewardIds.includes(rewardId)) return current;
+  const nextXpConverted = (current.xpConverted ?? 0) + xpCost;
+  const rewardTokenTotals = {
+    ...(current.rewardTokenTotals ?? {}),
+    [token]: (current.rewardTokenTotals?.[token] ?? 0) + amount,
+  };
+  return saveProfile({
+    ...current,
+    xpConverted: nextXpConverted,
+    rewardsEarned: current.rewardsEarned + amount,
+    rewardTokenTotals,
+    claimedRewardIds: [...current.claimedRewardIds, rewardId],
+    activities: [
+      createActivity("reward", "XP converted", `${xpCost.toLocaleString()} XP converted into ${amount.toLocaleString()} ${token}.`, token, "completed", txHash),
       ...current.activities,
     ],
   });

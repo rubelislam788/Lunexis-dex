@@ -94,6 +94,7 @@ export interface UserProfile {
   githubUsername: string;
   wallets: string[];
   xp: number;
+  xpConverted?: number;
   rewardsEarned: number;
   rewardTokenTotals?: Partial<Record<TokenSymbol, number>>;
   completedMissionIds: string[];

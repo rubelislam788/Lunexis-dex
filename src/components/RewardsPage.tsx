@@ -7,7 +7,7 @@ import ActivityTimeline from "@/components/ActivityTimeline";
 import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import { isAdminWallet } from "@/lib/admin";
-import { DEFAULT_REWARDS, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
+import { DEFAULT_REWARDS, XP_TO_USDC_AMOUNT, XP_TO_USDC_COST, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 
 const REWARD_STORAGE_KEY = "lunexis.rewards.v1";
 
@@ -59,7 +59,7 @@ function isMissionRequirementMet(requiredMissionId: string, completedMissionIds:
 }
 
 export default function RewardsPage() {
-  const { profile, isConnected, claim } = useProfile();
+  const { profile, isConnected, claim, convertXp } = useProfile();
   const { address } = useAccount();
   const [rewards, setRewards] = useState<RewardConfig[]>(() => readStoredRewards());
   const [showRewardAdmin, setShowRewardAdmin] = useState(false);
@@ -69,6 +69,7 @@ export default function RewardsPage() {
   const [claimErrors, setClaimErrors] = useState<Record<string, string>>({});
   const [successReward, setSuccessReward] = useState<{ amount: string; txHash?: string } | null>(null);
   const isRewardAdmin = isAdminWallet(address);
+  const availableXp = Math.max(0, (profile?.xp ?? 0) - (profile?.xpConverted ?? 0));
 
   useEffect(() => {
     const localRewards = readStoredRewards();
@@ -215,6 +216,49 @@ export default function RewardsPage() {
     }
   };
 
+  const claimXpConversion = async () => {
+    if (!address || claimingRewardId) return;
+    const rewardId = `xp-usdc-${Date.now()}`;
+    setClaimingRewardId("xp-convert");
+    setClaimMessage("");
+    setClaimErrors((current) => {
+      const next = { ...current };
+      delete next["xp-convert"];
+      return next;
+    });
+    try {
+      if (availableXp < XP_TO_USDC_COST) {
+        throw new Error(`You need ${XP_TO_USDC_COST.toLocaleString()} available XP to claim ${XP_TO_USDC_AMOUNT} USDC.`);
+      }
+      await syncProfileBeforePayout();
+      const response = await fetch("/api/reward-payout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rewardId,
+          token: "USDC",
+          amount: XP_TO_USDC_AMOUNT,
+          recipient: address,
+          xpCost: XP_TO_USDC_COST,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || "XP conversion payout failed.");
+      }
+      convertXp(rewardId, XP_TO_USDC_COST, XP_TO_USDC_AMOUNT, "USDC", data?.hash);
+      setClaimMessage(`${XP_TO_USDC_COST.toLocaleString()} XP converted into ${XP_TO_USDC_AMOUNT} USDC.`);
+      setSuccessReward({ amount: `${XP_TO_USDC_AMOUNT} USDC`, txHash: data?.hash });
+    } catch (error: any) {
+      setClaimErrors((current) => ({
+        ...current,
+        "xp-convert": error?.message || "XP conversion failed.",
+      }));
+    } finally {
+      setClaimingRewardId(null);
+    }
+  };
+
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-10">
@@ -281,14 +325,14 @@ export default function RewardsPage() {
                       <input value={reward.requirement} onChange={(event) => updateReward(reward.id, { requirement: event.target.value })} className="rounded-2xl px-4 py-3" />
                     </label>
                     <label className="grid gap-2 md:col-span-2">
-                      <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Required Mission IDs</span>
+                      <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Mission Lock IDs</span>
                       <input
                         value={missionIdsToText(reward.missionIds)}
                         onChange={(event) => updateReward(reward.id, { missionIds: textToMissionIds(event.target.value) })}
-                        placeholder="q1, q2, social-follow"
+                        placeholder="Paste mission ID: custom-1778916822890"
                         className="rounded-2xl px-4 py-3"
                       />
-                      <span style={{ color: "#64748b", fontSize: 11 }}>Leave empty to make this reward claimable by any connected wallet.</span>
+                      <span style={{ color: "#64748b", fontSize: 11 }}>A user must complete every Mission ID listed here before this reward can be claimed.</span>
                     </label>
                   </div>
                 </div>
@@ -309,6 +353,30 @@ export default function RewardsPage() {
             </div>
           ))}
         </div>
+
+        <section className="arc-card rounded-3xl p-6 mb-6" style={{ border: "1px solid rgba(56,189,248,0.18)" }}>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>XP Converter</div>
+              <h2 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, marginTop: 6 }}>Convert XP to USDC</h2>
+              <p style={{ color: "#9fb1c1", fontSize: 13, marginTop: 6 }}>
+                {XP_TO_USDC_COST.toLocaleString()} available XP can be converted into {XP_TO_USDC_AMOUNT} USDC. Available XP: {availableXp.toLocaleString()}.
+              </p>
+              {claimErrors["xp-convert"] && (
+                <p className="rounded-2xl px-4 py-3 mt-3" style={{ color: "#ffb7eb", background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)", fontSize: 12 }}>
+                  {claimErrors["xp-convert"]}
+                </p>
+              )}
+            </div>
+            <button
+              disabled={!isConnected || availableXp < XP_TO_USDC_COST || Boolean(claimingRewardId)}
+              onClick={claimXpConversion}
+              className="btn-primary px-6 py-3 rounded-full"
+            >
+              {claimingRewardId === "xp-convert" ? "Converting..." : `Claim ${XP_TO_USDC_AMOUNT} USDC`}
+            </button>
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {rewards.map((reward) => {
@@ -340,6 +408,9 @@ export default function RewardsPage() {
               <div key={reward.id} className="arc-card rounded-3xl p-6">
                 <div style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>{reward.title}</div>
                 <p style={{ color: "#849495", fontSize: 13, marginTop: 8 }}>{reward.requirement}</p>
+                <p style={{ color: "#38bdf8", fontSize: 11, marginTop: 8, fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                  {reward.missionIds.length ? `Mission ID lock: ${reward.missionIds.join(", ")}` : "No mission lock configured"}
+                </p>
                 <p style={{ color: claimed ? "#94a3b8" : eligible ? "#22c55e" : "#ffb7eb", fontSize: 12, marginTop: 10 }}>
                   {rewardStatus}
                 </p>

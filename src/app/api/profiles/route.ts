@@ -38,6 +38,7 @@ function mergeProfile(current: UserProfile | undefined, next: UserProfile): User
     xUsername: next.xUsername || current.xUsername || "",
     githubUsername: next.githubUsername || current.githubUsername || "",
     xp: Math.max(current.xp ?? 0, next.xp ?? 0),
+    xpConverted: Math.max(current.xpConverted ?? 0, next.xpConverted ?? 0),
     rewardsEarned: Math.max(current.rewardsEarned ?? 0, next.rewardsEarned ?? 0),
     rewardTokenTotals,
     wallets: mergeUnique(current.wallets ?? [], next.wallets ?? []),

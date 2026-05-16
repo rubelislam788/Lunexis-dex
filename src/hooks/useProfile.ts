@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import type { ActivityItem, UserProfile } from "@/types";
-import { addActivity, addWalletToProfile, claimReward, completeMission, loadProfile, loadRemoteProfile, saveProfile, updateProfile } from "@/lib/profile";
+import { addActivity, addWalletToProfile, claimReward, completeMission, convertXpReward, loadProfile, loadRemoteProfile, saveProfile, updateProfile } from "@/lib/profile";
 
 export function useProfile() {
   const { address, isConnected } = useAccount();
@@ -63,5 +63,12 @@ export function useProfile() {
     return next;
   }, [address]);
 
-  return { profile, address, isConnected, update, save, pushActivity, markMissionComplete, claim, refresh };
+  const convertXp = useCallback((rewardId: string, xpCost: number, amount: number, token?: Parameters<typeof convertXpReward>[4], txHash?: string) => {
+    if (!address) return null;
+    const next = convertXpReward(address, rewardId, xpCost, amount, token, txHash);
+    setProfile(next);
+    return next;
+  }, [address]);
+
+  return { profile, address, isConnected, update, save, pushActivity, markMissionComplete, claim, convertXp, refresh };
 }

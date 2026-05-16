@@ -1,5 +1,8 @@
 import type { TokenSymbol } from "@/types";
 
+export const XP_TO_USDC_COST = 10000;
+export const XP_TO_USDC_AMOUNT = 1;
+
 export interface RewardConfig {
   id: string;
   title: string;
