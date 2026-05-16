@@ -30,6 +30,11 @@ export async function POST(request: Request) {
       .filter((id: unknown): id is string => typeof id === "string" && Boolean(id.trim()))
       .map((id: string) => id.trim())
     : [];
+  const submittedCompletedMissionIds: string[] = Array.isArray(body?.completedMissionIds)
+    ? body.completedMissionIds
+      .filter((id: unknown): id is string => typeof id === "string" && Boolean(id.trim()))
+      .map((id: string) => id.trim())
+    : [];
 
   if (!token || !PAYOUT_TOKENS.has(token)) {
     return NextResponse.json({ error: "Reward token must be USDC or EURC." }, { status: 400 });
@@ -47,11 +52,11 @@ export async function POST(request: Request) {
   const profileStore = await readPersistentValue<ProfileStore>(PROFILE_STORE_KEY, {});
   const recipientKey = recipient.toLowerCase();
   const profile = profileStore[recipientKey];
+  const completedIds = new Set([...(profile?.completedMissionIds ?? []), ...submittedCompletedMissionIds]);
   if (profile?.claimedRewardIds?.includes(rewardId)) {
     return NextResponse.json({ error: "Reward already claimed." }, { status: 409 });
   }
   if (requiredMissionIds.length > 0) {
-    const completedIds = new Set(profile?.completedMissionIds ?? []);
     const missingIds = requiredMissionIds.filter((missionId: string) => !completedIds.has(missionId));
     if (missingIds.length > 0) {
       return NextResponse.json({ error: `Complete required mission tasks first: ${missingIds.join(", ")}` }, { status: 403 });
@@ -105,7 +110,7 @@ export async function POST(request: Request) {
   claimedRewardIds.add(rewardId);
   profileStore[recipientKey] = {
     ...(profile ?? {}),
-    completedMissionIds: profile?.completedMissionIds ?? [],
+    completedMissionIds: Array.from(completedIds),
     claimedRewardIds: Array.from(claimedRewardIds),
   };
   await writePersistentValue<ProfileStore>(PROFILE_STORE_KEY, profileStore);

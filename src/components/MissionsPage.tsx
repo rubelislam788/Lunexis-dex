@@ -207,12 +207,13 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.setTimeout(() => document.getElementById("mission-control-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
 
-  const syncProfileBeforePayout = async () => {
+  const syncProfileBeforePayout = async (missionId: string) => {
     if (!profile) return;
+    const completedMissionIds = Array.from(new Set([...(profile.completedMissionIds ?? []), missionId]));
     await fetch("/api/profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile }),
+      body: JSON.stringify({ profile: { ...profile, completedMissionIds } }),
     }).catch(() => null);
   };
 
@@ -222,7 +223,8 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     setClaimingQuestId(quest.id);
     setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Paying ${quest.reward} to your wallet...` }));
     try {
-      await syncProfileBeforePayout();
+      const completedMissionIds = Array.from(new Set([...(profile?.completedMissionIds ?? []), quest.id]));
+      await syncProfileBeforePayout(quest.id);
       const response = await fetch("/api/reward-payout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -232,6 +234,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           amount: quest.rewardAmt,
           recipient: address,
           requiredMissionIds: [quest.id],
+          completedMissionIds,
         }),
       });
       const data = await response.json().catch(() => null);
