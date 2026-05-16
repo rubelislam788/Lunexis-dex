@@ -299,7 +299,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <div className="relative z-10 max-w-6xl mx-auto px-8 py-10">
-        <div className="flex justify-between items-center mb-8 arc-fade-up">
+        <div className="mission-page-header flex justify-between items-center mb-8 arc-fade-up">
           <div>
             <h1 style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#e9feff", marginBottom: 4 }}>
               Lunexis Mission Grid
@@ -308,7 +308,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
               Verify real activity, unlock XP, and build your operator history.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="mission-page-actions flex gap-3">
             <FaucetButton label="Need Test USDC?" compact />
             <button onClick={() => onNavigate("swap")} className="btn-outline-cyan px-4 py-2 rounded-lg text-xs">Swap</button>
             {isMissionAdmin && (
@@ -471,7 +471,7 @@ function MissionControlPanel({
             Custom missions publish to the live app session and this browser. Add a database later for permanent storage.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="mission-control-actions flex flex-col sm:flex-row gap-3">
           <select value={selected.id} onChange={(event) => {
             setSelectedId(event.target.value);
             onSelectedQuestChange(event.target.value);
@@ -503,7 +503,7 @@ function MissionControlPanel({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
+      <div className="mission-control-form grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
         <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
           <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Mission Name</span>
           <input value={selected.title} onChange={(event) => onUpdateMission(selected.id, { title: event.target.value })} className="mt-2 w-full rounded-2xl px-4 py-3" />
@@ -571,9 +571,9 @@ function MissionControlPanel({
       </div>
 
       <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>Tasks</div>
-      <div className="grid gap-3">
+      <div className="mission-task-list grid gap-3">
         {tasks.map((task, index) => (
-          <div key={task.id} className="flex flex-col sm:flex-row gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <div key={task.id} className="mission-task-row flex flex-col sm:flex-row gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
             <div className="w-10 h-10 rounded-full grid place-items-center shrink-0" style={{ background: "rgba(56,189,248,0.12)", color: "#38bdf8", fontFamily: "'Space Grotesk'", fontWeight: 900 }}>{index + 1}</div>
             <input value={task.title} onChange={(event) => updateTask(task.id, event.target.value)} className="flex-1 rounded-2xl px-4 py-3" />
             <button onClick={() => removeTask(task.id)} className="btn-ghost px-4 py-3 rounded-full">Remove</button>
@@ -593,14 +593,14 @@ function MissionControlPanel({
           Add Link
         </button>
       </div>
-      <div className="mt-3 grid gap-3">
+      <div className="mission-social-list mt-3 grid gap-3">
         {socialLinks.length === 0 && (
           <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)", color: "#849495", fontSize: 13 }}>
             No social links yet. Add at least 2 links for social missions.
           </div>
         )}
         {socialLinks.map((link, index) => (
-          <div key={link.id} className="grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <div key={link.id} className="mission-social-row grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-3 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
             <input value={link.label} onChange={(event) => updateSocialLink(link.id, { label: event.target.value })} className="rounded-2xl px-4 py-3" placeholder={`Link ${index + 1}`} />
             <input value={link.url} onChange={(event) => updateSocialLink(link.id, { url: event.target.value })} className="rounded-2xl px-4 py-3" placeholder="https://..." />
             <button onClick={() => removeSocialLink(link.id)} disabled={socialLinks.length <= 2} className="btn-ghost px-4 py-3 rounded-full">
@@ -643,7 +643,7 @@ function MissionSection({
       <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#00dce5", marginBottom: 12, textTransform: "uppercase" }}>
         {title}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mission-grid grid grid-cols-1 md:grid-cols-2 gap-4">
         {quests.map((quest) => (
           <QuestCard
             key={quest.id}
@@ -706,9 +706,9 @@ function QuestCard({
       }}
       onClick={() => onSelectQuest(quest)}
     >
-      <div className="flex justify-between gap-4">
-        <div className="flex gap-4">
-          <div className="w-12 h-12 rounded-2xl grid place-items-center" style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.24)", boxShadow: "0 0 20px rgba(56,189,248,0.12)" }}>
+      <div className="mission-card-head flex justify-between gap-4">
+        <div className="mission-card-main flex gap-4">
+          <div className="mission-card-icon w-12 h-12 rounded-2xl grid place-items-center" style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.24)", boxShadow: "0 0 20px rgba(56,189,248,0.12)" }}>
             <span className="material-symbols-outlined" style={{ color: "#38bdf8", fontSize: 24 }}>{MISSION_ICONS[quest.id] ?? "auto_awesome"}</span>
           </div>
           <div>
@@ -721,7 +721,7 @@ function QuestCard({
             <p style={{ fontSize: 13, color: "#9fb1c1", lineHeight: 1.55 }}>{quest.description}</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="mission-card-badges flex flex-col items-end gap-2">
           <span className="px-2 py-1 rounded-md h-fit" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: completed ? "#22c55e" : DIFF_COLORS[quest.difficulty], background: completed ? "rgba(34,197,94,0.12)" : `${DIFF_COLORS[quest.difficulty]}18`, border: `1px solid ${completed ? "rgba(34,197,94,0.32)" : `${DIFF_COLORS[quest.difficulty]}44`}` }}>
             {completed ? "COMPLETED" : quest.difficulty.toUpperCase()}
           </span>
@@ -754,8 +754,8 @@ function QuestCard({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-4" onClick={(event) => event.stopPropagation()}>
-        <div className="flex gap-2 flex-wrap">
+      <div className="mission-card-footer flex flex-wrap items-center justify-between gap-3 mt-4" onClick={(event) => event.stopPropagation()}>
+        <div className="mission-tags flex gap-2 flex-wrap">
           {quest.tags.map((tag) => (
             <span key={tag} className="px-2 py-1 rounded-md" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, color: "#849495", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
               {tag}
@@ -766,7 +766,7 @@ function QuestCard({
           </span>
         </div>
 
-        <div className="flex gap-2">
+        <div className="mission-card-actions flex gap-2">
           {isMissionAdmin && (
             <button onClick={() => onEditQuest(quest.id)} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
               Edit
