@@ -2156,7 +2156,9 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 0.85rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 30;
 }
 
 .lunexis-swap-top-row.is-slippage-only {
@@ -2165,7 +2167,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 
 .lunexis-slippage-compact {
   position: relative;
-  z-index: 5;
+  z-index: 40;
 }
 
 .lunexis-slippage-compact > button {
@@ -2213,6 +2215,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   border: 1px solid rgba(56,189,248,0.22);
   box-shadow: 0 24px 70px rgba(0,0,0,0.42), 0 0 34px rgba(56,189,248,0.14);
   backdrop-filter: blur(18px);
+  z-index: 60;
 }
 
 .lunexis-slippage-menu button {
@@ -5011,6 +5014,8 @@ a.arc-uiverse-button:active,
 
 .arc-swap-card {
   animation: arcSwapReveal 0.5s cubic-bezier(.2,.9,.2,1) both;
+  overflow: visible !important;
+  z-index: 4;
 }
 
 .arc-swap-card > * {
