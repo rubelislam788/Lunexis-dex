@@ -2094,6 +2094,41 @@ html[data-lunexis-theme="elysium"] .lunexis-bg-particles span {
   to { transform: translateX(240%); }
 }
 
+@keyframes stakingAmbientDrift {
+  from { transform: translate3d(-1rem, -0.4rem, 0) scale(0.96); opacity: 0.48; }
+  to { transform: translate3d(1.4rem, 0.7rem, 0) scale(1.04); opacity: 0.82; }
+}
+
+@keyframes stakingStatusPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(0,220,229,0.08), inset 0 1px 0 rgba(255,255,255,0.08); }
+  50% { box-shadow: 0 0 30px rgba(0,220,229,0.2), inset 0 1px 0 rgba(255,255,255,0.14); }
+}
+
+@keyframes stakingSyncSweep {
+  from { background-position: 160% 0; }
+  to { background-position: -120% 0; }
+}
+
+@keyframes stakingLiveDot {
+  0%, 100% { transform: scale(1); opacity: 0.78; }
+  50% { transform: scale(1.45); opacity: 1; }
+}
+
+@keyframes stakingTokenGlow {
+  0%, 100% { opacity: 0.62; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes stakingAprPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+  50% { box-shadow: 0 0 24px rgba(34,197,94,0.14); }
+}
+
+@keyframes stakingPanelFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
 @keyframes lunexisWarningPulse {
   0%, 100% { box-shadow: 0 0 0 rgba(255,156,0,0); }
   50% { box-shadow: 0 0 28px rgba(255,156,0,0.18); }
@@ -2105,11 +2140,26 @@ html[data-lunexis-theme="elysium"] .lunexis-bg-particles span {
 }
 
 .lunexis-staking-hero {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.35rem;
+  padding: 0.6rem 0 0.35rem;
+}
+
+.lunexis-staking-hero::before {
+  content: "";
+  position: absolute;
+  inset: -4rem 10% auto;
+  height: 10rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(0,220,229,0.16), transparent 68%);
+  filter: blur(26px);
+  opacity: 0.72;
+  pointer-events: none;
+  animation: stakingAmbientDrift 12s ease-in-out infinite alternate;
 }
 
 .lunexis-staking-hero h1 {
@@ -2142,6 +2192,8 @@ html[data-lunexis-theme="elysium"] .lunexis-bg-particles span {
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(0,220,229,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+  animation: stakingStatusPulse 3.4s ease-in-out infinite;
 }
 
 .lunexis-staking-stats {
@@ -2167,6 +2219,34 @@ html[data-lunexis-theme="elysium"] .lunexis-bg-particles span {
 
 .lunexis-staking-stats > div {
   padding: 1.1rem;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.lunexis-staking-stats > div:hover {
+  transform: translateY(-3px);
+}
+
+.lunexis-staking-stats > div:nth-child(4)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0 35%, rgba(143,232,255,0.12) 48%, transparent 62%);
+  background-size: 240% 100%;
+  animation: stakingSyncSweep 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lunexis-staking-stats > div:nth-child(4)::after {
+  content: "";
+  position: absolute;
+  top: 1.05rem;
+  right: 1rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 16px rgba(34,197,94,0.9);
+  animation: stakingLiveDot 1.6s ease-in-out infinite;
 }
 
 .lunexis-staking-stats span,
@@ -2214,30 +2294,58 @@ html[data-lunexis-theme="elysium"] .lunexis-bg-particles span {
 }
 
 .lunexis-staking-alert code {
-  border-radius: 999px;
-  padding: 0.6rem 0.85rem;
-  background: rgba(0,0,0,0.3);
-  color: #8fe8ff;
-  font-size: 0.72rem;
+  display: none;
 }
 
 .lunexis-staking-search {
+  position: relative;
   width: min(100%, 340px);
+}
+
+.lunexis-staking-search .material-symbols-outlined {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  z-index: 2;
+  color: #38bdf8;
+  font-size: 18px;
+  transform: translateY(-50%);
+  transition: transform 0.2s ease, color 0.2s ease, filter 0.2s ease;
+}
+
+.lunexis-staking-search:focus-within .material-symbols-outlined {
+  color: #8fe8ff;
+  filter: drop-shadow(0 0 10px rgba(56,189,248,0.62));
+  transform: translateY(-50%) scale(1.08);
 }
 
 .lunexis-staking-input,
 .lunexis-staking-search input {
   width: 100%;
-  min-height: 44px;
-  border-radius: 16px !important;
-  border: 1px solid rgba(56,189,248,0.16) !important;
-  background: rgba(0,0,0,0.32) !important;
+  min-height: 46px;
+  border-radius: 999px !important;
+  border: 1px solid rgba(143,232,255,0.16) !important;
+  background: linear-gradient(135deg, rgba(0,0,0,0.34), rgba(12,24,45,0.26)) !important;
   color: #f8fbff !important;
-  padding: 0 0.9rem !important;
+  padding: 0 1rem !important;
   font-family: 'Space Grotesk', sans-serif !important;
   font-size: 0.86rem !important;
   outline: none !important;
   margin-top: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.lunexis-staking-search input {
+  margin-top: 0;
+  padding-left: 2.55rem !important;
+}
+
+.lunexis-staking-input:focus,
+.lunexis-staking-search input:focus {
+  border-color: rgba(143,232,255,0.52) !important;
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.08), 0 0 26px rgba(56,189,248,0.16), inset 0 1px 0 rgba(255,255,255,0.12);
+  transform: translateY(-1px);
 }
 
 select.lunexis-staking-input {
@@ -2262,13 +2370,30 @@ select.lunexis-staking-input {
 }
 
 .lunexis-staking-pool-card {
-  padding: 1rem;
-  transition: transform 0.24s ease, box-shadow 0.24s ease;
+  padding: 1.1rem;
+  transform-origin: center;
+  transition: transform 0.24s cubic-bezier(.2,.9,.2,1), box-shadow 0.24s ease, border-color 0.24s ease;
 }
 
 .lunexis-staking-pool-card:hover {
-  transform: translateY(-3px) scale(0.992);
-  box-shadow: 0 0 30px rgba(0,220,229,0.2), 0 26px 90px rgba(0,0,0,0.52);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 0 34px rgba(0,220,229,0.24), 0 30px 96px rgba(0,0,0,0.56);
+}
+
+.lunexis-staking-pool-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 1.15rem 1rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(143,232,255,0.5), transparent);
+  opacity: 0;
+  transform: scaleX(0.4);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.lunexis-staking-pool-card:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .lunexis-staking-pool-card h3 {
@@ -2306,6 +2431,29 @@ select.lunexis-staking-input {
   box-shadow: 0 0 22px rgba(56,189,248,0.22);
 }
 
+.lunexis-token-glow {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.lunexis-token-glow::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(56,189,248,0.28), transparent 68%);
+  filter: blur(4px);
+  opacity: 0.8;
+  animation: stakingTokenGlow 2.8s ease-in-out infinite;
+}
+
+.lunexis-token-glow > * {
+  position: relative;
+  z-index: 1;
+}
+
 .lunexis-pool-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2318,6 +2466,19 @@ select.lunexis-staking-input {
   padding: 0.75rem;
   background: rgba(255,255,255,0.035);
   border: 1px solid rgba(255,255,255,0.06);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.lunexis-pool-metrics > div:hover {
+  transform: translateY(-2px);
+  background: rgba(143,232,255,0.055);
+  border-color: rgba(143,232,255,0.14);
+}
+
+.lunexis-apr-metric {
+  background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(56,189,248,0.08)) !important;
+  border-color: rgba(34,197,94,0.18) !important;
+  animation: stakingAprPulse 3s ease-in-out infinite;
 }
 
 .lunexis-pool-metrics strong {
@@ -2439,10 +2600,13 @@ select.lunexis-staking-input {
 
 .lunexis-staking-empty {
   border-radius: 26px;
-  padding: 1.4rem;
-  background: rgba(0,0,0,0.22);
-  border: 1px solid rgba(56,189,248,0.12);
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(56,189,248,0.12), transparent 42%),
+    rgba(0,0,0,0.22);
+  border: 1px solid rgba(143,232,255,0.14);
   color: #9fb2c4;
+  animation: stakingPanelFloat 5s ease-in-out infinite alternate;
 }
 
 .lunexis-staking-empty > .material-symbols-outlined {
@@ -2467,6 +2631,87 @@ select.lunexis-staking-input {
 
 .lunexis-staking-empty p {
   margin: 0.4rem 0 1rem;
+}
+
+.lunexis-staking-initializing {
+  position: relative;
+  min-height: 360px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.4rem;
+  align-items: center;
+  border-radius: 32px;
+  padding: clamp(1.35rem, 4vw, 2.4rem);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 20%, rgba(56,189,248,0.18), transparent 24rem),
+    radial-gradient(circle at 84% 26%, rgba(255,45,178,0.13), transparent 26rem),
+    linear-gradient(145deg, rgba(0, 20, 24, 0.74), rgba(18, 22, 64, 0.66)) padding-box,
+    linear-gradient(135deg, rgba(0,220,229,0.82), rgba(61,106,255,0.58), rgba(255,45,178,0.52)) border-box;
+  border: 1px solid transparent;
+  box-shadow: 0 30px 96px rgba(0,0,0,0.48), 0 0 42px rgba(0,220,229,0.14);
+  backdrop-filter: blur(24px);
+  animation: stakingPanelFloat 5.5s ease-in-out infinite alternate;
+}
+
+.lunexis-staking-initializing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0 36%, rgba(255,255,255,0.1) 48%, transparent 62%);
+  background-size: 240% 100%;
+  animation: stakingSyncSweep 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lunexis-staking-init-orbit {
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border-radius: 32px;
+  color: #dff8ff;
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(143,232,255,0.22);
+  box-shadow: 0 0 34px rgba(56,189,248,0.2);
+  animation: stakingTokenGlow 2.8s ease-in-out infinite;
+}
+
+.lunexis-staking-init-orbit .material-symbols-outlined {
+  font-size: 42px;
+}
+
+.lunexis-staking-initializing h2 {
+  color: #f8fbff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.65rem, 4vw, 2.8rem);
+  font-weight: 900;
+}
+
+.lunexis-staking-initializing p {
+  max-width: 720px;
+  margin-top: 0.5rem;
+  color: #9fb2c4;
+  line-height: 1.7;
+}
+
+.lunexis-staking-init-steps {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.lunexis-staking-init-steps span {
+  border-radius: 999px;
+  padding: 0.75rem 0.9rem;
+  color: #dff8ff;
+  background: rgba(143,232,255,0.07);
+  border: 1px solid rgba(143,232,255,0.12);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-align: center;
 }
 
 .lunexis-staking-empty div {
@@ -2501,11 +2746,20 @@ select.lunexis-staking-input {
     align-items: stretch;
   }
 
+  .lunexis-staking-hero {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
   .lunexis-staking-stats,
   .lunexis-staking-pool-grid,
   .lunexis-pool-metrics,
   .lunexis-staking-actions {
     grid-template-columns: 1fr;
+  }
+
+  .lunexis-staking-layout {
+    gap: 1rem;
   }
 
   .lunexis-stake-percent-row {
@@ -2525,6 +2779,20 @@ select.lunexis-staking-input {
   .lunexis-token-list small,
   .lunexis-staking-activity small {
     grid-column: 2;
+  }
+
+  .lunexis-staking-initializing {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    text-align: center;
+  }
+
+  .lunexis-staking-init-orbit {
+    margin: 0 auto;
+  }
+
+  .lunexis-staking-init-steps {
+    grid-template-columns: 1fr;
   }
 }
 

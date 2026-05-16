@@ -130,17 +130,10 @@ export default function StakingPage() {
           </section>
         )}
 
-        {!staking.managerReady && (
-          <section className="lunexis-staking-alert">
-            <div>
-              <strong>Staking manager not configured</strong>
-              <span>Deploy the staking contract and set NEXT_PUBLIC_LUNEXIS_STAKING_MANAGER_ADDRESS to enable real staking transactions.</span>
-            </div>
-            <code>npm run deploy:staking</code>
-          </section>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+        {!staking.managerReady ? (
+          <StakingInitializing />
+        ) : (
+        <div className="lunexis-staking-layout grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
           <main className="grid gap-6">
             <section className="lunexis-premium-card">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
@@ -149,6 +142,7 @@ export default function StakingPage() {
                   <h2>Stake Pools</h2>
                 </div>
                 <div className="lunexis-staking-search">
+                  <span className="material-symbols-outlined">search</span>
                   <input value={tokenSearch} onChange={(event) => setTokenSearch(event.target.value)} placeholder="Search token, symbol, address" />
                 </div>
               </div>
@@ -241,6 +235,7 @@ export default function StakingPage() {
             )}
           </aside>
         </div>
+        )}
       </div>
     </div>
   );
@@ -274,7 +269,7 @@ function PoolCard({
     <article className="lunexis-staking-pool-card">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          {tokenAvatar(pool.token)}
+          <span className="lunexis-token-glow">{tokenAvatar(pool.token)}</span>
           <div>
             <h3>{pool.token.symbol} Staking</h3>
             <p>{pool.token.name}</p>
@@ -283,7 +278,7 @@ function PoolCard({
         <span>{pool.poolType}</span>
       </div>
       <div className="lunexis-pool-metrics">
-        <div><span>APR/APY</span><strong>{(pool.aprBps / 100).toFixed(2)}%</strong></div>
+        <div className="lunexis-apr-metric"><span>APR/APY</span><strong>{(pool.aprBps / 100).toFixed(2)}%</strong></div>
         <div><span>Lock</span><strong>{formatDuration(pool.lockDuration)}</strong></div>
         <div><span>Total staked</span><strong>{pool.totalStaked}</strong></div>
         <div><span>My stake</span><strong>{pool.userStaked}</strong></div>
@@ -315,11 +310,31 @@ function EmptyStakingGuide() {
   return (
     <div className="lunexis-staking-empty">
       <span className="material-symbols-outlined">lock_open</span>
-      <strong>No staking pools live yet</strong>
-      <p>Admin can create flexible, 7 day, 30 day, or 90 day ARC Testnet pools after deploying the staking manager.</p>
-      {["Deploy staking manager", "Fund reward token", "Create pool", "Users stake ARC ERC20 tokens"].map((step, index) => (
+      <strong>Staking pools are initializing</strong>
+      <p>New ARC Testnet pools are being prepared. Check back soon for flexible and locked staking opportunities.</p>
+      {["Pool discovery active", "Rewards engine warming up", "ARC token vaults syncing", "User staking opens soon"].map((step, index) => (
         <div key={step}><b>{index + 1}</b>{step}</div>
       ))}
     </div>
+  );
+}
+
+function StakingInitializing() {
+  return (
+    <section className="lunexis-staking-initializing">
+      <div className="lunexis-staking-init-orbit">
+        <span className="material-symbols-outlined">lock_clock</span>
+      </div>
+      <div>
+        <div className="lunexis-kicker">Staking Engine</div>
+        <h2>Staking pools are initializing</h2>
+        <p>New ARC Testnet pools are arriving soon. Lunexis is preparing a clean staking surface with live rewards, lock options, and custom token support.</p>
+      </div>
+      <div className="lunexis-staking-init-steps">
+        <span>Scanning ARC Testnet tokens</span>
+        <span>Preparing reward streams</span>
+        <span>Syncing pool telemetry</span>
+      </div>
+    </section>
   );
 }
