@@ -61,6 +61,7 @@ export function useArcSwap() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quotePath, setQuotePath] = useState<Address[]>([]);
   const [routerQuoteReady, setRouterQuoteReady] = useState(false);
+  const [appKitApprovedKey, setAppKitApprovedKey] = useState("");
 
   const updateState = useCallback((patch: Partial<SwapState>) => {
     setState((prev) => ({ ...prev, ...patch }));
@@ -98,6 +99,8 @@ export function useArcSwap() {
       : "unavailable";
 
   const estimatedOut = useMemo(() => state.amountOut, [state.amountOut]);
+  const approvalKey = `${routeMode}:${fromToken}:${toToken}:${state.amountIn}:${state.slippage}`;
+  const appKitApprovalReady = routeMode === "appkit" && appKitApprovedKey === approvalKey;
 
   const buildCandidatePaths = useCallback(() => {
     if (!fromTokenAddress || !toTokenAddress) return [];
@@ -244,27 +247,53 @@ export function useArcSwap() {
   }, [address, currentChainId, fromTokenAddress, publicClient, router]);
 
   const needsApproval = Boolean(
-    router &&
-    fromTokenAddress &&
     amountIn &&
     amountIn > BigInt(0) &&
-    allowance < amountIn &&
-    !isAddressEqual(fromTokenAddress, zeroAddress) &&
-    routeMode === "router"
+    (
+      (
+        router &&
+        fromTokenAddress &&
+        allowance < amountIn &&
+        !isAddressEqual(fromTokenAddress, zeroAddress) &&
+        routeMode === "router"
+      ) ||
+      (routeMode === "appkit" && !appKitApprovalReady)
+    )
   );
 
   const approve = useCallback(async () => {
     if (!isConnected || !address) throw new Error("Wallet not connected");
     if (currentChainId !== ARC_CHAIN_ID) throw new Error("Switch your wallet to ARC Chain to approve swap tokens.");
     if (!walletClient || !publicClient) throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
-    if (!router || !fromTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress)) {
-      throw new Error("Swap route is temporarily unavailable. Refresh and try again.");
-    }
+    if (!state.amountIn || parseFloat(state.amountIn) <= 0 || !amountIn) throw new Error("Enter a valid amount before approving.");
     const account = walletClient.account;
     if (!account) throw new Error("Wallet signer account is not available.");
 
     try {
       updateState({ status: "approving", error: undefined });
+
+      if (routeMode === "appkit") {
+        if (!appKitKey) throw new Error("Swap service is not configured. Add NEXT_PUBLIC_ARC_KIT_KEY and redeploy.");
+        const adapter = await getViemAdapter(walletClient, publicClient);
+        const kit = await getAppKit();
+        await withCircleApiProxy<any>(() =>
+          kit.estimateSwap({
+            from: { adapter, chain: "Arc_Testnet" },
+            tokenIn: fromToken,
+            tokenOut: toToken,
+            amountIn: state.amountIn,
+            config: { kitKey: appKitKey, allowanceStrategy: "approve", slippageBps: slippageBps(state.slippage) },
+          })
+        );
+        setAppKitApprovedKey(approvalKey);
+        updateState({ status: "idle", txHash: undefined });
+        return { hash: undefined };
+      }
+
+      if (!router || !fromTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress)) {
+        throw new Error("Swap route is temporarily unavailable. Refresh and try again.");
+      }
+
       const { request } = await publicClient.simulateContract({
         address: fromTokenAddress,
         abi: erc20Abi,
@@ -281,7 +310,7 @@ export function useArcSwap() {
       updateState({ status: "error", error: err?.message || "Approval failed" });
       throw err;
     }
-  }, [address, currentChainId, fromTokenAddress, isConnected, publicClient, router, updateState, walletClient]);
+  }, [address, amountIn, appKitKey, approvalKey, currentChainId, fromToken, fromTokenAddress, isConnected, publicClient, routeMode, router, state.amountIn, state.slippage, toToken, updateState, walletClient]);
 
   const executeSwap = useCallback(async () => {
     if (!isConnected || !address) throw new Error("Wallet not connected");
@@ -299,6 +328,10 @@ export function useArcSwap() {
 
         if (!appKitKey) {
           throw new Error("Swap service is not configured. Add NEXT_PUBLIC_ARC_KIT_KEY and redeploy.");
+        }
+
+        if (!appKitApprovalReady) {
+          throw new Error(`Approve ${fromToken} before confirming the swap.`);
         }
 
         const adapter = await getViemAdapter(walletClient, publicClient);
@@ -363,7 +396,7 @@ export function useArcSwap() {
       updateState({ status: "error", error: err?.message || "Swap failed" });
       throw err;
     }
-  }, [address, amountIn, appKitKey, buildCandidatePaths, canUseAppKitSwap, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, quotePath, routeMode, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
+  }, [address, amountIn, appKitApprovalReady, appKitKey, buildCandidatePaths, canUseAppKitSwap, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, quotePath, routeMode, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });
@@ -375,6 +408,7 @@ export function useArcSwap() {
     executeSwap,
     approve,
     needsApproval,
+    appKitApprovalReady,
     routerConfigured: routerReady,
     appKitSupported: canUseAppKitSwap,
     appKitReady,
