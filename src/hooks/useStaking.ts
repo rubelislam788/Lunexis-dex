@@ -10,8 +10,6 @@ import {
   STAKING_CHAIN_ID,
   STAKING_MANAGER_ABI,
   STAKING_MANAGER_ADDRESS,
-  poolTypeLabel,
-  poolTypeValue,
   type StakingPoolType,
   type StakingPoolView,
   type StakingToken,
@@ -76,10 +74,15 @@ function normalizeStakingError(error: any) {
   if (/network|chain|switch/i.test(raw)) return "Switch your wallet to ARC Testnet and try again.";
   if (/locked/i.test(raw)) return "This position is still locked. Wait until the unlock date before unstaking.";
   if (/paused/i.test(raw)) return "This staking pool is paused right now.";
-  if (/allowance|approve/i.test(raw)) return "Approve this token for staking before submitting the stake transaction.";
-  if (/transferfailed|transfer failed|reward/i.test(raw)) return "The staking manager could not transfer rewards. The reward vault may need funding.";
-  if (/invalidamount|valid/i.test(raw)) return "Enter a valid amount for this staking action.";
+  if (/allowance|approve|transferfrom/i.test(raw)) return "Approve this token for staking before submitting the stake transaction.";
+  if (/transferfailed|transfer failed|reward/i.test(raw)) return "The staking contract could not transfer rewards. The reward vault may need funding.";
+  if (/invalidamount|valid|zero/i.test(raw)) return "Enter a valid amount for this staking action.";
+  if (/function.*not found|selector|revert/i.test(raw)) return "The staking contract rejected this action. Check that this token is allowed on the new staking contract.";
   return raw;
+}
+
+function isBigIntLike(value: unknown): value is bigint {
+  return typeof value === "bigint";
 }
 
 export function useStaking() {
@@ -94,13 +97,9 @@ export function useStaking() {
   const [status, setStatus] = useState<TxStatus>("idle");
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
-  const [ownerAddress, setOwnerAddress] = useState<Address | undefined>();
 
   const managerReady = Boolean(STAKING_MANAGER_ADDRESS);
   const isConfiguredAdmin = Boolean(address && STAKING_ADMIN_WALLET && address.toLowerCase() === STAKING_ADMIN_WALLET);
-  const isContractOwner = Boolean(address && ownerAddress && isAddressEqual(address, ownerAddress));
-  const isAdmin = isConfiguredAdmin || isContractOwner;
-  const canCreatePools = isContractOwner;
   const wrongNetwork = isConnected && chainId !== STAKING_CHAIN_ID;
 
   const ensureArcNetwork = useCallback(async () => {
@@ -111,6 +110,14 @@ export function useStaking() {
   const readTokenInfo = useCallback(async (tokenAddress: string): Promise<StakingToken> => {
     if (!publicClient || !isAddress(tokenAddress)) throw new Error("Paste a valid ARC Testnet ERC20 contract address.");
     const token = tokenAddress as Address;
+    const known = DEFAULT_STAKING_TOKENS.find((item) => isAddressEqual(item.address, token));
+    if (known) {
+      const rawBalance = address
+        ? await publicClient.readContract({ address: token, abi: ERC20_ABI, functionName: "balanceOf", args: [address] }).catch(() => BigInt(0))
+        : BigInt(0);
+      return { ...known, balance: cleanAmount(rawBalance as bigint, known.decimals) };
+    }
+
     const bytecode = await publicClient.getCode({ address: token });
     if (!bytecode || bytecode === "0x") throw new Error("No ERC20 contract found on ARC Testnet at this address.");
 
@@ -144,78 +151,105 @@ export function useStaking() {
     return token;
   }, [customTokens, readTokenInfo, tokens]);
 
+  const readAllowedTokens = useCallback(async () => {
+    if (!publicClient || !STAKING_MANAGER_ADDRESS) return [];
+    const result = await publicClient.readContract({
+      address: STAKING_MANAGER_ADDRESS,
+      abi: STAKING_MANAGER_ABI,
+      functionName: "getAllowedTokens",
+    } as any);
+    return Array.isArray(result) ? result.filter((item): item is Address => typeof item === "string" && isAddress(item)) : [];
+  }, [publicClient]);
+
+  const readMaxBigInt = useCallback(async (functionName: "pendingRewards" | "getStakedBalance", argsList: readonly unknown[][]) => {
+    if (!publicClient || !STAKING_MANAGER_ADDRESS) return BigInt(0);
+    const values: bigint[] = [];
+    for (const args of argsList) {
+      try {
+        const result = await publicClient.readContract({
+          address: STAKING_MANAGER_ADDRESS,
+          abi: STAKING_MANAGER_ABI,
+          functionName,
+          args,
+        } as any);
+        if (isBigIntLike(result)) values.push(result);
+      } catch {
+        // Try the next supported signature.
+      }
+    }
+    return values.reduce((max, value) => value > max ? value : max, BigInt(0));
+  }, [publicClient]);
+
   const refresh = useCallback(async () => {
     if (!publicClient) return;
-    const managerAddress = STAKING_MANAGER_ADDRESS;
     const savedCustom = loadCustomTokens();
     setCustomTokens(savedCustom);
 
-    const baseTokens = [...DEFAULT_STAKING_TOKENS, ...savedCustom];
-    const withBalances = await Promise.all(baseTokens.map(async (token) => {
-      if (!address) return token;
-      try {
-        const raw = await publicClient.readContract({ address: token.address, abi: ERC20_ABI, functionName: "balanceOf", args: [address] });
-        return { ...token, balance: cleanAmount(raw as bigint, token.decimals) };
-      } catch {
-        return token;
-      }
-    }));
-    setTokens(withBalances);
-    const localTokenMap = new Map(withBalances.map((token) => [token.address.toLowerCase(), token]));
-
-    if (!managerAddress) {
+    const managerCode = STAKING_MANAGER_ADDRESS
+      ? await publicClient.getCode({ address: STAKING_MANAGER_ADDRESS }).catch(() => undefined)
+      : undefined;
+    if (!STAKING_MANAGER_ADDRESS || !managerCode || managerCode === "0x") {
+      setError("No staking contract was found on ARC Testnet at the configured address.");
       setPools([]);
-      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
       return;
     }
 
-    const owner = await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "owner" }).catch(() => undefined);
-    setOwnerAddress(typeof owner === "string" && isAddress(owner) ? owner as Address : undefined);
+    try {
+      const allowedAddresses = await readAllowedTokens();
+      const allKnownTokens = [...DEFAULT_STAKING_TOKENS, ...savedCustom];
+      const allowedSet = new Set(allowedAddresses.map((item) => item.toLowerCase()));
+      const allowedTokenInputs = allowedAddresses.length > 0
+        ? allowedAddresses
+        : allKnownTokens.map((token) => token.address).filter((token) => allowedSet.has(token.toLowerCase()));
 
-    const count = Number(await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "poolCount" }).catch(() => BigInt(0)));
-    const nextPools = await Promise.all(Array.from({ length: count }).map(async (_, id) => {
-      const pool: any = await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "pools", args: [BigInt(id)] });
-      const stakeTokenAddress = pool[0] as Address;
-      const rewardTokenAddress = pool[1] as Address;
-      const stakeToken = localTokenMap.get(stakeTokenAddress.toLowerCase()) ?? await readTokenInfo(stakeTokenAddress);
-      const rewardToken = localTokenMap.get(rewardTokenAddress.toLowerCase()) ?? await readTokenInfo(rewardTokenAddress);
-      const position: any = address
-        ? await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "positions", args: [BigInt(id), address] }).catch(() => [BigInt(0), BigInt(0), 0, 0])
-        : [BigInt(0), BigInt(0), 0, 0];
-      const pending = address
-        ? await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "pendingReward", args: [BigInt(id), address] }).catch(() => BigInt(0))
-        : BigInt(0);
-      const allowance = address
-        ? await publicClient.readContract({ address: stakeTokenAddress, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] }).catch(() => BigInt(0))
-        : BigInt(0);
-      const rewardVaultBalance = await publicClient.readContract({ address: rewardTokenAddress, abi: ERC20_ABI, functionName: "balanceOf", args: [managerAddress] }).catch(() => BigInt(0));
+      const tokenViews = await Promise.all(allowedTokenInputs.map((token) => readTokenInfo(token)));
+      setTokens(tokenViews);
 
-      return {
-        id,
-        token: stakeToken,
-        rewardToken,
-        aprBps: Number(pool[2]),
-        lockDuration: Number(pool[3]),
-        poolType: poolTypeLabel(Number(pool[5])),
-        paused: Boolean(pool[6]),
-        totalStaked: cleanAmount(pool[7] as bigint, stakeToken.decimals),
-        metadata: String(pool[8] || ""),
-        userStaked: cleanAmount(position[0] as bigint, stakeToken.decimals),
-        pendingReward: cleanAmount(pending as bigint, rewardToken.decimals),
-        unlockAt: Number(position[3] || 0),
-        allowance: allowance as bigint,
-        rewardVaultBalance: cleanAmount(rewardVaultBalance as bigint, rewardToken.decimals),
-        needsApproval: Boolean((allowance as bigint) === BigInt(0)),
-      } satisfies StakingPoolView;
-    }));
+      const nextPools = await Promise.all(tokenViews.map(async (token, id) => {
+        const [allowance, staked, pending, rewardVaultBalance] = await Promise.all([
+          address
+            ? publicClient.readContract({ address: token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, STAKING_MANAGER_ADDRESS] }).catch(() => BigInt(0))
+            : Promise.resolve(BigInt(0)),
+          address
+            ? readMaxBigInt("getStakedBalance", [[address, token.address], [token.address, address], [token.address], []])
+            : Promise.resolve(BigInt(0)),
+          address
+            ? readMaxBigInt("pendingRewards", [[address, token.address], [token.address, address], [token.address], []])
+            : Promise.resolve(BigInt(0)),
+          publicClient.readContract({ address: token.address, abi: ERC20_ABI, functionName: "balanceOf", args: [STAKING_MANAGER_ADDRESS] }).catch(() => BigInt(0)),
+        ]);
 
-    setPools(nextPools);
-    setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-  }, [address, publicClient, readTokenInfo]);
+        return {
+          id,
+          token,
+          rewardToken: token,
+          aprBps: 0,
+          lockDuration: 0,
+          poolType: "Flexible",
+          paused: false,
+          totalStaked: cleanAmount(rewardVaultBalance as bigint, token.decimals),
+          metadata: `Lunexis ${token.symbol} ARC Testnet staking`,
+          userStaked: cleanAmount(staked as bigint, token.decimals),
+          pendingReward: cleanAmount(pending as bigint, token.decimals),
+          unlockAt: 0,
+          allowance: allowance as bigint,
+          rewardVaultBalance: cleanAmount(rewardVaultBalance as bigint, token.decimals),
+          needsApproval: Boolean((allowance as bigint) === BigInt(0)),
+        } satisfies StakingPoolView;
+      }));
+
+      setError("");
+      setPools(nextPools);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch (error: any) {
+      setError(normalizeStakingError(error));
+      setPools([]);
+    }
+  }, [address, publicClient, readAllowedTokens, readMaxBigInt, readTokenInfo]);
 
   useEffect(() => {
     refresh();
-    const timer = window.setInterval(refresh, 12000);
+    const timer = window.setInterval(refresh, 8000);
     window.addEventListener("online", refresh);
     window.addEventListener("focus", refresh);
     return () => {
@@ -225,18 +259,40 @@ export function useStaking() {
     };
   }, [refresh]);
 
+  const sendStakingWrite = useCallback(async (functionName: "stake" | "unstake" | "claimRewards", argsList: readonly unknown[][]) => {
+    if (!walletClient || !publicClient || !address || !STAKING_MANAGER_ADDRESS) throw new Error("Connect wallet and configure staking contract.");
+    let lastError: unknown;
+    for (const args of argsList) {
+      try {
+        const { request } = await publicClient.simulateContract({
+          address: STAKING_MANAGER_ADDRESS,
+          abi: STAKING_MANAGER_ABI,
+          functionName,
+          args,
+          account: address,
+        } as any);
+        const hash = await walletClient.writeContract(request);
+        await publicClient.waitForTransactionReceipt({ hash });
+        await refresh();
+        return { hash };
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw new Error(normalizeStakingError(lastError));
+  }, [address, publicClient, refresh, walletClient]);
+
   const approve = useCallback(async (pool: StakingPoolView, amount: string) => {
-    const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
+    if (!walletClient || !publicClient || !address || !STAKING_MANAGER_ADDRESS) throw new Error("Connect wallet and configure staking contract.");
     await ensureArcNetwork();
     const value = parsePositiveAmount(amount, pool.token.decimals, "approval");
     const balance = parseUnits(pool.token.balance || "0", pool.token.decimals);
     if (value > balance) throw new Error(`Insufficient ${pool.token.symbol} balance for this approval.`);
     const nativeGas = await publicClient.getBalance({ address }).catch(() => BigInt(0));
-    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on Arc Testnet before approving.");
+    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on ARC Testnet before approving.");
     setStatus("approving");
     try {
-      const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] });
+      const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, STAKING_MANAGER_ADDRESS] });
       if ((allowance as bigint) >= value) {
         await refresh();
         return { hash: undefined };
@@ -245,11 +301,11 @@ export function useStaking() {
         address: pool.token.address,
         abi: ERC20_ABI,
         functionName: "approve",
-        args: [managerAddress, maxUint256],
+        args: [STAKING_MANAGER_ADDRESS, maxUint256],
         account: address,
       });
       await publicClient.waitForTransactionReceipt({ hash });
-      pushActivity(createActivity("wallet", `Approved ${pool.token.symbol}`, `Approved staking manager for ${pool.token.symbol}.`, "USDC", "completed", hash));
+      pushActivity(createActivity("wallet", `Approved ${pool.token.symbol}`, `Approved staking contract for ${pool.token.symbol}.`, pool.token.symbol, "completed", hash));
       await refresh();
       return { hash };
     } catch (error) {
@@ -260,127 +316,58 @@ export function useStaking() {
   }, [address, ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
 
   const stake = useCallback(async (pool: StakingPoolView, amount: string) => {
-    const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
+    if (!address) throw new Error("Connect wallet and configure staking contract.");
+    if (!publicClient || !STAKING_MANAGER_ADDRESS) throw new Error("Connect wallet and configure staking contract.");
     await ensureArcNetwork();
-    if (pool.paused) throw new Error("This staking pool is paused right now.");
     const value = parsePositiveAmount(amount, pool.token.decimals, "staking");
     const balance = parseUnits(pool.token.balance || "0", pool.token.decimals);
     if (value > balance) throw new Error(`Insufficient ${pool.token.symbol} balance for this stake.`);
-    const nativeGas = await publicClient.getBalance({ address }).catch(() => BigInt(0));
-    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on Arc Testnet before staking.");
-    const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] }).catch(() => BigInt(0));
+    const nativeGas = publicClient ? await publicClient.getBalance({ address }).catch(() => BigInt(0)) : BigInt(0);
+    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on ARC Testnet before staking.");
+    const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, STAKING_MANAGER_ADDRESS] }).catch(() => BigInt(0));
     if ((allowance as bigint) < value) throw new Error(`Approve ${pool.token.symbol} before staking.`);
     setStatus("staking");
     try {
-      const { request } = await publicClient.simulateContract({
-        address: managerAddress,
-        abi: STAKING_MANAGER_ABI,
-        functionName: "stake",
-        args: [BigInt(pool.id), value],
-        account: address,
-      });
-      const hash = await walletClient.writeContract(request);
-      await publicClient.waitForTransactionReceipt({ hash });
-      pushActivity(createActivity("wallet", `Staked ${pool.token.symbol}`, `Staked ${amount} ${pool.token.symbol} in Lunexis staking.`, "USDC", "completed", hash));
-      await refresh();
-      return { hash };
-    } catch (error) {
-      throw new Error(normalizeStakingError(error));
+      const result = await sendStakingWrite("stake", [[pool.token.address, value], [value, pool.token.address], [value]]);
+      pushActivity(createActivity("wallet", `Staked ${pool.token.symbol}`, `Staked ${amount} ${pool.token.symbol} in Lunexis staking.`, pool.token.symbol, "completed", result.hash));
+      return result;
     } finally {
       setStatus("idle");
     }
-  }, [address, ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
+  }, [address, ensureArcNetwork, publicClient, pushActivity, sendStakingWrite]);
 
   const unstake = useCallback(async (pool: StakingPoolView, amount: string) => {
-    const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
     await ensureArcNetwork();
     const value = parsePositiveAmount(amount, pool.token.decimals, "unstake");
     const staked = parseUnits(pool.userStaked || "0", pool.token.decimals);
-    if (value > staked) throw new Error(`You only have ${pool.userStaked} ${pool.token.symbol} staked in this pool.`);
-    if (pool.unlockAt && pool.unlockAt * 1000 > Date.now()) throw new Error(`This position is locked until ${new Date(pool.unlockAt * 1000).toLocaleString()}.`);
+    if (value > staked) throw new Error(`You only have ${pool.userStaked} ${pool.token.symbol} staked.`);
     setStatus("unstaking");
     try {
-      const { request } = await publicClient.simulateContract({
-        address: managerAddress,
-        abi: STAKING_MANAGER_ABI,
-        functionName: "unstake",
-        args: [BigInt(pool.id), value],
-        account: address,
-      });
-      const hash = await walletClient.writeContract(request);
-      await publicClient.waitForTransactionReceipt({ hash });
-      pushActivity(createActivity("wallet", `Unstaked ${pool.token.symbol}`, `Unstaked ${amount} ${pool.token.symbol}.`, "USDC", "completed", hash));
-      await refresh();
-      return { hash };
-    } catch (error) {
-      throw new Error(normalizeStakingError(error));
+      const result = await sendStakingWrite("unstake", [[pool.token.address, value], [value, pool.token.address], [value]]);
+      pushActivity(createActivity("wallet", `Unstaked ${pool.token.symbol}`, `Unstaked ${amount} ${pool.token.symbol}.`, pool.token.symbol, "completed", result.hash));
+      return result;
     } finally {
       setStatus("idle");
     }
-  }, [address, ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
+  }, [ensureArcNetwork, pushActivity, sendStakingWrite]);
 
   const claim = useCallback(async (pool: StakingPoolView) => {
-    const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
     await ensureArcNetwork();
     const pending = parseUnits(pool.pendingReward || "0", pool.rewardToken.decimals);
     if (pending <= BigInt(0)) throw new Error("No staking rewards are ready to claim yet.");
-    const vaultBalance = await publicClient.readContract({ address: pool.rewardToken.address, abi: ERC20_ABI, functionName: "balanceOf", args: [managerAddress] }).catch(() => BigInt(0));
-    if ((vaultBalance as bigint) < pending) throw new Error("The staking manager reward vault needs more reward tokens before claims can succeed.");
     setStatus("claiming");
     try {
-      const { request } = await publicClient.simulateContract({
-        address: managerAddress,
-        abi: STAKING_MANAGER_ABI,
-        functionName: "claim",
-        args: [BigInt(pool.id)],
-        account: address,
-      });
-      const hash = await walletClient.writeContract(request);
-      await publicClient.waitForTransactionReceipt({ hash });
-      pushActivity(createActivity("reward", `Claimed ${pool.rewardToken.symbol}`, `Claimed staking rewards from ${pool.token.symbol} pool.`, "USDC", "completed", hash));
-      await refresh();
-      return { hash };
-    } catch (error) {
-      throw new Error(normalizeStakingError(error));
+      const result = await sendStakingWrite("claimRewards", [[pool.token.address], []]);
+      pushActivity(createActivity("reward", `Claimed ${pool.rewardToken.symbol}`, `Claimed staking rewards from ${pool.token.symbol} staking.`, pool.rewardToken.symbol, "completed", result.hash));
+      return result;
     } finally {
       setStatus("idle");
     }
-  }, [address, ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
+  }, [ensureArcNetwork, pushActivity, sendStakingWrite]);
 
-  const createPool = useCallback(async (input: CreatePoolInput) => {
-    const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect admin wallet and configure staking manager.");
-    if (!isContractOwner) throw new Error("Only the staking manager owner wallet can create pools.");
-    await ensureArcNetwork();
-    const managerCode = await publicClient.getCode({ address: managerAddress }).catch(() => undefined);
-    if (!managerCode || managerCode === "0x") throw new Error("No staking manager contract was found at the configured address.");
-    const nativeGas = await publicClient.getBalance({ address }).catch(() => BigInt(0));
-    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on Arc Testnet before sending transactions.");
-    setStatus("creating");
-    try {
-      const aprBps = Math.round(Number(input.apr || 0) * 100);
-      const lockDuration = Math.round(Number(input.lockDays || 0) * 86400);
-      const poolArgs = [input.stakeToken, input.rewardToken, aprBps, BigInt(lockDuration), poolTypeValue(input.poolType), input.metadata || "Lunexis ARC staking pool"] as const;
-      const { request } = await publicClient.simulateContract({
-        address: managerAddress,
-        abi: STAKING_MANAGER_ABI,
-        functionName: "createPool",
-        args: poolArgs,
-        account: walletClient.account!,
-      });
-      const hash = await walletClient.writeContract(request);
-      await publicClient.waitForTransactionReceipt({ hash });
-      await refresh();
-      return { hash };
-    } catch (error) {
-      throw new Error(normalizeStakingError(error));
-    } finally {
-      setStatus("idle");
-    }
-  }, [address, ensureArcNetwork, isContractOwner, publicClient, refresh, walletClient]);
+  const createPool = useCallback(async (_input: CreatePoolInput) => {
+    throw new Error("The new staking contract manages allowed tokens onchain. Pool creation is not available in this frontend.");
+  }, []);
 
   return {
     addCustomToken,
@@ -390,14 +377,14 @@ export function useStaking() {
     customTokens,
     ensureArcNetwork,
     error,
-    isAdmin,
-    canCreatePools,
+    isAdmin: isConfiguredAdmin,
+    canCreatePools: false,
     isConnected,
     isSwitching,
     lastUpdated,
     managerAddress: STAKING_MANAGER_ADDRESS ?? zeroAddress,
     managerReady,
-    ownerAddress,
+    ownerAddress: undefined,
     pools,
     refresh,
     setError,

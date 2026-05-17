@@ -40,7 +40,7 @@ function parseAddress(value?: string) {
 
 export const ARC_TESTNET_USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as Address;
 export const ARC_TESTNET_EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as Address;
-export const ARC_TESTNET_STAKING_MANAGER_ADDRESS = "0xF1f7d192b5d34a9199ba2818094b32190B8b0822" as Address;
+export const ARC_TESTNET_STAKING_MANAGER_ADDRESS = "0xe148681F1d360dB8dEDCbC6a69d3df157f28c09F" as Address;
 
 const configuredStakingManager = parseAddress(
   process.env.NEXT_PUBLIC_STAKING_MANAGER_ADDRESS ||
@@ -74,58 +74,21 @@ export const DEFAULT_STAKING_TOKENS: StakingToken[] = [
 ];
 
 export const STAKING_MANAGER_ABI = [
-  { type: "function", name: "owner", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
-  { type: "function", name: "paused", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
-  { type: "function", name: "poolCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
-  {
-    type: "function",
-    name: "pools",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "uint256" }],
-    outputs: [
-      { name: "stakeToken", type: "address" },
-      { name: "rewardToken", type: "address" },
-      { name: "aprBps", type: "uint16" },
-      { name: "lockDuration", type: "uint64" },
-      { name: "createdAt", type: "uint64" },
-      { name: "poolType", type: "uint8" },
-      { name: "paused", type: "bool" },
-      { name: "totalStaked", type: "uint256" },
-      { name: "metadata", type: "string" },
-    ],
-  },
-  {
-    type: "function",
-    name: "positions",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "uint256" }, { name: "", type: "address" }],
-    outputs: [
-      { name: "amount", type: "uint256" },
-      { name: "rewardStored", type: "uint256" },
-      { name: "updatedAt", type: "uint64" },
-      { name: "unlockAt", type: "uint64" },
-    ],
-  },
-  { type: "function", name: "pendingReward", stateMutability: "view", inputs: [{ name: "poolId", type: "uint256" }, { name: "user", type: "address" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "stake", stateMutability: "nonpayable", inputs: [{ name: "poolId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { type: "function", name: "unstake", stateMutability: "nonpayable", inputs: [{ name: "poolId", type: "uint256" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [{ name: "poolId", type: "uint256" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "emergencyWithdraw", stateMutability: "nonpayable", inputs: [{ name: "poolId", type: "uint256" }], outputs: [] },
-  {
-    type: "function",
-    name: "createPool",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "stakeToken", type: "address" },
-      { name: "rewardToken", type: "address" },
-      { name: "aprBps", type: "uint16" },
-      { name: "lockDuration", type: "uint64" },
-      { name: "poolType", type: "uint8" },
-      { name: "metadata", type: "string" },
-    ],
-    outputs: [{ name: "poolId", type: "uint256" }],
-  },
-  { type: "function", name: "setPool", stateMutability: "nonpayable", inputs: [{ name: "poolId", type: "uint256" }, { name: "aprBps", type: "uint16" }, { name: "lockDuration", type: "uint64" }, { name: "isPaused", type: "bool" }], outputs: [] },
+  { type: "function", name: "getAllowedTokens", stateMutability: "view", inputs: [], outputs: [{ type: "address[]" }] },
+  { type: "function", name: "pendingRewards", stateMutability: "view", inputs: [{ name: "user", type: "address" }, { name: "token", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "pendingRewards", stateMutability: "view", inputs: [{ name: "token", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "pendingRewards", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "getStakedBalance", stateMutability: "view", inputs: [{ name: "user", type: "address" }, { name: "token", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "getStakedBalance", stateMutability: "view", inputs: [{ name: "token", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "getStakedBalance", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "stake", stateMutability: "nonpayable", inputs: [{ name: "token", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { type: "function", name: "stake", stateMutability: "nonpayable", inputs: [{ name: "amount", type: "uint256" }, { name: "token", type: "address" }], outputs: [] },
+  { type: "function", name: "stake", stateMutability: "nonpayable", inputs: [{ name: "amount", type: "uint256" }], outputs: [] },
+  { type: "function", name: "unstake", stateMutability: "nonpayable", inputs: [{ name: "token", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
+  { type: "function", name: "unstake", stateMutability: "nonpayable", inputs: [{ name: "amount", type: "uint256" }, { name: "token", type: "address" }], outputs: [] },
+  { type: "function", name: "unstake", stateMutability: "nonpayable", inputs: [{ name: "amount", type: "uint256" }], outputs: [] },
+  { type: "function", name: "claimRewards", stateMutability: "nonpayable", inputs: [{ name: "token", type: "address" }], outputs: [] },
+  { type: "function", name: "claimRewards", stateMutability: "nonpayable", inputs: [], outputs: [] },
 ] as const;
 
 export { ERC20_ABI, zeroAddress };

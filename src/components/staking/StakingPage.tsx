@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { isAddress, parseUnits, type Address } from "viem";
+import { useMemo, useState } from "react";
+import { parseUnits } from "viem";
 import { useStaking } from "@/hooks/useStaking";
-import type { StakingPoolType, StakingPoolView, StakingToken } from "@/lib/staking";
+import type { StakingPoolView, StakingToken } from "@/lib/staking";
 import TokenIcon from "@/components/ui/TokenIcon";
 import { useToast } from "@/components/ui/Toast";
 
@@ -40,18 +40,8 @@ function tokenAvatar(token: StakingToken, size = 42) {
 export default function StakingPage() {
   const staking = useStaking();
   const { show, ToastContainer } = useToast();
-  const [tokenAddress, setTokenAddress] = useState("");
   const [tokenSearch, setTokenSearch] = useState("");
-  const [selectedToken, setSelectedToken] = useState<StakingToken | null>(null);
   const [poolAmounts, setPoolAmounts] = useState<Record<number, string>>({});
-  const [adminDraft, setAdminDraft] = useState({
-    stakeToken: "",
-    rewardToken: "",
-    apr: "18",
-    lockDays: "30",
-    poolType: "Locked" as StakingPoolType,
-    metadata: "Lunexis ARC staking pool",
-  });
 
   const filteredTokens = useMemo(() => {
     const query = tokenSearch.trim().toLowerCase();
@@ -63,46 +53,12 @@ export default function StakingPage() {
     );
   }, [staking.tokens, tokenSearch]);
 
-  useEffect(() => {
-    if (adminDraft.stakeToken || staking.tokens.length === 0) return;
-    const defaultToken = staking.tokens.find((token) => token.symbol === "USDC") ?? staking.tokens[0];
-    setSelectedToken(defaultToken);
-    setAdminDraft((prev) => ({
-      ...prev,
-      stakeToken: defaultToken.address,
-      rewardToken: defaultToken.address,
-      metadata: `Lunexis ${defaultToken.symbol} ARC Testnet staking pool`,
-    }));
-  }, [adminDraft.stakeToken, staking.tokens]);
-
   const totals = useMemo(() => {
     const staked = staking.pools.reduce((sum, pool) => sum + numeric(pool.userStaked), 0);
     const rewards = staking.pools.reduce((sum, pool) => sum + numeric(pool.pendingReward), 0);
     const active = staking.pools.filter((pool) => numeric(pool.userStaked) > 0).length;
     return { staked, rewards, active };
   }, [staking.pools]);
-
-  const useTokenForPool = (token: StakingToken) => {
-    setSelectedToken(token);
-    setAdminDraft((prev) => ({
-      ...prev,
-      stakeToken: token.address,
-      rewardToken: token.address,
-      metadata: `Lunexis ${token.symbol} ARC Testnet staking pool`,
-    }));
-  };
-
-  const addToken = async () => {
-    try {
-      const token = await staking.addCustomToken(tokenAddress);
-      useTokenForPool(token);
-      setTokenAddress("");
-      show(`${token.symbol} added to staking`, "success");
-    } catch (error: any) {
-      staking.setError(error?.message || "Invalid ARC Testnet ERC20 token.");
-      show("Token validation failed", "error");
-    }
-  };
 
   const run = async (label: string, action: () => Promise<any>) => {
     try {
@@ -113,29 +69,6 @@ export default function StakingPage() {
     }
   };
 
-  const createPool = () => {
-    if (!isAddress(adminDraft.stakeToken) || !isAddress(adminDraft.rewardToken)) {
-      show("Enter valid ARC Testnet token addresses", "error");
-      return;
-    }
-    run("Pool created", () => staking.createPool({
-      ...adminDraft,
-      stakeToken: adminDraft.stakeToken as Address,
-      rewardToken: adminDraft.rewardToken as Address,
-    }));
-  };
-
-  const createStablePool = (token: StakingToken, lockDays = "0") => {
-    run(`${token.symbol} pool created`, () => staking.createPool({
-      stakeToken: token.address,
-      rewardToken: token.address,
-      apr: token.symbol === "USDC" ? "12" : "14",
-      lockDays,
-      poolType: lockDays === "0" ? "Flexible" : "Locked",
-      metadata: `Lunexis ${token.symbol} ARC Testnet staking pool`,
-    }));
-  };
-
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <ToastContainer />
@@ -144,7 +77,7 @@ export default function StakingPage() {
           <div>
             <div className="lunexis-kicker">ARC Testnet Staking</div>
             <h1>Stake Any ARC Token</h1>
-            <p>Stake ARC Testnet ERC20 tokens, add custom token contracts, track rewards, and manage pool positions from one Lunexis staking surface.</p>
+            <p>Stake allowed ARC Testnet tokens, track live pending rewards, and manage real wallet transactions from the new Lunexis staking contract.</p>
           </div>
           <div className="lunexis-staking-network">
             <span className="material-symbols-outlined">hub</span>
@@ -189,12 +122,7 @@ export default function StakingPage() {
               </div>
 
               {staking.pools.length === 0 ? (
-                <EmptyStakingGuide
-                  tokens={staking.tokens.filter((token) => token.symbol === "USDC" || token.symbol === "EURC")}
-                  isAdmin={staking.canCreatePools}
-                  status={staking.status}
-                  onCreatePool={createStablePool}
-                />
+                <EmptyStakingGuide />
               ) : (
                 <div className="lunexis-staking-pool-grid">
                   {staking.pools.map((pool) => (
@@ -246,15 +174,13 @@ export default function StakingPage() {
 
           <aside className="grid gap-6 content-start">
             <section className="lunexis-premium-card">
-              <div className="lunexis-kicker">Custom Token Staking</div>
-              <h2>Add ARC Token</h2>
-              <p className="lunexis-staking-muted">Paste any ARC Testnet ERC20 contract. Lunexis reads name, symbol, decimals, and balance before allowing staking.</p>
-              <input value={tokenAddress} onChange={(event) => setTokenAddress(event.target.value)} placeholder="0x... token contract" className="lunexis-staking-input" />
+              <div className="lunexis-kicker">Allowed Tokens</div>
+              <h2>Contract Assets</h2>
+              <p className="lunexis-staking-muted">These tokens are loaded from `getAllowedTokens()` on the new ARC Testnet staking contract.</p>
               {staking.error && <div className="lunexis-staking-error">{staking.error}</div>}
-              <button onClick={addToken} className="btn-primary w-full py-3 rounded-2xl mt-3">Validate & Add Token</button>
               <div className="lunexis-token-list">
                 {filteredTokens.map((token) => (
-                  <button key={token.address} onClick={() => useTokenForPool(token)} className={selectedToken?.address === token.address ? "is-active" : ""}>
+                  <button key={token.address} className="is-active" type="button">
                     {tokenAvatar(token, 34)}
                     <span>{token.symbol}</span>
                     <small>{token.balance ?? "0"}</small>
@@ -263,58 +189,12 @@ export default function StakingPage() {
               </div>
             </section>
 
-            {staking.canCreatePools ? (
-              <section className="lunexis-premium-card">
-                <div className="lunexis-kicker">Private Admin</div>
-                <h2>Pool Manager</h2>
-                {selectedToken && (
-                  <div className="lunexis-staking-warning mb-3">
-                    {selectedToken.symbol} selected. Stake and reward addresses are filled with this token contract.
-                  </div>
-                )}
-                <input
-                  value={adminDraft.stakeToken}
-                  onChange={(event) => setAdminDraft((prev) => ({ ...prev, stakeToken: event.target.value, rewardToken: event.target.value }))}
-                  placeholder="Stake token address"
-                  className="lunexis-staking-input"
-                />
-                <input
-                  value={adminDraft.rewardToken}
-                  onChange={(event) => setAdminDraft((prev) => ({ ...prev, rewardToken: event.target.value }))}
-                  placeholder="Reward token address"
-                  className="lunexis-staking-input"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={adminDraft.apr} onChange={(event) => setAdminDraft((prev) => ({ ...prev, apr: event.target.value }))} placeholder="APR %" className="lunexis-staking-input" />
-                  <input value={adminDraft.lockDays} onChange={(event) => setAdminDraft((prev) => ({ ...prev, lockDays: event.target.value }))} placeholder="Lock days" className="lunexis-staking-input" />
-                </div>
-                <select value={adminDraft.poolType} onChange={(event) => setAdminDraft((prev) => ({ ...prev, poolType: event.target.value as StakingPoolType }))} className="lunexis-staking-input">
-                  <option value="Flexible">Flexible staking</option>
-                  <option value="Locked">Locked staking</option>
-                  <option value="FixedReward">Fixed reward pool</option>
-                </select>
-                <input value={adminDraft.metadata} onChange={(event) => setAdminDraft((prev) => ({ ...prev, metadata: event.target.value }))} placeholder="Pool metadata" className="lunexis-staking-input" />
-                <div className="lunexis-staking-warning mb-3">Pool creation uses native USDC gas. Fund the manager with reward tokens before users claim rewards.</div>
-                <button onClick={createPool} disabled={staking.status === "creating" || !staking.canCreatePools} className="btn-primary w-full py-3 rounded-2xl mt-2">
-                  {staking.status === "creating" ? "Creating..." : staking.canCreatePools ? "Create Pool" : "Owner Wallet Required"}
-                </button>
-              </section>
-            ) : staking.isAdmin ? (
-              <section className="lunexis-premium-card">
-                <div className="lunexis-kicker">Private Admin</div>
-                <h2>Owner Wallet Required</h2>
-                <p className="lunexis-staking-muted">This wallet is listed as admin in the app, but the staking contract only allows the onchain owner to create pools.</p>
-                <div className="lunexis-staking-error mt-3">
-                  Connect the staking manager owner wallet and make sure it has native USDC gas on Arc Testnet.
-                </div>
-              </section>
-            ) : (
-              <section className="lunexis-premium-card">
-                <div className="lunexis-kicker">Staking Setup</div>
-                <h2>Pool setup pending</h2>
-                <p className="lunexis-staking-muted">USDC and EURC staking pools appear here after the contract owner initializes them.</p>
-              </section>
-            )}
+            <section className="lunexis-premium-card">
+              <div className="lunexis-kicker">Staking Contract</div>
+              <h2>ARC Testnet Live</h2>
+              <p className="lunexis-staking-muted break-all">{staking.managerAddress}</p>
+              <div className="lunexis-staking-warning mt-3">Approve is sent to the token contract. Stake, unstake, and claim are sent to this staking contract.</div>
+            </section>
           </aside>
         </div>
         )}
@@ -348,13 +228,11 @@ function PoolCard({
   onUnstake: () => void;
   onClaim: () => void;
 }) {
-  const dailyReward = numeric(pool.userStaked) * (pool.aprBps / 10000) / 365;
   const utilization = Math.min(100, numeric(pool.totalStaked) > 0 ? (numeric(pool.userStaked) / numeric(pool.totalStaked)) * 100 : 0);
   const amountRaw = parseTokenAmount(amount, pool.token.decimals);
   const balanceRaw = parseTokenAmount(pool.token.balance || "0", pool.token.decimals) ?? BigInt(0);
   const userStakedRaw = parseTokenAmount(pool.userStaked || "0", pool.token.decimals) ?? BigInt(0);
   const pendingRaw = parseTokenAmount(pool.pendingReward || "0", pool.rewardToken.decimals) ?? BigInt(0);
-  const vaultRaw = parseTokenAmount(pool.rewardVaultBalance || "0", pool.rewardToken.decimals) ?? BigInt(0);
   const hasAmount = Boolean(amountRaw && amountRaw > BigInt(0));
   const needsApproval = Boolean(hasAmount && pool.allowance !== undefined && pool.allowance < amountRaw!);
   const isLocked = Boolean(pool.unlockAt && pool.unlockAt * 1000 > Date.now());
@@ -388,9 +266,7 @@ function PoolCard({
       ? "Switch to ARC Testnet"
       : pendingRaw <= BigInt(0)
         ? "No rewards yet"
-        : vaultRaw < pendingRaw
-          ? "Reward vault needs funding"
-          : "";
+        : "";
   const actionHint = hasAmount
     ? stakeBlockReason || unstakeBlockReason
     : pendingRaw > BigInt(0)
@@ -410,15 +286,15 @@ function PoolCard({
         <span>{pool.poolType}</span>
       </div>
       <div className="lunexis-pool-metrics">
-        <div className="lunexis-apr-metric"><span>APR/APY</span><strong>{(pool.aprBps / 100).toFixed(2)}%</strong></div>
+        <div className="lunexis-apr-metric"><span>Wallet</span><strong>{pool.token.balance ?? "0"}</strong></div>
         <div><span>Lock</span><strong>{formatDuration(pool.lockDuration)}</strong></div>
-        <div><span>Total staked</span><strong>{pool.totalStaked}</strong></div>
+        <div><span>Contract balance</span><strong>{pool.rewardVaultBalance ?? "0"}</strong></div>
         <div><span>My stake</span><strong>{pool.userStaked}</strong></div>
         <div><span>Pending</span><strong>{pool.pendingReward} {pool.rewardToken.symbol}</strong></div>
-        <div><span>Daily est.</span><strong>{dailyReward.toFixed(6)}</strong></div>
+        <div><span>Network</span><strong>ARC Testnet</strong></div>
       </div>
       <div className="lunexis-utilization">
-        <span>Pool utilization</span>
+        <span>My stake vs contract balance</span>
         <i><b style={{ width: `${utilization}%` }} /></i>
       </div>
       <input value={amount} onChange={(event) => onAmount(event.target.value)} placeholder={`Amount in ${pool.token.symbol}`} className="lunexis-staking-input" inputMode="decimal" />
@@ -443,43 +319,12 @@ function PoolCard({
   );
 }
 
-function EmptyStakingGuide({
-  tokens,
-  isAdmin,
-  status,
-  onCreatePool,
-}: {
-  tokens: StakingToken[];
-  isAdmin: boolean;
-  status: string;
-  onCreatePool: (token: StakingToken, lockDays?: string) => void;
-}) {
+function EmptyStakingGuide() {
   return (
     <div className="lunexis-staking-empty">
       <span className="material-symbols-outlined">lock_open</span>
-      <strong>USDC and EURC pools need initialization</strong>
-      <p>Create the first ARC Testnet staking pools for USDC and EURC. After pool creation, users can approve, stake, unstake, and claim from real wallet transactions.</p>
-      <div className="lunexis-starter-pool-grid">
-        {tokens.map((token) => (
-          <article key={token.address} className="lunexis-starter-pool-card">
-            <div>
-              {tokenAvatar(token, 38)}
-              <span>
-                <strong>{token.symbol}</strong>
-                <small>Balance {token.balance ?? "0"}</small>
-              </span>
-            </div>
-            <p>{token.symbol} rewards paid in {token.symbol}. Flexible ARC Testnet pool.</p>
-            {isAdmin ? (
-              <button onClick={() => onCreatePool(token, "0")} disabled={status !== "idle"} className="btn-primary w-full py-3 rounded-2xl">
-                {status === "creating" ? "Creating..." : `Create ${token.symbol} Pool`}
-              </button>
-            ) : (
-              <small className="lunexis-staking-warning">Connect the staking manager owner wallet once to initialize this pool.</small>
-            )}
-          </article>
-        ))}
-      </div>
+      <strong>No allowed staking tokens found</strong>
+      <p>The frontend is connected to the new ARC Testnet staking contract and is waiting for `getAllowedTokens()` to return stakeable assets.</p>
     </div>
   );
 }
