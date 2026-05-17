@@ -138,7 +138,7 @@ export async function POST(request: Request) {
     const publishedRewards = normalizeRewards(rewardStore.rewards ?? DEFAULT_REWARDS);
     const reward = publishedRewards.find((item) => item.id === rewardId);
     if (!reward) {
-      return NextResponse.json({ error: "This reward is not published yet. Ask the admin to save rewards again." }, { status: 404 });
+      return NextResponse.json({ code: "REWARD_NOT_PUBLISHED", error: "This reward is not published yet. Ask the admin to save rewards again." }, { status: 404 });
     }
     if (reward.token !== token || Number(reward.amount) !== amount) {
       return NextResponse.json({ error: "Reward details changed. Refresh the Rewards page and try again." }, { status: 409 });

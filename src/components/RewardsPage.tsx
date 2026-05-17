@@ -113,7 +113,7 @@ export default function RewardsPage() {
   }, [isRewardAdmin]);
 
   const persistRewards = async (next: RewardConfig[]) => {
-    if (!isRewardAdmin || !address) return;
+    if (!isRewardAdmin || !address) return false;
     const nextRewards = normalizeRewards(next);
     window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
     setSaveState("saving");
@@ -126,6 +126,7 @@ export default function RewardsPage() {
       body: JSON.stringify({ rewards: nextRewards }),
     }).catch(() => null);
     setSaveState(response?.ok ? "saved" : "error");
+    return Boolean(response?.ok);
   };
 
   const updateReward = (rewardId: string, patch: Partial<RewardConfig>) => {
@@ -173,11 +174,27 @@ export default function RewardsPage() {
   };
 
   const saveRewards = async () => {
-    if (!isRewardAdmin || !address) return;
+    if (!isRewardAdmin || !address) return false;
     const nextRewards = normalizeRewards(rewards);
     setRewards(nextRewards);
     window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
-    await persistRewards(nextRewards);
+    return await persistRewards(nextRewards);
+  };
+
+  const postRewardPayout = async (reward: RewardConfig) => {
+    const completedMissionIds = profile?.completedMissionIds ?? [];
+    return fetch("/api/reward-payout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rewardId: reward.id,
+        token: reward.token,
+        amount: reward.amount,
+        recipient: address,
+        requiredMissionIds: reward.missionIds,
+        completedMissionIds,
+      }),
+    });
   };
 
   const claimTokenReward = async (reward: RewardConfig) => {
@@ -191,20 +208,16 @@ export default function RewardsPage() {
     });
     try {
       await syncProfileBeforePayout();
-      const completedMissionIds = profile?.completedMissionIds ?? [];
-      const response = await fetch("/api/reward-payout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rewardId: reward.id,
-          token: reward.token,
-          amount: reward.amount,
-          recipient: address,
-          requiredMissionIds: reward.missionIds,
-          completedMissionIds,
-        }),
-      });
-      const data = await response.json().catch(() => null);
+      let response = await postRewardPayout(reward);
+      let data = await response.json().catch(() => null);
+      if (!response.ok && data?.code === "REWARD_NOT_PUBLISHED" && isRewardAdmin) {
+        setClaimErrors((current) => ({ ...current, [reward.id]: "Publishing this reward, then retrying claim..." }));
+        const saved = await saveRewards();
+        if (saved) {
+          response = await postRewardPayout(reward);
+          data = await response.json().catch(() => null);
+        }
+      }
       if (!response.ok) {
         const fallback = response.status === 503
           ? "Reward wallet is syncing. Please try again soon."
