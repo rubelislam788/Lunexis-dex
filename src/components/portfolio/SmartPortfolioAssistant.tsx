@@ -15,7 +15,7 @@ function parseAmount(value?: string) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-export default function SmartPortfolioAssistant() {
+export default function SmartPortfolioAssistant({ compact = false }: { compact?: boolean }) {
   const { profile } = useProfile();
   const { balances } = usePortfolioBalances();
   const [expanded, setExpanded] = useState("allocation");
@@ -92,6 +92,35 @@ export default function SmartPortfolioAssistant() {
       ),
     },
   ];
+
+  if (compact) {
+    return (
+      <section className="lunexis-wallet-intelligence-mini">
+        <div className="lunexis-wallet-intelligence-mini-head">
+          <span className="material-symbols-outlined" aria-hidden="true">psychology</span>
+          <div>
+            <div className="lunexis-kicker">Wallet Intelligence</div>
+            <p>{insightText}</p>
+          </div>
+        </div>
+        <div className="lunexis-wallet-intelligence-mini-grid">
+          <div><span>Top</span><strong>{analysis.topHolding?.token ?? "Syncing"}</strong></div>
+          <div><span>Risk</span><strong>{analysis.riskyApproval ? "Review" : "Low"}</strong></div>
+          <div><span>Tx refs</span><strong>{analysis.contracts}</strong></div>
+          <div><span>Inactive</span><strong>{analysis.inactive.length}</strong></div>
+        </div>
+        <div className="lunexis-wallet-intelligence-mini-bars">
+          {analysis.allocations.slice(0, 4).map((item) => (
+            <div key={item.token}>
+              <span>{item.token}</span>
+              <i><b style={{ width: `${Math.min(100, Math.max(0, item.percent))}%` }} /></i>
+              <strong>{item.percent.toFixed(0)}%</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="lunexis-premium-card lunexis-ai-assistant">

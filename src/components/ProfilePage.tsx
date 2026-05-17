@@ -88,6 +88,9 @@ export default function ProfilePage() {
 
             <button onClick={openEdit} className="btn-outline-cyan w-full mt-5 px-5 py-3 rounded-xl">Edit Profile</button>
             <div className="mt-5">
+              <SmartPortfolioAssistant compact />
+            </div>
+            <div className="mt-5">
               <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginBottom: 10 }}>Connected Wallets</h2>
               <div className="grid gap-2">
                 {profile.wallets.map((wallet) => (
@@ -145,7 +148,6 @@ export default function ProfilePage() {
           </section>
         </div>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-          <SmartPortfolioAssistant />
           <AiProfileCard />
           <PortfolioShareCard />
           <WalletSecurityChecker />
