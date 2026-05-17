@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { isAddress, parseUnits, type Address } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { BridgeState, TokenSymbol } from "@/types";
-import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, getAppKit, getAppKitKey, getAppKitResultHash, getViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, getAppKit, getArcKitKey, getAppKitResultHash, getViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
 import { TOKEN_DECIMALS } from "@/lib/tokens";
 import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 
@@ -53,7 +53,7 @@ export function useArcBridge() {
   const token = state.token as TokenSymbol;
   const requiredChainId = state.fromChain === "Arc_Testnet" ? ARC_CHAIN_ID : SEPOLIA_CHAIN_ID;
   const currentChainId = chainId ?? publicClient?.chain?.id ?? requiredChainId;
-  const appKitKey = getAppKitKey();
+  const appKitKey = getArcKitKey();
   const isSupportedPath = (token === "USDC" || token === "EURC") && (
     (state.fromChain === "Ethereum_Sepolia" && state.toChain === "Arc_Testnet") ||
     (state.fromChain === "Arc_Testnet" && state.toChain === "Ethereum_Sepolia")
