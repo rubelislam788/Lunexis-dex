@@ -875,7 +875,7 @@ function QuestCard({
             {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
           </button>
           <button disabled={!completed || isTimeLocked} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-            {isTimeLocked ? timeState : "Rewards"}
+            {isTimeLocked ? timeState : "Claim"}
           </button>
         </div>
       </div>
