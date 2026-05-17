@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcBridge } from "@/hooks/useArcBridge";
+import type { BridgeProgressStep } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
@@ -60,10 +61,7 @@ export default function BridgePage() {
     setProgressOpen(true);
     setActiveStep(1);
     try {
-      setTimeout(() => setActiveStep(2), 1200);
-      setTimeout(() => setActiveStep(3), 2600);
-      setTimeout(() => setActiveStep(4), 4200);
-      const result = await executeBridge();
+      const result = await executeBridge((step) => setActiveStep(stepToProgressIndex(step, selectedToken, state.fromChain as SupportedChain)));
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
       setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString(), explorerBaseUrl: result?.explorerBaseUrl });
       refresh();
@@ -268,6 +266,7 @@ export default function BridgePage() {
           fromLabel={CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain}
           toLabel={CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}
           isEurc={selectedToken === "EURC"}
+          fromChain={state.fromChain as SupportedChain}
         />
       )}
       <TransactionSuccessModal
@@ -287,10 +286,24 @@ export default function BridgePage() {
   );
 }
 
-function BridgeProgressModal({ activeStep, token, fromLabel, toLabel, isEurc }: { activeStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean }) {
+function stepToProgressIndex(step: BridgeProgressStep, token: TokenSymbol, fromChain: SupportedChain) {
+  if (step === "confirm") return 1;
+  if (step === "receive") return 4;
+  if (token === "EURC" && fromChain === SUPPORTED_CHAINS.ETH_SEPOLIA) {
+    return step === "bridge" ? 2 : 3;
+  }
+  if (token !== "EURC") {
+    return step === "bridge" ? 2 : 3;
+  }
+  return step === "swap" ? 2 : 3;
+}
+
+function BridgeProgressModal({ activeStep, token, fromLabel, toLabel, isEurc, fromChain }: { activeStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean; fromChain: SupportedChain }) {
   const steps = isEurc
-    ? ["Confirm", "Swap", "Bridge", "Receive"]
-    : ["Confirm", "Burn", "Attest", "Mint"];
+    ? fromChain === SUPPORTED_CHAINS.ETH_SEPOLIA
+      ? ["Confirm", "Bridge", "Swap", "Receive"]
+      : ["Confirm", "Swap", "Bridge", "Receive"]
+    : ["Confirm", "Submit", "Relay", "Receive"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.76)", backdropFilter: "blur(12px)" }}>
