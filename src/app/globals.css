@@ -6221,12 +6221,12 @@ html[data-lunexis-theme="morn"] .lunexis-page-back-button:hover {
   }
 
   .arc-topbar-wallet {
-    max-width: 50vw;
+    max-width: 34vw;
   }
 
   .arc-topbar-wallet > .relative > .lunexis-wallet-trigger {
-    max-width: 50vw !important;
-    padding-inline: 0.5rem !important;
+    max-width: 34vw !important;
+    padding-inline: 0.38rem !important;
   }
 
   .arc-topbar-wallet > .relative > .lunexis-wallet-trigger.is-connect {
@@ -6234,9 +6234,10 @@ html[data-lunexis-theme="morn"] .lunexis-page-back-button:hover {
   }
 
   .arc-topbar-wallet > .relative > .lunexis-wallet-trigger.is-connected {
-    min-width: 34px !important;
-    max-width: 34px !important;
-    padding-inline: 0.2rem !important;
+    width: min(34vw, 8.5rem) !important;
+    min-width: 0 !important;
+    max-width: min(34vw, 8.5rem) !important;
+    padding-inline: 0.38rem 0.2rem !important;
   }
 
   .lunexis-mobile-bottom-nav small {
@@ -7132,7 +7133,7 @@ video {
 
   .arc-topbar-wallet {
     min-width: 0;
-    max-width: min(52vw, 13rem);
+    max-width: min(34vw, 8.5rem);
   }
 
   .lunexis-wallet-trigger {
@@ -7140,11 +7141,35 @@ video {
   }
 
   .lunexis-wallet-trigger.is-connected {
-    max-width: min(52vw, 13rem) !important;
+    width: min(34vw, 8.5rem) !important;
+    max-width: min(34vw, 8.5rem) !important;
+    min-height: 2rem !important;
+    height: 2rem !important;
+    gap: 0.35rem !important;
+    padding: 0.18rem 0.22rem 0.18rem 0.45rem !important;
+    overflow: hidden !important;
+    border-radius: 0.55rem !important;
   }
 
-  .lunexis-wallet-trigger.is-connected .flex-col {
-    max-width: calc(52vw - 3.5rem);
+  .lunexis-wallet-trigger.is-connected .flex-col,
+  .lunexis-wallet-trigger.is-connected > div {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+  }
+
+  .lunexis-wallet-trigger.is-connected span {
+    max-width: 100% !important;
+  }
+
+  .lunexis-wallet-trigger.is-connected img,
+  .lunexis-wallet-trigger.is-connected > span:last-child {
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+    min-width: 1.65rem !important;
+    flex: 0 0 1.65rem !important;
+    font-size: 0.58rem !important;
   }
 
   .arc-token-amount-row {
