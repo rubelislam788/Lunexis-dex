@@ -4,7 +4,7 @@ import type { TokenSymbol } from "@/types";
 export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; size?: number }) {
   const token = TOKEN_META[symbol];
   const showArcBadge = symbol === "USDC" || symbol === "EURC";
-  const badgeSize = Math.max(14, Math.round(size * 0.46));
+  const badgeSize = Math.max(15, Math.round(size * 0.42));
 
   return (
     <span
@@ -32,20 +32,21 @@ export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; 
             bottom: -Math.max(1, Math.round(size * 0.08)),
             width: badgeSize,
             height: badgeSize,
-            background: "linear-gradient(180deg, #f8fbff 0%, #bfe9ff 100%)",
-            border: "1px solid rgba(255, 255, 255, 0.92)",
-            boxShadow: "0 0 0 1px rgba(4, 24, 55, 0.75), 0 0 12px rgba(56, 189, 248, 0.7)",
+            background: "#06203d",
+            border: "1px solid rgba(125, 211, 252, 0.8)",
+            boxShadow: "0 0 0 1px rgba(4, 24, 55, 0.9), 0 0 10px rgba(56, 189, 248, 0.55)",
             overflow: "hidden",
           }}
         >
           <img
-            src="/arc-assets/arc-badge.svg"
+            src="/arc-assets/arc-badge.png"
             alt=""
             style={{
               width: badgeSize,
               height: badgeSize,
-              objectFit: "contain",
-              filter: "drop-shadow(0 1px 1px rgba(0, 11, 28, 0.35))",
+              objectFit: "cover",
+              objectPosition: "center",
+              filter: "contrast(1.08) brightness(1.08)",
             }}
           />
         </span>
