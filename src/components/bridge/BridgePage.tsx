@@ -197,8 +197,9 @@ export default function BridgePage() {
               value={state.recipientAddress}
               onChange={(event) => updateState({ recipientAddress: event.target.value })}
               placeholder={address ?? "Recipient address (optional)"}
-              className="w-full px-4 py-4 rounded-2xl mb-5"
+              className="w-full px-4 py-4 rounded-2xl"
             />
+            <div className="lunexis-bridge-recipient-hint mb-5">Send this to another wallet</div>
 
             {selectedToken === "EURC" && (
               <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.18)" }}>

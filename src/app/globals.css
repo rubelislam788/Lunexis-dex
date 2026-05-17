@@ -7485,3 +7485,19 @@ html[data-lunexis-theme="morn"] .lunexis-bridge-token-card[aria-pressed="true"] 
     0 18px 42px rgba(26, 122, 110, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
 }
+
+.lunexis-bridge-recipient-hint {
+  margin-top: 0.55rem;
+  padding-left: 0.35rem;
+  color: #8fe8ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+html[data-lunexis-theme="white"] .lunexis-bridge-recipient-hint,
+html[data-lunexis-theme="morn"] .lunexis-bridge-recipient-hint {
+  color: var(--lunexis-accent-readable) !important;
+  -webkit-text-fill-color: var(--lunexis-accent-readable) !important;
+}
