@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
+import LunexisLogoMark from "@/components/ui/LunexisLogoMark";
 
 type ClipboardImageItem = new (items: Record<string, Blob>) => ClipboardItem;
 
@@ -26,6 +27,22 @@ function parseUsd(value?: string) {
 
 function escapeXml(value: string) {
   return value.replace(/[<>&"']/g, (char) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "\"": "&quot;", "'": "&apos;" }[char] ?? char));
+}
+
+function portfolioLogoSvg(accent: string, accent2: string) {
+  return `
+    <g transform="translate(934 102) scale(.48)" opacity=".94">
+      <ellipse cx="80" cy="80" rx="78" ry="78" fill="rgba(255,255,255,.14)" stroke="${accent}" stroke-width="3"/>
+      <path d="M19 88C45 62 116 54 143 78C113 94 52 106 19 88Z" fill="none" stroke="${accent2}" stroke-width="3" opacity=".8"/>
+      <path d="M113 22C80 17 45 34 29 66C10 105 35 149 78 151C45 132 39 90 63 57C77 38 94 27 113 22Z" fill="${accent}"/>
+      <path d="M104 34C82 35 63 50 52 71C39 97 45 125 66 140C44 130 34 100 47 72C58 49 79 34 104 34Z" fill="#ffffff" opacity=".78"/>
+      <path d="M113 22C84 31 61 58 57 89C54 114 64 135 80 150C50 134 41 92 64 58C78 38 94 27 113 22Z" fill="#07112C" opacity=".5"/>
+      <path d="M17 88C47 104 111 101 145 78" fill="none" stroke="${accent2}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M54 111L91 75L110 59" fill="none" stroke="#eafbff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="54" cy="111" r="8" fill="${accent2}" stroke="#EAFBFF" stroke-width="3"/>
+      <circle cx="91" cy="75" r="9" fill="${accent2}" stroke="#EAFBFF" stroke-width="3"/>
+      <circle cx="110" cy="59" r="9" fill="${accent2}" stroke="#EAFBFF" stroke-width="3"/>
+    </g>`;
 }
 
 function svgToPngBlob(svg: string) {
@@ -103,6 +120,7 @@ export default function PortfolioShareCard() {
     <circle cx="1020" cy="90" r="220" fill="${activeTheme.accent}" opacity=".18"/>
     <circle cx="150" cy="520" r="230" fill="${activeTheme.accent2}" opacity=".14"/>
     <rect x="70" y="72" width="1060" height="486" rx="46" fill="rgba(255,255,255,.13)" stroke="${activeTheme.accent}" stroke-width="2"/>
+    ${portfolioLogoSvg(activeTheme.accent, activeTheme.accent2)}
     <text x="110" y="150" fill="${activeTheme.accent}" font-family="Inter, Arial" font-size="26" font-weight="800" letter-spacing="5">LUNEXIS PORTFOLIO</text>
     <text x="110" y="245" fill="${activeTheme.text}" font-family="Inter, Arial" font-size="64" font-weight="900">${escapeXml(username)}</text>
     <text x="112" y="292" fill="${activeTheme.muted}" font-family="Inter, Arial" font-size="28">${escapeXml(wallet)}</text>
@@ -163,6 +181,9 @@ export default function PortfolioShareCard() {
         </div>
       </div>
       <div className={`lunexis-share-preview is-${theme}`}>
+        <div className="lunexis-share-preview-logo" aria-hidden="true">
+          <LunexisLogoMark size={54} />
+        </div>
         <div>
           <span>LUNEXIS PORTFOLIO</span>
           <h3>{username}</h3>

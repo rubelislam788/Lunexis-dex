@@ -1329,6 +1329,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 }
 
 .lunexis-share-preview {
+  position: relative;
   min-height: 230px;
   border-radius: 28px;
   padding: 1.4rem;
@@ -1339,6 +1340,27 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
     radial-gradient(circle at 78% 18%, rgba(0,220,229,0.22), transparent 16rem),
     linear-gradient(135deg, rgba(0,20,24,0.95), rgba(25,26,72,0.92), rgba(80,0,55,0.7));
   animation: lunexisPreviewFloat 5s ease-in-out infinite alternate;
+}
+
+.lunexis-share-preview-logo {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 3.7rem;
+  height: 3.7rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1.25rem;
+  background: rgba(3, 10, 20, 0.22);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 14px 35px rgba(0,0,0,0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.lunexis-share-preview-logo .lunexis-logo-mark {
+  width: 3rem;
+  height: 3rem;
 }
 
 .lunexis-share-preview.is-white {
@@ -1356,6 +1378,13 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 .lunexis-share-preview.is-white h3,
 .lunexis-share-preview.is-white strong {
   color: #0D1E1C;
+}
+
+.lunexis-share-preview.is-white .lunexis-share-preview-logo,
+.lunexis-share-preview.is-utopia .lunexis-share-preview-logo,
+.lunexis-share-preview.is-bloom .lunexis-share-preview-logo {
+  background: rgba(255,255,255,0.5);
+  border-color: rgba(13,30,28,0.14);
 }
 
 .lunexis-share-preview.is-aurora {
