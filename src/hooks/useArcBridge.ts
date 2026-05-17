@@ -10,8 +10,7 @@ import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 
 const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
-export type BridgeProgressStep = "confirm" | "swap" | "bridge" | "receive";
-export type BridgeProgressUpdate = { step: BridgeProgressStep; status: "active" | "done" };
+export type BridgeProgressUpdate = { stepIndex: number; status: "active" | "done" };
 
 function parseTokenAmount(value: string, decimals: number) {
   if (!value.trim()) return BigInt(0);
@@ -32,6 +31,58 @@ function friendlyBridgeError(err: any, requiredNetwork = "the required source ne
   if (/key|api/i.test(message)) return "Arc App Kit setup is missing or Circle bridge API is unavailable.";
 
   return message;
+}
+
+function collectTransactionHashes(value: any, hashes = new Set<string>(), objects = new WeakSet<object>(), depth = 0) {
+  if (!value || typeof value !== "object") return hashes;
+  if (objects.has(value) || depth > 6) return hashes;
+  objects.add(value);
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectTransactionHashes(item, hashes, objects, depth + 1));
+    return hashes;
+  }
+
+  ["hash", "txHash", "transactionHash"].forEach((key) => {
+    const maybeHash = value[key];
+    if (typeof maybeHash === "string" && maybeHash) hashes.add(maybeHash);
+  });
+
+  Object.values(value).forEach((item) => {
+    if (item && typeof item === "object") collectTransactionHashes(item, hashes, objects, depth + 1);
+  });
+
+  return hashes;
+}
+
+function createTransactionProgress(onProgress?: (update: BridgeProgressUpdate) => void) {
+  const seen = new Set<string>();
+  let completedStep = 0;
+
+  const markHash = (hash: string) => {
+    if (!hash || seen.has(hash)) return;
+    seen.add(hash);
+    completedStep = Math.min(4, completedStep + 1);
+    onProgress?.({ stepIndex: completedStep, status: "done" });
+    if (completedStep < 4) onProgress?.({ stepIndex: completedStep + 1, status: "active" });
+  };
+
+  const markResult = (result: any) => {
+    collectTransactionHashes(result).forEach(markHash);
+  };
+
+  const complete = () => {
+    onProgress?.({ stepIndex: 4, status: "done" });
+  };
+
+  const registerKitEvents = (kit: any) => {
+    if (!kit?.on || !kit?.off) return undefined;
+    const handler = (payload: any) => markResult(payload?.values ?? payload);
+    kit.on("*", handler);
+    return () => kit.off("*", handler);
+  };
+
+  return { markResult, complete, registerKitEvents };
 }
 
 export function useArcBridge() {
@@ -83,15 +134,16 @@ export function useArcBridge() {
     const recipient = state.recipientAddress.trim();
     if (recipient && !isAddress(recipient)) throw new Error("Enter a valid recipient wallet address.");
     const toAddress = (recipient ? recipient : address) as Address;
+    const progress = createTransactionProgress(onProgress);
+    let cleanupProgressEvents: (() => void) | undefined;
 
     try {
       updateState({ status: "bridging", error: undefined });
-      onProgress?.({ step: "confirm", status: "active" });
+      onProgress?.({ stepIndex: 1, status: "active" });
       const adapter = await getViemAdapter(walletClient, publicClient);
       const kit = await getAppKit();
+      cleanupProgressEvents = progress.registerKitEvents(kit);
       if (token === "EURC" && state.fromChain === "Arc_Testnet") {
-        onProgress?.({ step: "confirm", status: "done" });
-        onProgress?.({ step: "swap", status: "active" });
         const swapResult = await withCircleApiProxy<any>(() =>
           kit.swap({
             from: { adapter, chain: "Arc_Testnet" },
@@ -101,9 +153,8 @@ export function useArcBridge() {
             config: { kitKey: appKitKey, allowanceStrategy: "approve" },
           } as any)
         );
+        progress.markResult(swapResult);
         const bridgeAmount = String(swapResult?.amountOut || swapResult?.estimatedOutput?.amount || state.amount);
-        onProgress?.({ step: "swap", status: "done" });
-        onProgress?.({ step: "bridge", status: "active" });
         const bridgeResult = await withCircleApiProxy<any>(() =>
           kit.bridge({
             from: { adapter, chain: "Arc_Testnet" },
@@ -112,17 +163,15 @@ export function useArcBridge() {
             token: "USDC",
           } as any)
         );
+        progress.markResult(bridgeResult);
         const hash = getAppKitResultHash(bridgeResult) || getAppKitResultHash(swapResult);
         if (!hash) throw new Error("EURC swap and bridge submitted but no transaction hash was returned.");
-        onProgress?.({ step: "bridge", status: "done" });
-        onProgress?.({ step: "receive", status: "done" });
+        progress.complete();
         updateState({ status: "success", txHash: hash });
         return { hash, explorerBaseUrl: "https://testnet.arcscan.app/tx/" };
       }
 
       if (token === "EURC" && state.fromChain === "Ethereum_Sepolia") {
-        onProgress?.({ step: "confirm", status: "done" });
-        onProgress?.({ step: "bridge", status: "active" });
         const bridgeResult = await withCircleApiProxy<any>(() =>
           kit.bridge({
             from: { adapter, chain: "Ethereum_Sepolia" },
@@ -131,10 +180,9 @@ export function useArcBridge() {
             token: "USDC",
           } as any)
         );
+        progress.markResult(bridgeResult);
         const bridgeAmount = String(bridgeResult?.amount || state.amount);
-        onProgress?.({ step: "bridge", status: "done" });
         await promptWalletNetworkSwitch(ARC_CHAIN_ID).catch(() => undefined);
-        onProgress?.({ step: "swap", status: "active" });
         const swapResult = await withCircleApiProxy<any>(() =>
           kit.swap({
             from: { adapter, chain: "Arc_Testnet" },
@@ -144,10 +192,10 @@ export function useArcBridge() {
             config: { kitKey: appKitKey, allowanceStrategy: "approve" },
           } as any)
         );
+        progress.markResult(swapResult);
         const hash = getAppKitResultHash(swapResult) || getAppKitResultHash(bridgeResult);
         if (!hash) throw new Error("USDC bridge and EURC swap submitted but no transaction hash was returned.");
-        onProgress?.({ step: "swap", status: "done" });
-        onProgress?.({ step: "receive", status: "done" });
+        progress.complete();
         updateState({ status: "success", txHash: hash });
         return { hash, explorerBaseUrl: "https://testnet.arcscan.app/tx/" };
       }
@@ -160,15 +208,14 @@ export function useArcBridge() {
           token: "USDC",
         } as any)
       );
+      progress.markResult(result);
       const hash = getAppKitResultHash(result);
 
       if (!hash) {
         throw new Error("Bridge submitted but no transaction hash was returned.");
       }
 
-      onProgress?.({ step: "confirm", status: "done" });
-      onProgress?.({ step: "bridge", status: "done" });
-      onProgress?.({ step: "receive", status: "done" });
+      progress.complete();
       updateState({ status: "success", txHash: hash });
       return {
         hash,
@@ -178,6 +225,8 @@ export function useArcBridge() {
       const message = friendlyBridgeError(err, state.fromChain === "Arc_Testnet" ? "Arc Testnet" : "Ethereum Sepolia");
       updateState({ status: "error", error: message });
       throw new Error(message);
+    } finally {
+      cleanupProgressEvents?.();
     }
   }, [address, amount, appKitKey, currentChainId, isConnected, isSupportedPath, publicClient, requiredChainId, state.amount, state.fromChain, state.recipientAddress, state.toChain, token, updateState, walletClient]);
 

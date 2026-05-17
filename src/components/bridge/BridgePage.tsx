@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcBridge } from "@/hooks/useArcBridge";
-import type { BridgeProgressUpdate } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
@@ -65,10 +64,9 @@ export default function BridgePage() {
     setBridgeProgress({ activeStep: 1, completedStep: 0 });
     try {
       const result = await executeBridge((update) => {
-        const stepIndex = stepToProgressIndex(update, selectedToken, state.fromChain as SupportedChain);
         setBridgeProgress((prev) => update.status === "done"
-          ? { activeStep: Math.max(prev.activeStep, stepIndex), completedStep: Math.max(prev.completedStep, stepIndex) }
-          : { activeStep: stepIndex, completedStep: Math.max(prev.completedStep, stepIndex - 1) }
+          ? { activeStep: Math.max(prev.activeStep, Math.min(4, update.stepIndex + 1)), completedStep: Math.max(prev.completedStep, update.stepIndex) }
+          : { activeStep: update.stepIndex, completedStep: Math.max(prev.completedStep, update.stepIndex - 1) }
         );
       });
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
@@ -295,18 +293,6 @@ export default function BridgePage() {
       />
     </div>
   );
-}
-
-function stepToProgressIndex(update: BridgeProgressUpdate, token: TokenSymbol, fromChain: SupportedChain) {
-  if (update.step === "confirm") return 1;
-  if (update.step === "receive") return 4;
-  if (token === "EURC" && fromChain === SUPPORTED_CHAINS.ETH_SEPOLIA) {
-    return update.step === "bridge" ? 2 : 3;
-  }
-  if (token !== "EURC") {
-    return update.step === "bridge" ? 2 : 3;
-  }
-  return update.step === "swap" ? 2 : 3;
 }
 
 function BridgeProgressModal({ activeStep, completedStep, token, fromLabel, toLabel, isEurc, fromChain }: { activeStep: number; completedStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean; fromChain: SupportedChain }) {
