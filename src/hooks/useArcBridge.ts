@@ -95,7 +95,7 @@ function fastBridgeConfig() {
   return {
     transferSpeed: "FAST",
     maxFee: FAST_BRIDGE_MAX_FEE,
-    batchTransactions: true,
+    batchTransactions: false,
   };
 }
 
@@ -172,7 +172,7 @@ export function useArcBridge() {
         const bridgeResult = await withCircleApiProxy<any>(() =>
           kit.bridge({
             from: { adapter, chain: "Arc_Testnet" },
-            to: { adapter, chain: "Ethereum_Sepolia", recipientAddress: toAddress, useCircleRelayer: true },
+            to: { adapter, chain: "Ethereum_Sepolia", recipientAddress: toAddress, useForwarder: true },
             amount: bridgeAmount,
             token: "USDC",
             config: fastBridgeConfig(),
@@ -190,7 +190,7 @@ export function useArcBridge() {
         const bridgeResult = await withCircleApiProxy<any>(() =>
           kit.bridge({
             from: { adapter, chain: "Ethereum_Sepolia" },
-            to: { adapter, chain: "Arc_Testnet", recipientAddress: toAddress, useCircleRelayer: true },
+            to: { adapter, chain: "Arc_Testnet", recipientAddress: toAddress, useForwarder: true },
             amount: state.amount,
             token: "USDC",
             config: fastBridgeConfig(),
@@ -219,7 +219,7 @@ export function useArcBridge() {
       const result = await withCircleApiProxy<any>(() =>
         kit.bridge({
           from: { adapter, chain: state.fromChain },
-          to: { adapter, chain: state.toChain, recipientAddress: toAddress, useCircleRelayer: true },
+          to: { adapter, chain: state.toChain, recipientAddress: toAddress, useForwarder: true },
           amount: state.amount,
           token: "USDC",
           config: fastBridgeConfig(),
