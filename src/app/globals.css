@@ -3936,6 +3936,65 @@ select.lunexis-staking-input {
   height: 32px !important;
 }
 
+.lunexis-wallet-trigger.is-connected {
+  color: #f8fbff !important;
+}
+
+.lunexis-wallet-trigger.is-connected img,
+.lunexis-wallet-trigger.is-connected > span:last-child {
+  border-color: rgba(56,189,248,0.45) !important;
+}
+
+html[data-lunexis-theme="dark"] .lunexis-wallet-trigger.is-connected {
+  background: linear-gradient(180deg, rgba(74,158,232,0.16), rgba(20,25,32,0.58)) !important;
+  border-color: rgba(74,158,232,0.34) !important;
+  box-shadow: 0 0 20px rgba(74,158,232,0.16), inset 0 1px 0 rgba(228,238,248,0.08) !important;
+}
+
+html[data-lunexis-theme="dark"] .lunexis-wallet-trigger.is-connected span {
+  color: #E4EEF8 !important;
+}
+
+html[data-lunexis-theme="white"] .lunexis-wallet-trigger.is-connected {
+  background: rgba(255,255,255,0.78) !important;
+  border-color: rgba(13,30,28,0.12) !important;
+  box-shadow: 0 10px 26px rgba(13,30,28,0.09), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+
+html[data-lunexis-theme="white"] .lunexis-wallet-trigger.is-connected span {
+  color: #0D1E1C !important;
+}
+
+html[data-lunexis-theme="white"] .lunexis-wallet-trigger.is-connected img,
+html[data-lunexis-theme="white"] .lunexis-wallet-trigger.is-connected > span:last-child {
+  border-color: rgba(42,157,143,0.34) !important;
+}
+
+html[data-lunexis-theme="neon"] .lunexis-wallet-trigger.is-connected {
+  background: linear-gradient(135deg, rgba(255,45,178,0.16), rgba(132,64,255,0.18)) !important;
+  border-color: rgba(255,45,178,0.34) !important;
+  box-shadow: 0 0 24px rgba(255,45,178,0.18), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+}
+
+html[data-lunexis-theme="neon"] .lunexis-wallet-trigger.is-connected span {
+  color: #ffeaff !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-wallet-trigger.is-connected {
+  background: linear-gradient(135deg, rgba(247,250,248,0.82), rgba(222,236,229,0.68), rgba(126,214,208,0.18)) !important;
+  border-color: rgba(43,79,74,0.16) !important;
+  box-shadow: 0 10px 24px rgba(63,79,72,0.13), inset 0 1px 0 rgba(255,255,255,0.84) !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-wallet-trigger.is-connected span {
+  color: #182a2a !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-wallet-trigger.is-connected img,
+html[data-lunexis-theme="morn"] .lunexis-wallet-trigger.is-connected > span:last-child {
+  border-color: rgba(60,141,132,0.34) !important;
+}
+
 .lunexis-header-profile-panel {
   position: absolute;
   top: calc(100% + 0.8rem);
