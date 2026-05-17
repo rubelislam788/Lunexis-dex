@@ -268,14 +268,13 @@ export function useArcSwap() {
         throw new Error("Swap route is temporarily unavailable. Refresh and try again.");
       }
 
-      const { request } = await publicClient.simulateContract({
+      const hash = await walletClient.writeContract({
         address: fromTokenAddress,
         abi: erc20Abi,
         functionName: "approve",
         args: [router, maxUint256],
         account,
       });
-      const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
       setAllowance(maxUint256);
       updateState({ status: "idle", txHash: hash });

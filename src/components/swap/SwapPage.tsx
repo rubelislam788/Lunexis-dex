@@ -373,7 +373,7 @@ export default function SwapPage() {
               </div>
             )}
 
-            {needsApproval && currentChainId === requiredChainId && (
+            {needsApproval && routeMode === "router" && currentChainId === requiredChainId && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
                 {state.status === "approving" ? `Approving ${state.fromToken}...` : `Approve ${state.fromToken}`}
               </button>
