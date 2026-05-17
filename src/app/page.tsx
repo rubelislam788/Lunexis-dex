@@ -210,7 +210,6 @@ export default function Home() {
       <Header
         currentPage={currentPage}
         onNavigate={navigate}
-        onBack={goBack}
         onToggleSidebar={toggleSidebar}
         sidebarOpen={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
         sidebarAvailable={renderSidebar}
@@ -227,6 +226,10 @@ export default function Home() {
       />
 
       <div>
+        <button type="button" onClick={goBack} className="lunexis-page-back-button" aria-label="Go back">
+          <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          <span>Back</span>
+        </button>
         {currentPage === "landing" && <LandingPage onNavigate={navigate} />}
         {currentPage === "missions" && <MissionsPage onNavigate={navigate} onSelectQuest={selectQuest} />}
         {currentPage === "swap" && <SwapPage />}

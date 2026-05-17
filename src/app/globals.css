@@ -4077,7 +4077,7 @@ select.lunexis-staking-input {
   }
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent),
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.lunexis-page-back-button):not(.bg-transparent),
 a.arc-uiverse-button,
 .btn-primary,
 .btn-ghost,
@@ -4098,7 +4098,7 @@ a.arc-uiverse-button,
   transition: all 0.2s ease-in !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent):hover,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.lunexis-page-back-button):not(.bg-transparent):hover,
 a.arc-uiverse-button:hover,
 .btn-primary:hover,
 .btn-ghost:hover,
@@ -4109,7 +4109,7 @@ a.arc-uiverse-button:hover,
   transition: all 0.2s ease-out !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent)::before,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.lunexis-page-back-button):not(.bg-transparent)::before,
 a.arc-uiverse-button::before,
 .btn-primary::before,
 .btn-ghost::before,
@@ -4128,7 +4128,7 @@ a.arc-uiverse-button::before,
   transform: skewX(-20deg) !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent):hover::before,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.lunexis-page-back-button):not(.bg-transparent):hover::before,
 a.arc-uiverse-button:hover::before,
 .btn-primary:hover::before,
 .btn-ghost:hover::before,
@@ -4137,7 +4137,7 @@ a.arc-uiverse-button:hover::before,
   animation: sh02 0.5s 0s linear !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent)::after,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.lunexis-page-back-button):not(.bg-transparent)::after,
 a.arc-uiverse-button::after,
 .btn-primary::after,
 .btn-ghost::after,
@@ -4146,7 +4146,7 @@ a.arc-uiverse-button::after,
   content: none !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent):active,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.lunexis-page-back-button):not(.bg-transparent):active,
 a.arc-uiverse-button:active,
 .btn-primary:active,
 .btn-ghost:active,
@@ -4154,6 +4154,56 @@ a.arc-uiverse-button:active,
 .arc-topbar-button:active {
   box-shadow: 0 0 0 0 transparent !important;
   transition: box-shadow 0.2s ease-in !important;
+}
+
+.lunexis-page-back-button {
+  position: fixed;
+  top: calc(5.25rem + env(safe-area-inset-top));
+  left: calc(var(--arc-sidebar-offset, 0rem) + clamp(1rem, 2.4vw, 2rem));
+  z-index: 42;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.8rem !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148,217,255,0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.025)),
+    rgba(3, 8, 14, 0.72) !important;
+  color: #e9feff !important;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.34), 0 0 20px rgba(0,220,229,0.1) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.lunexis-page-back-button span:first-child {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.lunexis-page-back-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56,189,248,0.54) !important;
+  background: rgba(61,106,255,0.82) !important;
+  box-shadow: 0 16px 34px rgba(0,0,0,0.32), 0 0 24px rgba(0,142,236,0.55) !important;
+}
+
+@media (max-width: 768px) {
+  .lunexis-page-back-button {
+    top: calc(4.85rem + env(safe-area-inset-top));
+    left: max(0.75rem, env(safe-area-inset-left));
+    min-height: 2.15rem;
+    padding: 0.5rem 0.68rem !important;
+    font-size: 0.66rem !important;
+  }
 }
 
 .arc-mission-card {
