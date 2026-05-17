@@ -24,6 +24,7 @@ import {
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
 type SocialProof = Record<string, boolean>;
+type OnchainMissionAction = "swap" | "bridge" | "stake";
 
 const DIFF_COLORS: Record<string, string> = {
   Easy: "#22c55e",
@@ -70,6 +71,33 @@ const formatMissionDate = (value?: string) => {
 };
 
 const normalizeExternalUrl = (url: string) => /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
+
+const missionSocialProofKey = (questId: string, linkId: string) => `${questId}-${linkId}`;
+
+const getMissionSocialLinks = (quest: Quest) => (quest.socialLinks ?? []).filter((link) => link.label.trim() && link.url.trim());
+
+function missionText(quest: Quest) {
+  return [
+    quest.title,
+    quest.description,
+    quest.category,
+    ...quest.tags,
+    ...(quest.tasks ?? []).map((task) => task.title),
+  ].join(" ").toLowerCase();
+}
+
+function getOnchainMissionActions(quest: Quest): OnchainMissionAction[] {
+  const text = missionText(quest);
+  return ([
+    ["swap", /\bswaps?\b|\bswapping\b/i],
+    ["bridge", /\bbridges?\b|\bbridging\b/i],
+    ["stake", /\bstakes?\b|\bstaking\b|\bstaked\b/i],
+  ] as const).filter(([, pattern]) => pattern.test(text)).map(([action]) => action);
+}
+
+function isSocialOnlyMission(quest: Quest) {
+  return getMissionSocialLinks(quest).length > 0 && getOnchainMissionActions(quest).length === 0;
+}
 
 async function publishMissions(quests: Quest[], adminAddress?: string) {
   await fetch("/api/missions", {
@@ -197,6 +225,36 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     const next = { ...proof, [key]: true };
     setProof(next);
     window.localStorage.setItem(PROOF_KEY, JSON.stringify(next));
+    return next;
+  };
+
+  const completeVerifiedQuest = (quest: Quest, message = "All mission tasks are verified. You can now claim the token reward.") => {
+    markMissionComplete(quest.id, quest.xp);
+    setSuccessReward({
+      title: "Mission Complete",
+      amount: `${quest.xp.toLocaleString()} XP`,
+      message,
+    });
+    setVerifyStates((prev) => ({ ...prev, [quest.id]: "success" }));
+    setVerifyMessages((prev) => ({ ...prev, [quest.id]: message }));
+  };
+
+  const saveLinkProof = (quest: Quest, key: string) => {
+    const nextProof = saveProof(key);
+    const links = getMissionSocialLinks(quest);
+    const allLinksVisited = links.length > 0 && links.every((link) => nextProof[missionSocialProofKey(quest.id, link.id)]);
+
+    if (!isConnected) {
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Link visit saved. Connect wallet to verify this mission." }));
+      return;
+    }
+
+    if (profile?.completedMissionIds.includes(quest.id)) return;
+    if (isSocialOnlyMission(quest) && allLinksVisited) {
+      completeVerifiedQuest(quest, "All mission links were visited. Mission verified.");
+    } else if (links.length > 0) {
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: allLinksVisited ? "Links visited. Complete the onchain action, then verify." : "Link visit saved. Open every mission link to finish this step." }));
+    }
   };
 
   const openMissionEditor = (questId: string) => {
@@ -235,8 +293,12 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     }
   };
 
-  const hasConfirmedActivity = async (type: "swap" | "bridge") => {
-    const activities = profile?.activities.filter((item) => item.type === type && item.status === "completed") ?? [];
+  const hasConfirmedActivity = async (type: OnchainMissionAction) => {
+    const activities = profile?.activities.filter((item) => {
+      if (item.status !== "completed") return false;
+      if (type === "stake") return /\bstak/i.test(`${item.title} ${item.description}`);
+      return item.type === type;
+    }) ?? [];
     if (activities.length === 0) return false;
 
     const withHashes = activities.filter((item) => item.txHash);
@@ -250,6 +312,10 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
   const validateQuest = async (quest: Quest) => {
     if (!profile) return { ok: false, message: "Connect your wallet before verification." };
+    const socialLinks = getMissionSocialLinks(quest);
+    const missingLinks = socialLinks.filter((link) => !proof[missionSocialProofKey(quest.id, link.id)]);
+    const requiredActions = getOnchainMissionActions(quest);
+
     if (quest.id === "q1") return await hasConfirmedActivity("swap") ? { ok: true, message: "Swap transaction confirmed onchain." } : { ok: false, message: "No confirmed swap transaction found." };
     if (quest.id === "q2") return hasUsdcBalance ? { ok: true, message: "USDC balance detected on Arc." } : { ok: false, message: "Hold at least 10 USDC before verifying." };
     if (quest.id === "q3") return hasStablecoinPair ? { ok: true, message: "USDC and EURC balances detected on Arc." } : { ok: false, message: "Hold both USDC and EURC on Arc Testnet first." };
@@ -262,7 +328,25 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     if (quest.id === "social-follow") return proof.rubelFollow && proof.arcFollow ? { ok: true, message: "Community follows verified." } : { ok: false, message: "Open both X profiles before verification." };
     if (quest.id === "social-rubel-post") return proof.rubelPost ? { ok: true, message: "Rubel post engagement verified." } : { ok: false, message: "Open and complete the Rubel post action first." };
     if (quest.id === "social-arc-post") return proof.arcPost ? { ok: true, message: "Arc post engagement verified." } : { ok: false, message: "Open and complete the Arc post action first." };
-    return { ok: false, message: "No verifier is configured for this mission." };
+
+    if (missingLinks.length > 0) {
+      return { ok: false, message: `Open every mission link first: ${missingLinks.map((link) => link.label).join(", ")}.` };
+    }
+
+    if (requiredActions.length > 0) {
+      const missingActions: OnchainMissionAction[] = [];
+      for (const action of requiredActions) {
+        if (!(await hasConfirmedActivity(action))) missingActions.push(action);
+      }
+      if (missingActions.length > 0) {
+        return { ok: false, message: `Complete a confirmed ${missingActions.join(", ")} transaction before verifying.` };
+      }
+      return { ok: true, message: "Required onchain activity confirmed." };
+    }
+
+    if (socialLinks.length > 0) return { ok: true, message: "All mission links were visited." };
+
+    return { ok: false, message: "Add a social link or include swap, bridge, or staking in this mission so Lunexis knows how to verify it." };
   };
 
   const verifyQuest = (quest: Quest) => {
@@ -282,13 +366,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.setTimeout(async () => {
       const result = await validateQuest(quest);
       if (result.ok) {
-        markMissionComplete(quest.id, quest.xp);
-        setSuccessReward({
-          title: "Mission Complete",
-          amount: `${quest.xp.toLocaleString()} XP`,
-          message: "All mission tasks are verified. You can now claim the token reward.",
-        });
-        setVerifyStates((prev) => ({ ...prev, [quest.id]: "success" }));
+        completeVerifiedQuest(quest);
       } else {
         setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
       }
@@ -342,7 +420,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           onSelectQuest={onSelectQuest}
           onVerify={verifyQuest}
           onClaim={claimQuestReward}
-          saveProof={saveProof}
+          saveProof={saveLinkProof}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}
           isMissionAdmin={isMissionAdmin}
@@ -632,7 +710,7 @@ function MissionSection({
   onSelectQuest: (quest: Quest) => void;
   onVerify: (quest: Quest) => void;
   onClaim: (quest: Quest) => void;
-  saveProof: (key: string) => void;
+  saveProof: (quest: Quest, key: string) => void;
   verifyStates: Record<string, VerifyState>;
   verifyMessages: Record<string, string>;
   isMissionAdmin: boolean;
@@ -685,7 +763,7 @@ function QuestCard({
   onSelectQuest: (quest: Quest) => void;
   onVerify: () => void;
   onClaim: () => void;
-  saveProof: (key: string) => void;
+  saveProof: (quest: Quest, key: string) => void;
   featured?: boolean;
   isMissionAdmin: boolean;
   onEditQuest: (questId: string) => void;
@@ -693,7 +771,7 @@ function QuestCard({
   const progressPct = completed ? 100 : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
   const socialHref = quest.id === "social-rubel-post" ? SOCIAL_LINKS.rubelPost : quest.id === "social-arc-post" ? SOCIAL_LINKS.arcPost : SOCIAL_LINKS.rubel;
-  const missionSocialLinks = (quest.socialLinks ?? []).filter((link) => link.label.trim() && link.url.trim());
+  const missionSocialLinks = getMissionSocialLinks(quest);
   const timeState = getMissionTimeState(quest);
   const isTimeLocked = timeState !== "Live";
 
@@ -773,10 +851,10 @@ function QuestCard({
             </button>
           )}
           {quest.category === "Social" && quest.id === "social-follow" && (
-            <a href={SOCIAL_LINKS.arc} target="_blank" rel="noreferrer" onClick={() => saveProof("arcFollow")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>Open Arc</a>
+            <a href={SOCIAL_LINKS.arc} target="_blank" rel="noreferrer" onClick={() => saveProof(quest, "arcFollow")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>Open Arc</a>
           )}
           {quest.category === "Social" && (
-            <a href={socialHref} target="_blank" rel="noreferrer" onClick={() => saveProof(quest.id === "social-follow" ? "rubelFollow" : quest.id === "social-rubel-post" ? "rubelPost" : "arcPost")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            <a href={socialHref} target="_blank" rel="noreferrer" onClick={() => saveProof(quest, quest.id === "social-follow" ? "rubelFollow" : quest.id === "social-rubel-post" ? "rubelPost" : "arcPost")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
               {quest.id === "social-follow" ? "Open Rubel" : "Open Signal"}
             </a>
           )}
@@ -786,7 +864,7 @@ function QuestCard({
               href={normalizeExternalUrl(link.url)}
               target="_blank"
               rel="noreferrer"
-              onClick={() => saveProof(`${quest.id}-${link.id}`)}
+              onClick={() => saveProof(quest, missionSocialProofKey(quest.id, link.id))}
               className="btn-ghost px-3 py-2 rounded-lg"
               style={{ fontSize: 10 }}
             >
