@@ -3582,9 +3582,9 @@ select.lunexis-staking-input {
   margin: 0 auto;
   padding: 6px 14px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(112px, auto) minmax(0, 1fr);
   align-items: center;
-  column-gap: clamp(36px, 4.5vw, 72px);
+  column-gap: clamp(18px, 2.8vw, 46px);
   border-radius: 999px;
   background:
     radial-gradient(circle at 14% 20%, rgba(0, 220, 229, 0.14), transparent 28%),
@@ -3648,8 +3648,8 @@ select.lunexis-staking-input {
   gap: 0;
   min-width: 0;
   min-height: 40px;
-  margin-inline: clamp(12px, 1.8vw, 28px) !important;
-  padding: 3px 14px !important;
+  margin-inline: 0 !important;
+  padding: 3px 10px !important;
   border-radius: 999px !important;
   background: transparent !important;
   color: #f8fbff !important;
@@ -3677,15 +3677,17 @@ select.lunexis-staking-input {
 .arc-topbar-left {
   justify-self: start;
   min-width: 0;
-  padding-right: clamp(10px, 1.4vw, 22px);
+  max-width: 100%;
+  padding-right: 0;
 }
 
 .arc-topbar-right {
   justify-self: end;
   min-width: 0;
+  max-width: 100%;
   position: relative;
   align-items: center;
-  padding-left: clamp(10px, 1.4vw, 22px);
+  padding-left: 0;
 }
 
 .arc-topbar-nav {
@@ -4194,6 +4196,62 @@ a.arc-uiverse-button:active,
   border-color: rgba(56,189,248,0.54) !important;
   background: rgba(61,106,255,0.82) !important;
   box-shadow: 0 16px 34px rgba(0,0,0,0.32), 0 0 24px rgba(0,142,236,0.55) !important;
+}
+
+html[data-lunexis-theme="dark"] .lunexis-page-back-button {
+  background: linear-gradient(180deg, rgba(228,238,248,0.07), rgba(20,25,32,0.78)) !important;
+  border-color: rgba(42,64,96,0.78) !important;
+  color: #E4EEF8 !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.46), inset 0 1px 0 rgba(228,238,248,0.08) !important;
+}
+
+html[data-lunexis-theme="dark"] .lunexis-page-back-button:hover {
+  background: #4A9EE8 !important;
+  border-color: #4A9EE8 !important;
+  color: #0A1A2C !important;
+  box-shadow: 0 0 24px rgba(74,158,232,0.34), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+
+html[data-lunexis-theme="white"] .lunexis-page-back-button {
+  background: rgba(255,255,255,0.82) !important;
+  border-color: rgba(13,30,28,0.1) !important;
+  color: #0D1E1C !important;
+  box-shadow: 0 12px 28px rgba(13,30,28,0.11), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+
+html[data-lunexis-theme="white"] .lunexis-page-back-button:hover {
+  background: linear-gradient(135deg, #2A9D8F, #5BBFB5) !important;
+  border-color: rgba(26,122,110,0.18) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 28px rgba(26,122,110,0.22), inset 0 1px 0 rgba(255,255,255,0.28) !important;
+}
+
+html[data-lunexis-theme="neon"] .lunexis-page-back-button {
+  background: linear-gradient(180deg, rgba(255,45,178,0.16), rgba(21,0,35,0.78)) !important;
+  border-color: rgba(255,45,178,0.28) !important;
+  color: #ffeaff !important;
+  box-shadow: 0 0 24px rgba(255,45,178,0.18), inset 0 1px 0 rgba(255,255,255,0.09) !important;
+}
+
+html[data-lunexis-theme="neon"] .lunexis-page-back-button:hover {
+  background: linear-gradient(135deg, #ff2db2, #8440ff) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 30px rgba(255,45,178,0.34), 0 0 22px rgba(132,64,255,0.26) !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-page-back-button {
+  background: rgba(247,250,244,0.84) !important;
+  border-color: rgba(43,79,74,0.14) !important;
+  color: #182a2a !important;
+  box-shadow: 0 12px 28px rgba(63,79,72,0.14), inset 0 1px 0 rgba(255,255,255,0.84) !important;
+}
+
+html[data-lunexis-theme="morn"] .lunexis-page-back-button:hover {
+  background: linear-gradient(135deg, #3c8d84, #79b67d) !important;
+  border-color: rgba(43,79,74,0.18) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(60,141,132,0.24), inset 0 1px 0 rgba(255,255,255,0.28) !important;
 }
 
 @media (max-width: 768px) {
@@ -5440,7 +5498,7 @@ a.arc-uiverse-button:active,
 @media (max-width: 1320px) {
   .arc-floating-topbar {
     width: min(1120px, calc(100vw - 24px));
-    column-gap: clamp(42px, 4.8vw, 64px);
+    column-gap: clamp(14px, 2.2vw, 30px);
   }
 
   .arc-floating-nav-link {
@@ -5448,13 +5506,13 @@ a.arc-uiverse-button:active,
   }
 }
 
-@media (max-width: 1240px) {
+@media (max-width: 1380px) {
   .arc-topbar-nav {
     display: none !important;
   }
 
   .arc-floating-topbar {
-    width: min(720px, calc(100vw - 1.25rem));
+    width: min(760px, calc(100vw - 1.25rem));
   }
 }
 
