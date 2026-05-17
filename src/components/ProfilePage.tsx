@@ -75,6 +75,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            <div className="mt-4">
+              <SmartPortfolioAssistant compact />
+            </div>
+
             <div className="grid gap-3 mt-6">
               <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ color: "#849495", fontSize: 11 }}>Twitter/X</div>
@@ -87,9 +91,6 @@ export default function ProfilePage() {
             </div>
 
             <button onClick={openEdit} className="btn-outline-cyan w-full mt-5 px-5 py-3 rounded-xl">Edit Profile</button>
-            <div className="mt-5">
-              <SmartPortfolioAssistant compact />
-            </div>
             <div className="mt-5">
               <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 13, fontWeight: 900, color: "#f8fbff", marginBottom: 10 }}>Connected Wallets</h2>
               <div className="grid gap-2">
