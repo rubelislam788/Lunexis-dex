@@ -195,6 +195,10 @@ export default function SwapPage() {
       setShowNetworkSwitchModal(true);
       return;
     }
+    if (needsApproval && routeMode === "router") {
+      await handleApprove();
+      return;
+    }
     try {
       const result = await executeSwap();
       pushActivity(createActivity("swap", "Swap completed", `Swapped ${state.amountIn} ${state.fromToken} to ${state.toToken}.`, state.fromToken as TokenSymbol, "completed", result?.hash));
@@ -269,8 +273,8 @@ export default function SwapPage() {
     ? "Connect Wallet to Swap"
     : wrongNetwork
       ? "Switch to ARC Chain"
-      : !state.amountIn
-        ? "Enter amount"
+        : !state.amountIn
+          ? "Enter amount"
         : needsApproval
           ? `Approve ${state.fromToken}`
           : !swapReady
@@ -280,7 +284,7 @@ export default function SwapPage() {
             : routeMode === "appkit"
               ? "Approve & Confirm Swap"
               : "Confirm Swap";
-  const actionDisabled = isLoading || !state.amountIn || needsApproval || (!swapReady && !wrongNetwork);
+  const actionDisabled = isLoading || !state.amountIn || (!swapReady && !wrongNetwork);
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <ToastContainer />
@@ -373,13 +377,8 @@ export default function SwapPage() {
               </div>
             )}
 
-            {needsApproval && routeMode === "router" && currentChainId === requiredChainId && (
-              <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
-                {state.status === "approving" ? `Approving ${state.fromToken}...` : `Approve ${state.fromToken}`}
-              </button>
-            )}
             <button onClick={handleSwap} disabled={actionDisabled} className="btn-primary w-full py-4 rounded-2xl">
-              {isLoading ? "Swapping..." : readinessText}
+              {state.status === "approving" ? `Approving ${state.fromToken}...` : isLoading ? "Swapping..." : readinessText}
             </button>
             {!isConnected && (
               <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.16)" }}>
