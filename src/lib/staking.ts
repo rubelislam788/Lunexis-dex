@@ -38,13 +38,25 @@ function parseAddress(value?: string) {
   return value && isAddress(value) ? (value as Address) : undefined;
 }
 
-export const STAKING_MANAGER_ADDRESS = parseAddress(process.env.NEXT_PUBLIC_LUNEXIS_STAKING_MANAGER_ADDRESS || "0xbb3E8dCAe80009031D83E4433b17710b65e2e281");
+export const ARC_TESTNET_USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as Address;
+export const ARC_TESTNET_EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as Address;
+export const ARC_TESTNET_STAKING_MANAGER_ADDRESS = "0xF1f7d192b5d34a9199ba2818094b32190B8b0822" as Address;
+
+const configuredStakingManager = parseAddress(
+  process.env.NEXT_PUBLIC_STAKING_MANAGER_ADDRESS ||
+  process.env.NEXT_PUBLIC_LUNEXIS_STAKING_MANAGER_ADDRESS
+);
+
+export const STAKING_MANAGER_ADDRESS =
+  configuredStakingManager?.toLowerCase() === ARC_TESTNET_STAKING_MANAGER_ADDRESS.toLowerCase()
+    ? configuredStakingManager
+    : ARC_TESTNET_STAKING_MANAGER_ADDRESS;
 export const STAKING_ADMIN_WALLET = (process.env.NEXT_PUBLIC_STAKING_ADMIN_WALLET || process.env.NEXT_PUBLIC_ADMIN_WALLET || "").toLowerCase();
 export const STAKING_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 
 export const DEFAULT_STAKING_TOKENS: StakingToken[] = [
   {
-    address: (process.env.NEXT_PUBLIC_USDC_ADDRESS || process.env.NEXT_PUBLIC_USDC_ARC_ADDRESS || "0x3600000000000000000000000000000000000000") as Address,
+    address: ARC_TESTNET_USDC_ADDRESS,
     name: "USD Coin",
     symbol: "USDC",
     decimals: 6,
@@ -52,7 +64,7 @@ export const DEFAULT_STAKING_TOKENS: StakingToken[] = [
     accent: "#2775ca",
   },
   {
-    address: (process.env.NEXT_PUBLIC_EURC_ADDRESS || process.env.NEXT_PUBLIC_EURC_ARC_ADDRESS || "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a") as Address,
+    address: ARC_TESTNET_EURC_ADDRESS,
     name: "EURO",
     symbol: "EURC",
     decimals: 6,
