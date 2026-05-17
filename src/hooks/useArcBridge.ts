@@ -4,16 +4,11 @@ import { useCallback, useState } from "react";
 import { isAddress, parseUnits, type Address } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { BridgeState, TokenSymbol } from "@/types";
-import {
-  ETHEREUM_SEPOLIA_CHAIN_ID,
-  getAppKit,
-  getAppKitResultHash,
-  getViemAdapter,
-  withCircleApiProxy,
-} from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, getAppKit, getAppKitResultHash, getViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
 import { TOKEN_DECIMALS } from "@/lib/tokens";
 
 const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
+const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 
 function parseTokenAmount(value: string, decimals: number) {
   if (!value.trim()) return BigInt(0);
@@ -55,8 +50,12 @@ export function useArcBridge() {
   }, []);
 
   const token = state.token as TokenSymbol;
-  const currentChainId = chainId ?? publicClient?.chain?.id ?? SEPOLIA_CHAIN_ID;
-  const isSupportedPath = state.fromChain === "Ethereum_Sepolia" && state.toChain === "Arc_Testnet" && token === "USDC";
+  const requiredChainId = state.fromChain === "Arc_Testnet" ? ARC_CHAIN_ID : SEPOLIA_CHAIN_ID;
+  const currentChainId = chainId ?? publicClient?.chain?.id ?? requiredChainId;
+  const isSupportedPath = token === "USDC" && (
+    (state.fromChain === "Ethereum_Sepolia" && state.toChain === "Arc_Testnet") ||
+    (state.fromChain === "Arc_Testnet" && state.toChain === "Ethereum_Sepolia")
+  );
   const amount = parseTokenAmount(state.amount, TOKEN_DECIMALS[token]);
   const bridgeMode: "appkit" | "unsupported" = isSupportedPath ? "appkit" : "unsupported";
   const needsApproval = false;
@@ -67,10 +66,12 @@ export function useArcBridge() {
 
   const executeBridge = useCallback(async () => {
     if (!isConnected || !address) throw new Error("Wallet not connected");
-    if (currentChainId !== SEPOLIA_CHAIN_ID) throw new Error("Switch your wallet to Ethereum Sepolia to bridge into Arc Testnet.");
+    if (currentChainId !== requiredChainId) {
+      throw new Error(`Switch your wallet to ${state.fromChain === "Arc_Testnet" ? "Arc Testnet" : "Ethereum Sepolia"} to bridge.`);
+    }
     if (!walletClient || !publicClient) throw new Error("Wallet signer not ready. Reconnect your wallet and try again.");
     if (!state.amount || parseFloat(state.amount) <= 0 || !amount || amount <= BigInt(0)) throw new Error("Enter a valid amount.");
-    if (!isSupportedPath) throw new Error("Bridge currently supports USDC from Ethereum Sepolia to Arc Testnet.");
+    if (!isSupportedPath) throw new Error("Bridge currently supports USDC between Ethereum Sepolia and Arc Testnet.");
 
     const recipient = state.recipientAddress.trim();
     if (recipient && !isAddress(recipient)) throw new Error("Enter a valid recipient wallet address.");
@@ -82,8 +83,8 @@ export function useArcBridge() {
       const kit = await getAppKit();
       const result = await withCircleApiProxy(() =>
         kit.bridge({
-          from: { adapter, chain: "Ethereum_Sepolia" },
-          to: { adapter, chain: "Arc_Testnet", recipientAddress: toAddress, useCircleRelayer: true },
+          from: { adapter, chain: state.fromChain },
+          to: { adapter, chain: state.toChain, recipientAddress: toAddress, useCircleRelayer: true },
           amount: state.amount,
         } as any)
       );
@@ -94,13 +95,16 @@ export function useArcBridge() {
       }
 
       updateState({ status: "success", txHash: hash });
-      return { hash, explorerBaseUrl: "https://sepolia.etherscan.io/tx/" };
+      return {
+        hash,
+        explorerBaseUrl: state.fromChain === "Arc_Testnet" ? "https://testnet.arcscan.app/tx/" : "https://sepolia.etherscan.io/tx/",
+      };
     } catch (err: any) {
       const message = friendlyBridgeError(err);
       updateState({ status: "error", error: message });
       throw new Error(message);
     }
-  }, [address, amount, currentChainId, isConnected, isSupportedPath, publicClient, state.amount, state.recipientAddress, updateState, walletClient]);
+  }, [address, amount, currentChainId, isConnected, isSupportedPath, publicClient, requiredChainId, state.amount, state.fromChain, state.recipientAddress, state.toChain, updateState, walletClient]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });
@@ -115,7 +119,7 @@ export function useArcBridge() {
     bridgeConfigured: isSupportedPath,
     bridgeReady: bridgeMode === "appkit",
     bridgeMode,
-    requiredChainId: SEPOLIA_CHAIN_ID,
+    requiredChainId,
     currentChainId,
     reset,
   };

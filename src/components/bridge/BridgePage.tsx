@@ -7,7 +7,7 @@ import { useArcBridge } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
-import { CHAIN_META, SUPPORTED_CHAINS, type SupportedChain } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, CHAIN_META, ETHEREUM_SEPOLIA_CHAIN_ID, SUPPORTED_CHAINS, type SupportedChain } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
 import { BRIDGE_TOKENS, TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
@@ -16,8 +16,16 @@ import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 import WalletButton from "@/components/ui/WalletButton";
 
-const SOURCE_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ETH_SEPOLIA];
-const DEST_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ARC_TESTNET];
+const SOURCE_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ETH_SEPOLIA, SUPPORTED_CHAINS.ARC_TESTNET];
+const DEST_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ARC_TESTNET, SUPPORTED_CHAINS.ETH_SEPOLIA];
+
+function oppositeBridgeChain(chain: SupportedChain): SupportedChain {
+  return chain === SUPPORTED_CHAINS.ARC_TESTNET ? SUPPORTED_CHAINS.ETH_SEPOLIA : SUPPORTED_CHAINS.ARC_TESTNET;
+}
+
+function bridgeChainId(chain: SupportedChain) {
+  return chain === SUPPORTED_CHAINS.ARC_TESTNET ? ARC_TESTNET_CHAIN_ID : ETHEREUM_SEPOLIA_CHAIN_ID;
+}
 
 export default function BridgePage() {
   const { isConnected, address } = useAccount();
@@ -33,6 +41,8 @@ export default function BridgePage() {
   const selectedToken = (state.token || "USDC") as TokenSymbol;
   const availableBridgeTokens = ["USDC"] as TokenSymbol[];
   const onRequiredNetwork = currentChainId === requiredChainId;
+  const requiredNetworkLabel = CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain;
+  const sourceExplorerBaseUrl = state.fromChain === SUPPORTED_CHAINS.ARC_TESTNET ? "https://testnet.arcscan.app/tx/" : "https://sepolia.etherscan.io/tx/";
 
   const handleBridge = async () => {
     setConfirmOpen(false);
@@ -58,12 +68,34 @@ export default function BridgePage() {
     }
   };
 
-  const handleSwitchNetwork = async () => {
+  const switchToBridgeNetwork = async (chainId: number, label: string) => {
     try {
-      await switchChainAsync({ chainId: requiredChainId });
-      show("Wallet switched to Ethereum Sepolia", "success");
+      await switchChainAsync({ chainId });
+      show(`Wallet switched to ${label}`, "success");
     } catch (err: any) {
       show(err?.message || "Network switch failed", "error");
+    }
+  };
+
+  const handleSwitchNetwork = () => {
+    void switchToBridgeNetwork(requiredChainId, requiredNetworkLabel);
+  };
+
+  const handleFromChainChange = (fromChain: SupportedChain) => {
+    const toChain = oppositeBridgeChain(fromChain);
+    const nextChainId = bridgeChainId(fromChain);
+    updateState({ fromChain, toChain });
+    if (isConnected && currentChainId !== nextChainId) {
+      void switchToBridgeNetwork(nextChainId, CHAIN_META[fromChain]?.label ?? fromChain);
+    }
+  };
+
+  const handleToChainChange = (toChain: SupportedChain) => {
+    const fromChain = oppositeBridgeChain(toChain);
+    const nextChainId = bridgeChainId(fromChain);
+    updateState({ toChain, fromChain });
+    if (isConnected && currentChainId !== nextChainId) {
+      void switchToBridgeNetwork(nextChainId, CHAIN_META[fromChain]?.label ?? fromChain);
     }
   };
 
@@ -88,8 +120,18 @@ export default function BridgePage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <section className="lg:col-span-3 arc-card rounded-3xl p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-              <ChainSelect label="From Chain" value={state.fromChain as SupportedChain} options={SOURCE_CHAIN_OPTIONS} onChange={(fromChain) => updateState({ fromChain })} />
-              <ChainSelect label="To Chain" value={state.toChain as SupportedChain} options={DEST_CHAIN_OPTIONS} onChange={(toChain) => updateState({ toChain })} />
+              <ChainSelect
+                label="From Chain"
+                value={state.fromChain as SupportedChain}
+                options={SOURCE_CHAIN_OPTIONS}
+                onChange={handleFromChainChange}
+              />
+              <ChainSelect
+                label="To Chain"
+                value={state.toChain as SupportedChain}
+                options={DEST_CHAIN_OPTIONS}
+                onChange={handleToChainChange}
+              />
             </div>
 
             <div className="rounded-3xl p-5 mb-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[selectedToken].accent}44` }}>
@@ -138,7 +180,7 @@ export default function BridgePage() {
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Source Network</span>
                 <span style={{ color: currentChainId === requiredChainId ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === requiredChainId ? "Ethereum Sepolia" : "Switch to Ethereum Sepolia"}
+                  {currentChainId === requiredChainId ? requiredNetworkLabel : `Switch to ${requiredNetworkLabel}`}
                 </span>
               </div>
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -154,7 +196,7 @@ export default function BridgePage() {
                   Bridge Path Not Available
                 </div>
                 <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  Live bridging currently supports USDC from Ethereum Sepolia to Arc Testnet.
+                  Live bridging currently supports USDC between Ethereum Sepolia and Arc Testnet.
                 </p>
               </div>
             )}
@@ -164,7 +206,7 @@ export default function BridgePage() {
               </div>
             ) : !onRequiredNetwork ? (
               <button disabled={isSwitchingNetwork} onClick={handleSwitchNetwork} className="btn-primary w-full py-4 rounded-2xl mb-3">
-                {isSwitchingNetwork ? "Switching Network..." : "Switch to Ethereum Sepolia"}
+                {isSwitchingNetwork ? "Opening Wallet..." : `Switch to ${requiredNetworkLabel}`}
               </button>
             ) : (
               <button disabled={isLoading || !state.amount || needsApproval || !bridgeReady} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
@@ -189,7 +231,7 @@ export default function BridgePage() {
               </div>
             )}
             {state.txHash && (
-              <a href={`https://sepolia.etherscan.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+              <a href={`${sourceExplorerBaseUrl}${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
               </a>
             )}
@@ -242,7 +284,7 @@ export default function BridgePage() {
         txHash={successTx?.hash}
         gasFee={successTx?.gasFee}
         timestamp={successTx?.timestamp}
-        explorerBaseUrl={successTx?.explorerBaseUrl ?? "https://sepolia.etherscan.io/tx/"}
+        explorerBaseUrl={successTx?.explorerBaseUrl ?? sourceExplorerBaseUrl}
         onClose={() => setSuccessTx(null)}
       />
     </div>
