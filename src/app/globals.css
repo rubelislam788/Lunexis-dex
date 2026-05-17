@@ -7338,3 +7338,28 @@ html[data-lunexis-theme="white"] :where(.arc-skeleton),
 html[data-lunexis-theme="morn"] :where(.arc-skeleton) {
   background: linear-gradient(90deg, rgba(16, 37, 34, 0.08), rgba(0, 111, 120, 0.16), rgba(16, 37, 34, 0.08)) !important;
 }
+
+html[data-lunexis-theme="white"] :where(.lunexis-analysis-tabs button, .lunexis-token-chart-tabs button, .lunexis-timeframe-row button, .lunexis-premium-card > .flex button),
+html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button, .lunexis-token-chart-tabs button, .lunexis-timeframe-row button, .lunexis-premium-card > .flex button) {
+  background: rgba(255, 255, 255, 0.56) !important;
+  border-color: rgba(16, 37, 34, 0.14) !important;
+  color: var(--lunexis-text-strong) !important;
+  -webkit-text-fill-color: var(--lunexis-text-strong) !important;
+  text-shadow: none !important;
+}
+
+html[data-lunexis-theme="white"] :where(.lunexis-analysis-tabs button:hover, .lunexis-analysis-tabs button.is-active, .lunexis-token-chart-tabs button:hover, .lunexis-token-chart-tabs button.is-active, .lunexis-timeframe-row button:hover, .lunexis-timeframe-row button.is-active, .lunexis-premium-card > .flex button:hover, .lunexis-premium-card > .flex button.is-active),
+html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button:hover, .lunexis-analysis-tabs button.is-active, .lunexis-token-chart-tabs button:hover, .lunexis-token-chart-tabs button.is-active, .lunexis-timeframe-row button:hover, .lunexis-timeframe-row button.is-active, .lunexis-premium-card > .flex button:hover, .lunexis-premium-card > .flex button.is-active) {
+  background: linear-gradient(135deg, rgba(126, 214, 208, 0.34), rgba(255, 255, 255, 0.72)) !important;
+  border-color: rgba(0, 111, 120, 0.28) !important;
+  box-shadow: 0 10px 28px rgba(16, 37, 34, 0.08) !important;
+  color: var(--lunexis-text-strong) !important;
+  -webkit-text-fill-color: var(--lunexis-text-strong) !important;
+}
+
+html[data-lunexis-theme="white"] :where(.lunexis-analysis-body, .lunexis-analysis-body *, .lunexis-insight-grid span, .lunexis-insight-grid strong, .lunexis-allocation-row span, .lunexis-allocation-row strong, [style*="#dbeafe"], [style*="#b8c6d6"], [style*="#d6edf8"]),
+html[data-lunexis-theme="morn"] :where(.lunexis-analysis-body, .lunexis-analysis-body *, .lunexis-insight-grid span, .lunexis-insight-grid strong, .lunexis-allocation-row span, .lunexis-allocation-row strong, [style*="#dbeafe"], [style*="#b8c6d6"], [style*="#d6edf8"]) {
+  color: var(--lunexis-text-strong) !important;
+  -webkit-text-fill-color: var(--lunexis-text-strong) !important;
+  text-shadow: none !important;
+}
