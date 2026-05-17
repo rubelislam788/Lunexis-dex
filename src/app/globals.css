@@ -1283,6 +1283,51 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   box-shadow: 0 0 18px rgba(56,189,248,0.45);
 }
 
+.lunexis-share-header {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.lunexis-share-theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.lunexis-share-theme-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.48rem 0.72rem;
+  background: rgba(255,255,255,0.045);
+  color: #dbeafe;
+  border: 1px solid rgba(255,255,255,0.1);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lunexis-share-theme-row button i {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.34);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.32);
+}
+
+.lunexis-share-theme-row button:hover,
+.lunexis-share-theme-row button.is-active {
+  background: rgba(56,189,248,0.16);
+  border-color: rgba(56,189,248,0.44);
+  color: #f8fbff;
+  box-shadow: 0 0 20px rgba(56,189,248,0.14);
+}
+
 .lunexis-share-preview {
   min-height: 230px;
   border-radius: 28px;
@@ -1334,7 +1379,33 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
     linear-gradient(135deg, rgba(4,47,58,0.96), rgba(7,89,133,0.9), rgba(20,184,166,0.72));
 }
 
-.lunexis-share-preview.is-arcadia {
+.lunexis-share-preview.is-cyber {
+  background:
+    linear-gradient(120deg, rgba(0,220,229,0.18) 0 1px, transparent 1px 76px),
+    radial-gradient(circle at 15% 22%, rgba(0,220,229,0.3), transparent 14rem),
+    radial-gradient(circle at 84% 16%, rgba(139,92,246,0.3), transparent 15rem),
+    linear-gradient(135deg, rgba(6,19,31,0.98), rgba(16,55,93,0.92), rgba(0,220,229,0.5));
+}
+
+.lunexis-share-preview.is-bloom {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(216,93,145,0.24), transparent 14rem),
+    radial-gradient(circle at 78% 16%, rgba(90,168,151,0.24), transparent 16rem),
+    linear-gradient(135deg, rgba(237,246,255,0.96), rgba(248,237,232,0.92), rgba(241,170,203,0.72));
+  border-color: rgba(216,93,145,0.28);
+  color: #271722;
+}
+
+.lunexis-share-preview.is-bloom :is(span, small, p) {
+  color: #705261;
+}
+
+.lunexis-share-preview.is-bloom h3,
+.lunexis-share-preview.is-bloom strong {
+  color: #271722;
+}
+
+.lunexis-share-preview.is-utopia {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -1345,7 +1416,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   color: #102522;
 }
 
-.lunexis-share-preview.is-arcadia::before {
+.lunexis-share-preview.is-utopia::before {
   content: "";
   position: absolute;
   inset: 28% -8% -18%;
@@ -1358,7 +1429,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   clip-path: polygon(0 35%, 18% 23%, 36% 30%, 52% 16%, 68% 31%, 83% 13%, 100% 22%, 100% 100%, 0 100%);
 }
 
-.lunexis-share-preview.is-arcadia::after {
+.lunexis-share-preview.is-utopia::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1371,12 +1442,12 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   -webkit-mask-image: radial-gradient(circle at 0% 80%, #000 0 20%, transparent 42%), radial-gradient(circle at 100% 30%, #000 0 18%, transparent 36%);
 }
 
-.lunexis-share-preview.is-arcadia :is(span, small, p) {
+.lunexis-share-preview.is-utopia :is(span, small, p) {
   color: #3c5b55;
 }
 
-.lunexis-share-preview.is-arcadia h3,
-.lunexis-share-preview.is-arcadia strong {
+.lunexis-share-preview.is-utopia h3,
+.lunexis-share-preview.is-utopia strong {
   color: #102522;
 }
 
@@ -7921,8 +7992,8 @@ html[data-lunexis-theme="morn"] :where(.arc-skeleton) {
   background: linear-gradient(90deg, rgba(16, 37, 34, 0.08), rgba(0, 111, 120, 0.16), rgba(16, 37, 34, 0.08)) !important;
 }
 
-html[data-lunexis-theme="white"] :where(.lunexis-analysis-tabs button, .lunexis-token-chart-tabs button, .lunexis-timeframe-row button, .lunexis-premium-card > .flex button),
-html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button, .lunexis-token-chart-tabs button, .lunexis-timeframe-row button, .lunexis-premium-card > .flex button) {
+html[data-lunexis-theme="white"] :where(.lunexis-analysis-tabs button, .lunexis-token-chart-tabs button, .lunexis-timeframe-row button, .lunexis-premium-card > .flex button, .lunexis-share-theme-row button),
+html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button, .lunexis-token-chart-tabs button, .lunexis-timeframe-row button, .lunexis-premium-card > .flex button, .lunexis-share-theme-row button) {
   background: rgba(255, 255, 255, 0.56) !important;
   border-color: rgba(16, 37, 34, 0.14) !important;
   color: var(--lunexis-text-strong) !important;
@@ -7930,8 +8001,8 @@ html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button, .lunexis-t
   text-shadow: none !important;
 }
 
-html[data-lunexis-theme="white"] :where(.lunexis-analysis-tabs button:hover, .lunexis-analysis-tabs button.is-active, .lunexis-token-chart-tabs button:hover, .lunexis-token-chart-tabs button.is-active, .lunexis-timeframe-row button:hover, .lunexis-timeframe-row button.is-active, .lunexis-premium-card > .flex button:hover, .lunexis-premium-card > .flex button.is-active),
-html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button:hover, .lunexis-analysis-tabs button.is-active, .lunexis-token-chart-tabs button:hover, .lunexis-token-chart-tabs button.is-active, .lunexis-timeframe-row button:hover, .lunexis-timeframe-row button.is-active, .lunexis-premium-card > .flex button:hover, .lunexis-premium-card > .flex button.is-active) {
+html[data-lunexis-theme="white"] :where(.lunexis-analysis-tabs button:hover, .lunexis-analysis-tabs button.is-active, .lunexis-token-chart-tabs button:hover, .lunexis-token-chart-tabs button.is-active, .lunexis-timeframe-row button:hover, .lunexis-timeframe-row button.is-active, .lunexis-premium-card > .flex button:hover, .lunexis-premium-card > .flex button.is-active, .lunexis-share-theme-row button:hover, .lunexis-share-theme-row button.is-active),
+html[data-lunexis-theme="morn"] :where(.lunexis-analysis-tabs button:hover, .lunexis-analysis-tabs button.is-active, .lunexis-token-chart-tabs button:hover, .lunexis-token-chart-tabs button.is-active, .lunexis-timeframe-row button:hover, .lunexis-timeframe-row button.is-active, .lunexis-premium-card > .flex button:hover, .lunexis-premium-card > .flex button.is-active, .lunexis-share-theme-row button:hover, .lunexis-share-theme-row button.is-active) {
   background: linear-gradient(135deg, rgba(126, 214, 208, 0.34), rgba(255, 255, 255, 0.72)) !important;
   border-color: rgba(0, 111, 120, 0.28) !important;
   box-shadow: 0 10px 28px rgba(16, 37, 34, 0.08) !important;

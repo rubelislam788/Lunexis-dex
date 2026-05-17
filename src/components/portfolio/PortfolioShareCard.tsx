@@ -9,10 +9,12 @@ type ClipboardImageItem = new (items: Record<string, Blob>) => ClipboardItem;
 const SHARE_THEMES = {
   nebula: { label: "Nebula", stops: ["#001d24", "#111a3f", "#340028"], text: "#ffffff", muted: "#9fb2c4", accent: "#38bdf8", accent2: "#ff4fc8" },
   white: { label: "White", stops: ["#f7fbf8", "#ffffff", "#dff0ee"], text: "#0D1E1C", muted: "#3A5C58", accent: "#2A9D8F", accent2: "#C98A3B" },
+  utopia: { label: "Utopia", stops: ["#dce9ef", "#f2f6ef", "#86b98f"], text: "#102522", muted: "#3c5b55", accent: "#0f766e", accent2: "#e879a7" },
+  bloom: { label: "Bloom", stops: ["#edf6ff", "#f8ede8", "#f1aacb"], text: "#271722", muted: "#705261", accent: "#d85d91", accent2: "#5aa897" },
+  cyber: { label: "Cyber", stops: ["#06131f", "#10375d", "#00dce5"], text: "#effcff", muted: "#9bd8e4", accent: "#00dce5", accent2: "#8b5cf6" },
   aurora: { label: "Aurora", stops: ["#06261f", "#123e50", "#5f2d8c"], text: "#f4fffb", muted: "#b5d8d1", accent: "#34d399", accent2: "#a78bfa" },
   sunset: { label: "Sunset", stops: ["#2a1329", "#7a2e43", "#ffb86b"], text: "#fff7ed", muted: "#ffd7b0", accent: "#ff8a5b", accent2: "#ffd166" },
   ocean: { label: "Ocean", stops: ["#042f3a", "#075985", "#14b8a6"], text: "#ecfeff", muted: "#a7f3d0", accent: "#22d3ee", accent2: "#5eead4" },
-  arcadia: { label: "Arcadia", stops: ["#cfe0e8", "#dfeade", "#9cc7a7"], text: "#102522", muted: "#3c5b55", accent: "#0f766e", accent2: "#e879a7" },
 } as const;
 
 type ShareTheme = keyof typeof SHARE_THEMES;
@@ -66,7 +68,7 @@ export default function PortfolioShareCard() {
   const wallet = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Wallet not connected";
   const topToken = stats.top?.token ?? "N/A";
   const activeTheme = SHARE_THEMES[theme];
-  const arcadiaScene = theme === "arcadia"
+  const scenicScene = theme === "utopia"
     ? `
     <path d="M0 430 C170 330 280 390 430 315 C570 250 705 310 845 230 C1000 140 1095 215 1200 150 L1200 630 L0 630Z" fill="#b7d2ba" opacity=".82"/>
     <path d="M0 515 C210 455 270 500 455 430 C620 368 760 410 910 350 C1040 298 1120 328 1200 280 L1200 630 L0 630Z" fill="#79aa83" opacity=".58"/>
@@ -97,7 +99,7 @@ export default function PortfolioShareCard() {
       <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
     <rect width="1200" height="630" fill="url(#bg)"/>
-    ${arcadiaScene}
+    ${scenicScene}
     <circle cx="1020" cy="90" r="220" fill="${activeTheme.accent}" opacity=".18"/>
     <circle cx="150" cy="520" r="230" fill="${activeTheme.accent2}" opacity=".14"/>
     <rect x="70" y="72" width="1060" height="486" rx="46" fill="rgba(255,255,255,.13)" stroke="${activeTheme.accent}" stroke-width="2"/>
@@ -141,14 +143,22 @@ export default function PortfolioShareCard() {
 
   return (
     <section className="lunexis-premium-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="lunexis-share-header">
         <div>
           <div className="lunexis-kicker">One Click Portfolio Share</div>
           <h2>Social Portfolio Card</h2>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="lunexis-share-theme-row">
           {Object.entries(SHARE_THEMES).map(([id, item]) => (
-            <button key={id} onClick={() => setTheme(id as ShareTheme)} className={theme === id ? "is-active" : ""}>{item.label}</button>
+            <button
+              key={id}
+              onClick={() => setTheme(id as ShareTheme)}
+              className={theme === id ? "is-active" : ""}
+              type="button"
+            >
+              <i style={{ background: `linear-gradient(135deg, ${item.stops.join(", ")})` }} />
+              {item.label}
+            </button>
           ))}
         </div>
       </div>
