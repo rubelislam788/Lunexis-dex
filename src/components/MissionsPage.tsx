@@ -180,23 +180,32 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const isMissionAdmin = isAdminWallet(address);
 
   useEffect(() => {
+    const admin = Boolean(address && isAdminWallet(address));
+    const localDrafts = hasLocalMissionDrafts();
+    const localMissions = loadLocalMissions(QUESTS);
     try {
       setProof(JSON.parse(window.localStorage.getItem(PROOF_KEY) || "{}"));
-      setQuests(loadLocalMissions(QUESTS));
+      if (admin && localDrafts) {
+        setQuests(localMissions);
+      }
     } catch {
       setProof({});
     }
 
-    fetch("/api/missions")
+    fetch("/api/missions", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.quests) && data.quests.length > 0) {
-          if (data.isDefault && hasLocalMissionDrafts()) return;
+          if (admin && data.isDefault && localDrafts) {
+            void publishMissions(localMissions, address);
+            return;
+          }
+          if (admin && localDrafts) return;
           setQuests(ensureMissionSchedule(data.quests));
         }
       })
       .catch(() => null);
-  }, []);
+  }, [address]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setMissionClock(Date.now()), 30000);

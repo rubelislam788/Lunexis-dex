@@ -9,7 +9,7 @@ import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import { isAdminWallet } from "@/lib/admin";
 import { DEFAULT_REWARDS, XP_TO_USDC_AMOUNT, XP_TO_USDC_COST, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 import { QUESTS } from "@/lib/missions";
-import { MISSION_STEP_PROOF_KEY, loadLocalMissions } from "@/lib/mission-storage";
+import { MISSION_STEP_PROOF_KEY, hasLocalMissionDrafts, loadLocalMissions } from "@/lib/mission-storage";
 import type { Quest } from "@/types";
 
 const REWARD_STORAGE_KEY = "lunexis.rewards.v1";
@@ -92,11 +92,15 @@ function isMissionStepRequirementMet(missionId: string, quests: Quest[]) {
   return getMissionSteps(quest).every((step) => verified.has(step.id));
 }
 
+function rewardHasPublishedMissionLocks(reward: RewardConfig, quests: Quest[]) {
+  return reward.missionIds.every((missionId) => Boolean(findQuestByMissionId(missionId, quests)));
+}
+
 export default function RewardsPage() {
   const { profile, isConnected, claim, convertXp } = useProfile();
   const { address } = useAccount();
-  const [rewards, setRewards] = useState<RewardConfig[]>(() => readStoredRewards());
-  const [quests, setQuests] = useState<Quest[]>(() => loadLocalMissions(QUESTS));
+  const [rewards, setRewards] = useState<RewardConfig[]>(DEFAULT_REWARDS);
+  const [quests, setQuests] = useState<Quest[]>(QUESTS);
   const [showRewardAdmin, setShowRewardAdmin] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
@@ -106,19 +110,23 @@ export default function RewardsPage() {
   const [payoutStatus, setPayoutStatus] = useState<{ configured: boolean; address?: string; balances?: Array<{ token: string; displayAmount: string }>; error?: string } | null>(null);
   const isRewardAdmin = isAdminWallet(address);
   const availableXp = Math.max(0, (profile?.xp ?? 0) - (profile?.xpConverted ?? 0));
+  const visibleRewards = isRewardAdmin ? rewards : rewards.filter((reward) => rewardHasPublishedMissionLocks(reward, quests));
 
   useEffect(() => {
-    const localRewards = readStoredRewards();
-    setQuests(loadLocalMissions(QUESTS));
-    setRewards(localRewards);
+    const admin = Boolean(address && isAdminWallet(address));
+    const localRewards = admin ? readStoredRewards() : DEFAULT_REWARDS;
+    if (admin) {
+      setRewards(localRewards);
+      setQuests(loadLocalMissions(QUESTS));
+    }
     fetch("/api/rewards", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
         if (Array.isArray(data?.rewards)) {
           const nextRewards = normalizeRewards(data.rewards);
-          if (!isDefaultRewardSet(localRewards) && isDefaultRewardSet(nextRewards)) {
+          if (admin && !isDefaultRewardSet(localRewards) && isDefaultRewardSet(nextRewards)) {
             setRewards(localRewards);
-            if (address && isAdminWallet(address)) {
+            if (address) {
               void fetch("/api/rewards", {
                 method: "POST",
                 headers: {
@@ -131,7 +139,7 @@ export default function RewardsPage() {
             return;
           }
           setRewards(nextRewards);
-          window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
+          if (admin) window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
         }
       })
       .catch(() => null);
@@ -139,7 +147,9 @@ export default function RewardsPage() {
     fetch("/api/missions", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => {
-        if (Array.isArray(data?.quests) && data.quests.length > 0) setQuests(data.quests);
+        if (Array.isArray(data?.quests) && data.quests.length > 0 && (!admin || !hasLocalMissionDrafts())) {
+          setQuests(data.quests);
+        }
       })
       .catch(() => null);
   }, [address]);
@@ -461,7 +471,7 @@ export default function RewardsPage() {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {rewards.map((reward) => {
+          {visibleRewards.map((reward) => {
             const claimed = Boolean(profile?.claimedRewardIds.includes(reward.id));
             const completedMissionIds = profile?.completedMissionIds ?? [];
             const missingMissionIds = reward.missionIds.filter((id) => !isMissionRequirementMet(id, completedMissionIds));

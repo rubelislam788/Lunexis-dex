@@ -58,6 +58,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No valid missions to save" }, { status: 400 });
   }
 
-  const store = await writePersistentValue<MissionStore>(STORE_KEY, { quests });
-  return NextResponse.json({ quests: store.quests });
+  try {
+    const store = await writePersistentValue<MissionStore>(STORE_KEY, { quests });
+    return NextResponse.json({ quests: store.quests });
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || "Could not publish missions" }, { status: 503 });
+  }
 }

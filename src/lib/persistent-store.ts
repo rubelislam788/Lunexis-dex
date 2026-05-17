@@ -11,6 +11,10 @@ function redisConfig() {
   return url && token ? { url: url.replace(/\/$/, ""), token } : null;
 }
 
+function isVercelRuntime() {
+  return Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+}
+
 async function readFileStore(): Promise<StoreEnvelope> {
   try {
     return JSON.parse(await fs.readFile(FILE_STORE_PATH, "utf8")) as StoreEnvelope;
@@ -77,6 +81,10 @@ export async function writePersistentValue<T>(key: string, value: T): Promise<T>
     } catch {
       // Fall through to local cache.
     }
+  }
+
+  if (isVercelRuntime()) {
+    throw new Error("Persistent storage is not configured. Add Vercel KV or Upstash Redis env vars before publishing admin changes.");
   }
 
   const store = await readFileStore();
