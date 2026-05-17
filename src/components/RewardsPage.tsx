@@ -8,6 +8,9 @@ import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import { isAdminWallet } from "@/lib/admin";
 import { DEFAULT_REWARDS, XP_TO_USDC_AMOUNT, XP_TO_USDC_COST, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
+import { QUESTS } from "@/lib/missions";
+import { MISSION_STEP_PROOF_KEY, loadLocalMissions } from "@/lib/mission-storage";
+import type { Quest } from "@/types";
 
 const REWARD_STORAGE_KEY = "lunexis.rewards.v1";
 
@@ -58,10 +61,42 @@ function isMissionRequirementMet(requiredMissionId: string, completedMissionIds:
   return missionKeyAliases(requiredMissionId).some((key) => completedKeys.has(key));
 }
 
+function readVerifiedMissionStepIds(missionId: string) {
+  if (typeof window === "undefined") return [];
+  try {
+    const verified = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
+    return verified[missionId] ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function getMissionSteps(quest: Quest) {
+  return quest.tasks?.length
+    ? quest.tasks
+    : Array.from({ length: Math.max(1, quest.totalSteps || 1) }, (_, index) => ({
+      id: `${quest.id}-step-${index + 1}`,
+      title: `Step ${index + 1}`,
+    }));
+}
+
+function findQuestByMissionId(missionId: string, quests: Quest[]) {
+  const aliases = new Set(missionKeyAliases(missionId));
+  return quests.find((quest) => missionKeyAliases(quest.id).some((alias) => aliases.has(alias)));
+}
+
+function isMissionStepRequirementMet(missionId: string, quests: Quest[]) {
+  const quest = findQuestByMissionId(missionId, quests);
+  if (!quest) return true;
+  const verified = new Set(readVerifiedMissionStepIds(quest.id));
+  return getMissionSteps(quest).every((step) => verified.has(step.id));
+}
+
 export default function RewardsPage() {
   const { profile, isConnected, claim, convertXp } = useProfile();
   const { address } = useAccount();
   const [rewards, setRewards] = useState<RewardConfig[]>(() => readStoredRewards());
+  const [quests, setQuests] = useState<Quest[]>(() => loadLocalMissions(QUESTS));
   const [showRewardAdmin, setShowRewardAdmin] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
@@ -74,6 +109,7 @@ export default function RewardsPage() {
 
   useEffect(() => {
     const localRewards = readStoredRewards();
+    setQuests(loadLocalMissions(QUESTS));
     setRewards(localRewards);
     fetch("/api/rewards", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
@@ -97,6 +133,13 @@ export default function RewardsPage() {
           setRewards(nextRewards);
           window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
         }
+      })
+      .catch(() => null);
+
+    fetch("/api/missions", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (Array.isArray(data?.quests) && data.quests.length > 0) setQuests(data.quests);
       })
       .catch(() => null);
   }, [address]);
@@ -199,6 +242,14 @@ export default function RewardsPage() {
 
   const claimTokenReward = async (reward: RewardConfig) => {
     if (!address || claimingRewardId) return;
+    const missingStepMissionIds = reward.missionIds.filter((id) => !isMissionStepRequirementMet(id, quests));
+    if (missingStepMissionIds.length > 0) {
+      setClaimErrors((current) => ({
+        ...current,
+        [reward.id]: `Verify mission steps first: ${missingStepMissionIds.join(", ")}`,
+      }));
+      return;
+    }
     setClaimingRewardId(reward.id);
     setClaimMessage("");
     setClaimErrors((current) => {
@@ -414,7 +465,8 @@ export default function RewardsPage() {
             const claimed = Boolean(profile?.claimedRewardIds.includes(reward.id));
             const completedMissionIds = profile?.completedMissionIds ?? [];
             const missingMissionIds = reward.missionIds.filter((id) => !isMissionRequirementMet(id, completedMissionIds));
-            const eligible = Boolean(isConnected && profile && missingMissionIds.length === 0);
+            const missingStepMissionIds = reward.missionIds.filter((id) => !isMissionStepRequirementMet(id, quests));
+            const eligible = Boolean(isConnected && profile && missingMissionIds.length === 0 && missingStepMissionIds.length === 0);
             const isClaiming = claimingRewardId === reward.id;
             const claimError = claimErrors[reward.id];
             const rewardStatus = claimed
@@ -425,6 +477,8 @@ export default function RewardsPage() {
                   ? "Connect wallet to claim"
                   : missingMissionIds.length
                     ? `Complete mission first: ${missingMissionIds.join(", ")}`
+                    : missingStepMissionIds.length
+                      ? `Verify mission steps first: ${missingStepMissionIds.join(", ")}`
                     : "Connect wallet to claim";
             const rewardButtonLabel = isClaiming
               ? "Paying..."
@@ -434,6 +488,8 @@ export default function RewardsPage() {
                   ? "Connect Wallet"
                   : missingMissionIds.length
                     ? "Complete Mission First"
+                    : missingStepMissionIds.length
+                      ? "Verify Steps First"
                     : "Claim Reward";
             return (
               <div key={reward.id} className="arc-card rounded-3xl p-6">

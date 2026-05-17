@@ -1,6 +1,7 @@
 import type { MissionSocialLink, MissionTask, Quest } from "@/types";
 
 export const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
+export const MISSION_STEP_PROOF_KEY = "arcquest.mission-step-proof.v1";
 export const MISSION_CUSTOM_KEY = "arcquest.mission-custom.v1";
 export const MISSION_CREATED_KEY = "arcquest.mission-created.v1";
 export const MISSION_REMOVED_KEY = "arcquest.mission-removed.v1";

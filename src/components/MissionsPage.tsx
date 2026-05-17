@@ -14,6 +14,7 @@ import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import {
   DEFAULT_MISSION_DAYS,
+  MISSION_STEP_PROOF_KEY,
   addDaysIso,
   ensureMissionSchedule,
   hasLocalMissionDrafts,
@@ -97,6 +98,30 @@ function getOnchainMissionActions(quest: Quest): OnchainMissionAction[] {
 
 function isSocialOnlyMission(quest: Quest) {
   return getMissionSocialLinks(quest).length > 0 && getOnchainMissionActions(quest).length === 0;
+}
+
+function getMissionSteps(quest: Quest) {
+  return quest.tasks?.length
+    ? quest.tasks
+    : Array.from({ length: Math.max(1, quest.totalSteps || 1) }, (_, index) => ({
+      id: `${quest.id}-step-${index + 1}`,
+      title: `Step ${index + 1}`,
+    }));
+}
+
+function getVerifiedMissionStepIds(questId: string) {
+  if (typeof window === "undefined") return [];
+  try {
+    const verified = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
+    return verified[questId] ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function getMissingMissionSteps(quest: Quest) {
+  const verified = new Set(getVerifiedMissionStepIds(quest.id));
+  return getMissionSteps(quest).filter((step) => !verified.has(step.id));
 }
 
 async function publishMissions(quests: Quest[], adminAddress?: string) {
@@ -243,6 +268,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     const nextProof = saveProof(key);
     const links = getMissionSocialLinks(quest);
     const allLinksVisited = links.length > 0 && links.every((link) => nextProof[missionSocialProofKey(quest.id, link.id)]);
+    const missingSteps = getMissingMissionSteps(quest);
 
     if (!isConnected) {
       setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Link visit saved. Connect wallet to verify this mission." }));
@@ -251,7 +277,11 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
     if (profile?.completedMissionIds.includes(quest.id)) return;
     if (isSocialOnlyMission(quest) && allLinksVisited) {
-      completeVerifiedQuest(quest, "All mission links were visited. Mission verified.");
+      if (missingSteps.length > 0) {
+        setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Links visited. Verify every mission step first (${missingSteps.length} left).` }));
+        return;
+      }
+      completeVerifiedQuest(quest, "All mission links and steps were verified.");
     } else if (links.length > 0) {
       setVerifyMessages((prev) => ({ ...prev, [quest.id]: allLinksVisited ? "Links visited. Complete the onchain action, then verify." : "Link visit saved. Open every mission link to finish this step." }));
     }
@@ -264,22 +294,32 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     window.setTimeout(() => document.getElementById("mission-control-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
 
-  const syncProfileBeforePayout = async (missionId: string) => {
+  const syncProfileBeforePayout = async () => {
     if (!profile) return;
-    const completedMissionIds = Array.from(new Set([...(profile.completedMissionIds ?? []), missionId]));
     await fetch("/api/profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile: { ...profile, completedMissionIds } }),
+      body: JSON.stringify({ profile }),
     }).catch(() => null);
   };
 
   const claimQuestReward = async (quest: Quest) => {
     if (!address || claimingQuestId) return;
+    const missingSteps = getMissingMissionSteps(quest);
+    if (missingSteps.length > 0) {
+      setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Verify every mission step first (${missingSteps.length} left).` }));
+      return;
+    }
+    if (!profile?.completedMissionIds.includes(quest.id)) {
+      setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
+      setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Verify the full mission before syncing reward eligibility." }));
+      return;
+    }
     setClaimingQuestId(quest.id);
     setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Syncing mission ID for Rewards eligibility..." }));
     try {
-      await syncProfileBeforePayout(quest.id);
+      await syncProfileBeforePayout();
       setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Mission ID ${quest.id} synced. Claim USDC/EURC rewards from Rewards.` }));
       setSuccessReward({
         title: "Mission Synced",
@@ -312,6 +352,10 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
   const validateQuest = async (quest: Quest) => {
     if (!profile) return { ok: false, message: "Connect your wallet before verification." };
+    const missingSteps = getMissingMissionSteps(quest);
+    if (missingSteps.length > 0) {
+      return { ok: false, message: `Verify every mission step first (${missingSteps.length} left).` };
+    }
     const socialLinks = getMissionSocialLinks(quest);
     const missingLinks = socialLinks.filter((link) => !proof[missionSocialProofKey(quest.id, link.id)]);
     const requiredActions = getOnchainMissionActions(quest);

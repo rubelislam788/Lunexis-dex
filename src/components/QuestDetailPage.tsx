@@ -3,9 +3,7 @@
 
 import { useEffect, useState } from "react";
 import type { MissionTask, Page, Quest } from "@/types";
-
-const MISSION_TASKS_KEY = "arcquest.mission-tasks.v1";
-const MISSION_STEP_PROOF_KEY = "arcquest.mission-step-proof.v1";
+import { MISSION_STEP_PROOF_KEY, MISSION_TASKS_KEY } from "@/lib/mission-storage";
 
 const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
   q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
