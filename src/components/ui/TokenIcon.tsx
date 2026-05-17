@@ -26,13 +26,14 @@ export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; 
       {showArcBadge && (
         <span
           aria-hidden="true"
-          className="absolute grid place-items-center rounded-full"
+          className="absolute grid place-items-center"
           style={{
             right: -Math.max(1, Math.round(size * 0.08)),
             bottom: -Math.max(1, Math.round(size * 0.08)),
             width: badgeSize,
             height: badgeSize,
             background: "#06203d",
+            borderRadius: Math.max(4, Math.round(size * 0.12)),
             border: "1px solid rgba(125, 211, 252, 0.8)",
             boxShadow: "0 0 0 1px rgba(4, 24, 55, 0.9), 0 0 10px rgba(56, 189, 248, 0.55)",
             overflow: "hidden",
@@ -44,7 +45,7 @@ export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; 
             style={{
               width: badgeSize,
               height: badgeSize,
-              objectFit: "cover",
+              objectFit: "contain",
               objectPosition: "center",
               filter: "contrast(1.08) brightness(1.08)",
             }}
