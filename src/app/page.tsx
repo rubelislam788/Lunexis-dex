@@ -25,6 +25,7 @@ export const dynamic = "force-dynamic";
 
 const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "staking", "profile"];
 const NAV_STORAGE_KEY = "lunexis.current-page.v1";
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "lunexis.sidebar-collapsed.v1";
 const QUEST_HASH_PREFIX = "quest/";
 const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "bridge", "staking", "profile"];
 
@@ -119,9 +120,10 @@ export default function Home() {
     const syncLayout = () => {
       const width = window.innerWidth;
       const nextOverlay = width < 1024;
+      const storedCollapsed = window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
       setIsOverlaySidebar(nextOverlay);
-      setSidebarOpen(!nextOverlay);
-      setSidebarCollapsed(width >= 1024 && width < 1280);
+      setSidebarOpen(false);
+      setSidebarCollapsed(nextOverlay ? false : storedCollapsed === null ? true : storedCollapsed === "true");
     };
 
     syncLayout();
@@ -196,7 +198,13 @@ export default function Home() {
       return;
     }
     if (!showSidebar) return;
-    setSidebarCollapsed((value) => !value);
+    setSidebarCollapsed((value) => {
+      const next = !value;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(next));
+      }
+      return next;
+    });
   };
 
   if (!navReady) {
