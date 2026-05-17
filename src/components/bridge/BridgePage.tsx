@@ -9,7 +9,7 @@ import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
 import { ARC_TESTNET_CHAIN_ID, CHAIN_META, ETHEREUM_SEPOLIA_CHAIN_ID, SUPPORTED_CHAINS, type SupportedChain } from "@/lib/arc-kit";
 import { createActivity } from "@/lib/profile";
-import { BRIDGE_TOKENS, TOKEN_META } from "@/lib/tokens";
+import { TOKEN_META } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
@@ -45,6 +45,11 @@ export default function BridgePage() {
   const onRequiredNetwork = currentChainId === requiredChainId;
   const requiredNetworkLabel = CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain;
   const sourceExplorerBaseUrl = state.fromChain === SUPPORTED_CHAINS.ARC_TESTNET ? "https://testnet.arcscan.app/tx/" : "https://sepolia.etherscan.io/tx/";
+  const balanceLabel = (symbol: TokenSymbol) => {
+    const item = balances.find((balance) => balance.token === symbol);
+    if (balancesLoading || item?.isLoading) return "Loading...";
+    return item?.displayAmount || `${item?.amount ?? "0"} ${symbol}`;
+  };
 
   const handleBridge = async () => {
     setConfirmOpen(false);
@@ -122,8 +127,8 @@ export default function BridgePage() {
           <FaucetButton label="Open Arc Faucet" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <section className="lg:col-span-3 arc-card rounded-3xl p-6">
+        <div className="grid grid-cols-1 justify-center gap-6">
+          <section className="arc-card rounded-3xl p-6 max-w-3xl mx-auto w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
               <ChainSelect
                 label="From Chain"
@@ -153,6 +158,9 @@ export default function BridgePage() {
                     <div className="text-left">
                       <div style={{ fontFamily: "'Space Grotesk'", fontWeight: 900, color: "#f8fbff" }}>{symbol}</div>
                       <div style={{ color: "#849495", fontSize: 11 }}>{TOKEN_META[symbol].label}</div>
+                      <div style={{ color: "#38bdf8", fontSize: 11, marginTop: 4, fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
+                        Balance: {balanceLabel(symbol)}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -238,18 +246,6 @@ export default function BridgePage() {
             )}
             {state.status === "success" && <button onClick={() => { reset(); setActiveStep(0); }} className="btn-ghost w-full py-3 rounded-2xl mt-3">Bridge Again</button>}
           </section>
-
-          <aside className="lg:col-span-2 flex flex-col gap-4">
-            <div className="arc-card rounded-3xl p-5">
-              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Bridge Balances</h3>
-              {balances.filter((item) => BRIDGE_TOKENS.includes(item.token)).map((item) => (
-                <div key={item.token} className="flex items-center justify-between rounded-xl p-3 mb-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div className="flex items-center gap-2"><TokenIcon symbol={item.token} size={32} /><span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{item.token}</span></div>
-                  <span style={{ color: "#849495" }}>{balancesLoading || item.isLoading ? "..." : item.amount}</span>
-                </div>
-              ))}
-            </div>
-          </aside>
         </div>
       </div>
 
