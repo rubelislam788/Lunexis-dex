@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { isAddress, type Address } from "viem";
+import { isAddress, parseUnits, type Address } from "viem";
 import { useStaking } from "@/hooks/useStaking";
 import type { StakingPoolType, StakingPoolView, StakingToken } from "@/lib/staking";
 import TokenIcon from "@/components/ui/TokenIcon";
@@ -16,6 +16,14 @@ function formatDuration(seconds: number) {
   if (!seconds) return "Flexible";
   const days = Math.max(1, Math.round(seconds / 86400));
   return `${days} day${days === 1 ? "" : "s"}`;
+}
+
+function parseTokenAmount(value: string, decimals: number) {
+  try {
+    return parseUnits(value || "0", decimals);
+  } catch {
+    return null;
+  }
 }
 
 function tokenAvatar(token: StakingToken, size = 42) {
@@ -172,6 +180,8 @@ export default function StakingPage() {
                       key={pool.id}
                       pool={pool}
                       amount={poolAmounts[pool.id] ?? ""}
+                      isConnected={staking.isConnected}
+                      wrongNetwork={staking.wrongNetwork}
                       status={staking.status}
                       onAmount={(value) => setPoolAmounts((prev) => ({ ...prev, [pool.id]: value }))}
                       onPercent={(percent) => {
@@ -244,6 +254,7 @@ export default function StakingPage() {
                   <option value="FixedReward">Fixed reward pool</option>
                 </select>
                 <input value={adminDraft.metadata} onChange={(event) => setAdminDraft((prev) => ({ ...prev, metadata: event.target.value }))} placeholder="Pool metadata" className="lunexis-staking-input" />
+                <div className="lunexis-staking-warning mb-3">Fund the staking manager with the reward token before users claim rewards.</div>
                 <button onClick={createPool} disabled={staking.status === "creating"} className="btn-primary w-full py-3 rounded-2xl mt-2">
                   {staking.status === "creating" ? "Creating..." : "Create Pool"}
                 </button>
@@ -260,6 +271,8 @@ export default function StakingPage() {
 function PoolCard({
   pool,
   amount,
+  isConnected,
+  wrongNetwork,
   status,
   onAmount,
   onPercent,
@@ -270,6 +283,8 @@ function PoolCard({
 }: {
   pool: StakingPoolView;
   amount: string;
+  isConnected: boolean;
+  wrongNetwork: boolean;
   status: string;
   onAmount: (value: string) => void;
   onPercent: (percent: number) => void;
@@ -280,6 +295,52 @@ function PoolCard({
 }) {
   const dailyReward = numeric(pool.userStaked) * (pool.aprBps / 10000) / 365;
   const utilization = Math.min(100, numeric(pool.totalStaked) > 0 ? (numeric(pool.userStaked) / numeric(pool.totalStaked)) * 100 : 0);
+  const amountRaw = parseTokenAmount(amount, pool.token.decimals);
+  const balanceRaw = parseTokenAmount(pool.token.balance || "0", pool.token.decimals) ?? BigInt(0);
+  const userStakedRaw = parseTokenAmount(pool.userStaked || "0", pool.token.decimals) ?? BigInt(0);
+  const pendingRaw = parseTokenAmount(pool.pendingReward || "0", pool.rewardToken.decimals) ?? BigInt(0);
+  const vaultRaw = parseTokenAmount(pool.rewardVaultBalance || "0", pool.rewardToken.decimals) ?? BigInt(0);
+  const hasAmount = Boolean(amountRaw && amountRaw > BigInt(0));
+  const needsApproval = Boolean(hasAmount && pool.allowance !== undefined && pool.allowance < amountRaw!);
+  const isLocked = Boolean(pool.unlockAt && pool.unlockAt * 1000 > Date.now());
+  const stakeBlockReason = !isConnected
+    ? "Connect wallet"
+    : wrongNetwork
+      ? "Switch to ARC Testnet"
+      : !hasAmount
+        ? "Enter an amount"
+        : amountRaw! > balanceRaw
+          ? `Not enough ${pool.token.symbol}`
+          : pool.paused
+            ? "Pool paused"
+            : needsApproval
+              ? `Approve ${pool.token.symbol} first`
+              : "";
+  const unstakeBlockReason = !isConnected
+    ? "Connect wallet"
+    : wrongNetwork
+      ? "Switch to ARC Testnet"
+      : !hasAmount
+        ? "Enter an amount"
+        : amountRaw! > userStakedRaw
+          ? "Amount exceeds stake"
+          : isLocked
+            ? `Locked until ${new Date((pool.unlockAt ?? 0) * 1000).toLocaleDateString()}`
+            : "";
+  const claimBlockReason = !isConnected
+    ? "Connect wallet"
+    : wrongNetwork
+      ? "Switch to ARC Testnet"
+      : pendingRaw <= BigInt(0)
+        ? "No rewards yet"
+        : vaultRaw < pendingRaw
+          ? "Reward vault needs funding"
+          : "";
+  const actionHint = hasAmount
+    ? stakeBlockReason || unstakeBlockReason
+    : pendingRaw > BigInt(0)
+      ? claimBlockReason
+      : stakeBlockReason;
 
   return (
     <article className="lunexis-staking-pool-card">
@@ -312,11 +373,16 @@ function PoolCard({
         ))}
       </div>
       {numeric(pool.token.balance) <= 0 && <div className="lunexis-staking-warning">Low balance detected for this token.</div>}
+      {actionHint && (
+        <div className="lunexis-staking-warning">
+          {actionHint}
+        </div>
+      )}
       <div className="lunexis-staking-actions">
-        <button onClick={onApprove} disabled={status !== "idle"}>Approve</button>
-        <button onClick={onStake} disabled={status !== "idle" || pool.paused}>Stake</button>
-        <button onClick={onUnstake} disabled={status !== "idle" || numeric(pool.userStaked) <= 0}>Unstake</button>
-        <button onClick={onClaim} disabled={status !== "idle" || numeric(pool.pendingReward) <= 0}>Claim</button>
+        {needsApproval && <button onClick={onApprove} disabled={status !== "idle" || !hasAmount || wrongNetwork}>Approve</button>}
+        <button onClick={onStake} disabled={status !== "idle" || Boolean(stakeBlockReason)}>Stake</button>
+        <button onClick={onUnstake} disabled={status !== "idle" || Boolean(unstakeBlockReason)}>Unstake</button>
+        <button onClick={onClaim} disabled={status !== "idle" || Boolean(claimBlockReason)}>Claim</button>
       </div>
     </article>
   );

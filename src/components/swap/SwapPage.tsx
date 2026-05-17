@@ -46,6 +46,12 @@ function normalizeSwapError(error: any): SmartError {
   if (/network|chain|switch/i.test(raw)) {
     return { title: "Wrong network selected", message: "Stablecoin swaps run on ARC Testnet only.", action: "Switch your wallet to ARC Chain and try again.", tone: "warning" };
   }
+  if (/kit key|not configured|arc_kit|kitkey/i.test(raw)) {
+    return { title: "Swap service not configured", message: "The Arc App Kit key is missing, so USDC/EURC swaps cannot be submitted yet.", action: "Add NEXT_PUBLIC_ARC_KIT_KEY and redeploy the app." };
+  }
+  if (/wallet provider|no wallet provider|signer|account/i.test(raw)) {
+    return { title: "Wallet provider unavailable", message: "The browser wallet connection is not ready for signing.", action: "Reconnect your wallet and open the wallet extension or mobile wallet." };
+  }
   if (/slippage|amountoutmin|price impact/i.test(raw)) {
     return { title: "Slippage too high", message: "The quote moved before the transaction could confirm.", action: "Try 0.5% or 1% slippage, or reduce the amount.", tone: "warning" };
   }
@@ -74,7 +80,7 @@ function loadRecentTokens(): TokenSymbol[] {
 
 export default function SwapPage() {
   const { isConnected } = useAccount();
-  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
+  const { state, updateState, executeSwap, approve, needsApproval, routerConfigured, swapReady, routeMode, routeLabel, currentChainId, requiredChainId, estimatedOut, quoteLoading, reset } = useArcSwap();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
@@ -259,6 +265,19 @@ export default function SwapPage() {
 
   const isLoading = state.status === "approving" || state.status === "swapping";
   const wrongNetwork = isConnected && currentChainId !== requiredChainId;
+  const readinessText = !isConnected
+    ? "Connect Wallet to Swap"
+    : wrongNetwork
+      ? "Switch to ARC Chain"
+      : !state.amountIn
+        ? "Enter amount"
+        : needsApproval
+          ? `Approve ${state.fromToken}`
+          : !swapReady
+            ? routeMode === "appkit-missing-key"
+              ? "Swap service not configured"
+              : "No swap route"
+            : "Confirm Swap";
   const actionDisabled = isLoading || !state.amountIn || needsApproval || (!swapReady && !wrongNetwork);
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
@@ -343,7 +362,14 @@ export default function SwapPage() {
               </div>
             )}
 
-            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} show={Boolean(state.amountIn || estimatedOut)} />
+            <RoutePreview fromToken={fromToken.symbol} toToken={toToken.symbol} routeLabel={routeLabel} show={Boolean(state.amountIn || estimatedOut)} />
+
+            {!swapReady && !wrongNetwork && state.amountIn && (
+              <div className="lunexis-impact-warning mb-3">
+                <strong>{routeMode === "appkit-missing-key" ? "Swap service not configured" : "Route unavailable"}</strong>
+                <span>{routeMode === "appkit-missing-key" ? "Add an Arc App Kit key to enable USDC/EURC swaps." : "No working swap route returned a quote for this pair."}</span>
+              </div>
+            )}
 
             {needsApproval && currentChainId === requiredChainId && (
               <button onClick={handleApprove} disabled={state.status === "approving" || !state.amountIn} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
@@ -351,7 +377,7 @@ export default function SwapPage() {
               </button>
             )}
             <button onClick={handleSwap} disabled={actionDisabled} className="btn-primary w-full py-4 rounded-2xl">
-              {isLoading ? "Swapping..." : wrongNetwork ? "Switch to ARC Chain" : isConnected ? "Confirm Swap" : "Connect Wallet to Swap"}
+              {isLoading ? "Swapping..." : readinessText}
             </button>
             {!isConnected && (
               <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.16)" }}>
@@ -525,11 +551,11 @@ function SlippageSelector({
   );
 }
 
-function RoutePreview({ fromToken, toToken, show }: { fromToken: TokenSymbol; toToken: TokenSymbol; show: boolean }) {
+function RoutePreview({ fromToken, toToken, routeLabel, show }: { fromToken: TokenSymbol; toToken: TokenSymbol; routeLabel: string; show: boolean }) {
   if (!show || !SWAP_TOKENS.includes(fromToken) || !SWAP_TOKENS.includes(toToken)) return null;
   return (
     <div className="lunexis-route-preview">
-      <span>Route</span>
+      <span>Route - {routeLabel}</span>
       <div>
         <TokenIcon symbol={fromToken} size={28} />
         <strong>{fromToken}</strong>

@@ -57,6 +57,30 @@ function cleanAmount(raw: bigint, decimals: number) {
   return trimmed ? `${whole}.${trimmed}` : whole;
 }
 
+function parsePositiveAmount(amount: string, decimals: number, label: string) {
+  try {
+    const value = parseUnits(amount || "0", decimals);
+    if (value <= BigInt(0)) throw new Error(`Enter a valid ${label} amount.`);
+    return value;
+  } catch (error: any) {
+    if (error?.message?.startsWith("Enter a valid")) throw error;
+    throw new Error(`Enter a valid ${label} amount.`);
+  }
+}
+
+function normalizeStakingError(error: any) {
+  const raw = String(error?.shortMessage || error?.message || error || "Transaction failed");
+  if (/user rejected|rejected|denied|cancel/i.test(raw)) return "Wallet confirmation was cancelled. No funds were moved.";
+  if (/insufficient|exceeds balance|funds|balance/i.test(raw)) return "Insufficient token balance or ARC Testnet gas for this transaction.";
+  if (/network|chain|switch/i.test(raw)) return "Switch your wallet to ARC Testnet and try again.";
+  if (/locked/i.test(raw)) return "This position is still locked. Wait until the unlock date before unstaking.";
+  if (/paused/i.test(raw)) return "This staking pool is paused right now.";
+  if (/allowance|approve/i.test(raw)) return "Approve this token for staking before submitting the stake transaction.";
+  if (/transferfailed|transfer failed|reward/i.test(raw)) return "The staking manager could not transfer rewards. The reward vault may need funding.";
+  if (/invalidamount|valid/i.test(raw)) return "Enter a valid amount for this staking action.";
+  return raw;
+}
+
 export function useStaking() {
   const { address, chainId, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -159,6 +183,10 @@ export function useStaking() {
       const pending = address
         ? await publicClient.readContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "pendingReward", args: [BigInt(id), address] }).catch(() => BigInt(0))
         : BigInt(0);
+      const allowance = address
+        ? await publicClient.readContract({ address: stakeTokenAddress, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] }).catch(() => BigInt(0))
+        : BigInt(0);
+      const rewardVaultBalance = await publicClient.readContract({ address: rewardTokenAddress, abi: ERC20_ABI, functionName: "balanceOf", args: [managerAddress] }).catch(() => BigInt(0));
 
       return {
         id,
@@ -173,6 +201,9 @@ export function useStaking() {
         userStaked: cleanAmount(position[0] as bigint, stakeToken.decimals),
         pendingReward: cleanAmount(pending as bigint, rewardToken.decimals),
         unlockAt: Number(position[3] || 0),
+        allowance: allowance as bigint,
+        rewardVaultBalance: cleanAmount(rewardVaultBalance as bigint, rewardToken.decimals),
+        needsApproval: Boolean((allowance as bigint) === BigInt(0)),
       } satisfies StakingPoolView;
     }));
 
@@ -196,7 +227,9 @@ export function useStaking() {
     const managerAddress = STAKING_MANAGER_ADDRESS;
     if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
     await ensureArcNetwork();
-    const value = parseUnits(amount || "0", pool.token.decimals);
+    const value = parsePositiveAmount(amount, pool.token.decimals, "approval");
+    const balance = parseUnits(pool.token.balance || "0", pool.token.decimals);
+    if (value > balance) throw new Error(`Insufficient ${pool.token.symbol} balance for this approval.`);
     setStatus("approving");
     try {
       const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] });
@@ -204,18 +237,25 @@ export function useStaking() {
       const hash = await walletClient.writeContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "approve", args: [managerAddress, maxUint256], account: walletClient.account! });
       await publicClient.waitForTransactionReceipt({ hash });
       pushActivity(createActivity("wallet", `Approved ${pool.token.symbol}`, `Approved staking manager for ${pool.token.symbol}.`, "USDC", "completed", hash));
+      await refresh();
       return { hash };
+    } catch (error) {
+      throw new Error(normalizeStakingError(error));
     } finally {
       setStatus("idle");
     }
-  }, [address, ensureArcNetwork, publicClient, pushActivity, walletClient]);
+  }, [address, ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
 
   const stake = useCallback(async (pool: StakingPoolView, amount: string) => {
     const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
+    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
     await ensureArcNetwork();
-    const value = parseUnits(amount || "0", pool.token.decimals);
-    if (value <= BigInt(0)) throw new Error("Enter a valid staking amount.");
+    if (pool.paused) throw new Error("This staking pool is paused right now.");
+    const value = parsePositiveAmount(amount, pool.token.decimals, "staking");
+    const balance = parseUnits(pool.token.balance || "0", pool.token.decimals);
+    if (value > balance) throw new Error(`Insufficient ${pool.token.symbol} balance for this stake.`);
+    const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] }).catch(() => BigInt(0));
+    if ((allowance as bigint) < value) throw new Error(`Approve ${pool.token.symbol} before staking.`);
     setStatus("staking");
     try {
       const hash = await walletClient.writeContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "stake", args: [BigInt(pool.id), value], account: walletClient.account! });
@@ -223,17 +263,21 @@ export function useStaking() {
       pushActivity(createActivity("wallet", `Staked ${pool.token.symbol}`, `Staked ${amount} ${pool.token.symbol} in Lunexis staking.`, "USDC", "completed", hash));
       await refresh();
       return { hash };
+    } catch (error) {
+      throw new Error(normalizeStakingError(error));
     } finally {
       setStatus("idle");
     }
-  }, [ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
+  }, [address, ensureArcNetwork, publicClient, pushActivity, refresh, walletClient]);
 
   const unstake = useCallback(async (pool: StakingPoolView, amount: string) => {
     const managerAddress = STAKING_MANAGER_ADDRESS;
     if (!walletClient || !publicClient || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
     await ensureArcNetwork();
-    const value = parseUnits(amount || "0", pool.token.decimals);
-    if (value <= BigInt(0)) throw new Error("Enter a valid unstake amount.");
+    const value = parsePositiveAmount(amount, pool.token.decimals, "unstake");
+    const staked = parseUnits(pool.userStaked || "0", pool.token.decimals);
+    if (value > staked) throw new Error(`You only have ${pool.userStaked} ${pool.token.symbol} staked in this pool.`);
+    if (pool.unlockAt && pool.unlockAt * 1000 > Date.now()) throw new Error(`This position is locked until ${new Date(pool.unlockAt * 1000).toLocaleString()}.`);
     setStatus("unstaking");
     try {
       const hash = await walletClient.writeContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "unstake", args: [BigInt(pool.id), value], account: walletClient.account! });
@@ -241,6 +285,8 @@ export function useStaking() {
       pushActivity(createActivity("wallet", `Unstaked ${pool.token.symbol}`, `Unstaked ${amount} ${pool.token.symbol}.`, "USDC", "completed", hash));
       await refresh();
       return { hash };
+    } catch (error) {
+      throw new Error(normalizeStakingError(error));
     } finally {
       setStatus("idle");
     }
@@ -250,6 +296,10 @@ export function useStaking() {
     const managerAddress = STAKING_MANAGER_ADDRESS;
     if (!walletClient || !publicClient || !managerAddress) throw new Error("Connect wallet and configure staking manager.");
     await ensureArcNetwork();
+    const pending = parseUnits(pool.pendingReward || "0", pool.rewardToken.decimals);
+    if (pending <= BigInt(0)) throw new Error("No staking rewards are ready to claim yet.");
+    const vaultBalance = await publicClient.readContract({ address: pool.rewardToken.address, abi: ERC20_ABI, functionName: "balanceOf", args: [managerAddress] }).catch(() => BigInt(0));
+    if ((vaultBalance as bigint) < pending) throw new Error("The staking manager reward vault needs more reward tokens before claims can succeed.");
     setStatus("claiming");
     try {
       const hash = await walletClient.writeContract({ address: managerAddress, abi: STAKING_MANAGER_ABI, functionName: "claim", args: [BigInt(pool.id)], account: walletClient.account! });
@@ -257,6 +307,8 @@ export function useStaking() {
       pushActivity(createActivity("reward", `Claimed ${pool.rewardToken.symbol}`, `Claimed staking rewards from ${pool.token.symbol} pool.`, "USDC", "completed", hash));
       await refresh();
       return { hash };
+    } catch (error) {
+      throw new Error(normalizeStakingError(error));
     } finally {
       setStatus("idle");
     }
@@ -281,6 +333,8 @@ export function useStaking() {
       await publicClient.waitForTransactionReceipt({ hash });
       await refresh();
       return { hash };
+    } catch (error) {
+      throw new Error(normalizeStakingError(error));
     } finally {
       setStatus("idle");
     }

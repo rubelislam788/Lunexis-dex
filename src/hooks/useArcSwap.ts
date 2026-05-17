@@ -5,7 +5,7 @@ import { erc20Abi, formatEther, formatUnits, isAddressEqual, maxUint256, parseUn
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import type { SwapState, TokenSymbol } from "@/types";
 import { DEX_CONTRACTS, UNISWAP_V2_ROUTER_ABI } from "@/lib/arc-dex";
-import { ARC_TESTNET_CHAIN_ID, getAppKit, getAppKitResultHash, getArcKitKey, getBrowserViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, getAppKit, getAppKitResultHash, getArcKitKey, getViemAdapter, withCircleApiProxy } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
@@ -24,11 +24,22 @@ function parseSlippage(slippage: string) {
   return Number(slippage.replace("%", "")) || 0.5;
 }
 
+function slippageBps(slippage: string) {
+  return Math.round(parseSlippage(slippage) * 100);
+}
+
 function cleanAmount(raw: bigint, decimals: number) {
   const formatted = formatUnits(raw, decimals);
   const [whole, fraction = ""] = formatted.split(".");
   const trimmedFraction = fraction.slice(0, decimals === 6 ? 4 : 6).replace(/0+$/, "");
   return trimmedFraction ? `${whole}.${trimmedFraction}` : whole;
+}
+
+function appKitAmount(value: any) {
+  const amount = value?.amount ?? value?.value ?? value?.formatted ?? value;
+  if (typeof amount === "string") return amount;
+  if (typeof amount === "number" && Number.isFinite(amount)) return String(amount);
+  return "";
 }
 
 export function useArcSwap() {
@@ -49,6 +60,7 @@ export function useArcSwap() {
   const [allowance, setAllowance] = useState<bigint>(BigInt(0));
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quotePath, setQuotePath] = useState<Address[]>([]);
+  const [routerQuoteReady, setRouterQuoteReady] = useState(false);
 
   const updateState = useCallback((patch: Partial<SwapState>) => {
     setState((prev) => ({ ...prev, ...patch }));
@@ -71,12 +83,18 @@ export function useArcSwap() {
     !isAddressEqual(fromTokenAddress, zeroAddress) &&
     !isAddressEqual(toTokenAddress, zeroAddress)
   );
-  const routeMode: "router" | "appkit" | "appkit-missing-key" | "unavailable" = routerReady
-    ? "router"
-    : canUseAppKitSwap
-      ? appKitReady
-        ? "appkit"
+  const routeMode: "router" | "appkit" | "appkit-missing-key" | "quote-error" | "unavailable" = canUseAppKitSwap
+    ? appKitReady
+      ? "appkit"
+      : routerReady
+        ? routerQuoteReady
+          ? "router"
+          : "appkit-missing-key"
         : "appkit-missing-key"
+    : routerReady
+      ? routerQuoteReady
+        ? "router"
+        : "quote-error"
       : "unavailable";
 
   const estimatedOut = useMemo(() => state.amountOut, [state.amountOut]);
@@ -99,19 +117,53 @@ export function useArcSwap() {
         return;
       }
 
-      if (canUseAppKitSwap && routeMode !== "router") {
-        if (!cancelled) {
-          setQuoteLoading(false);
-          setQuotePath([]);
-          setState((prev) => ({ ...prev, amountOut: state.amountIn }));
+      if (canUseAppKitSwap && appKitReady) {
+        if (!isConnected || !walletClient || !publicClient || currentChainId !== ARC_CHAIN_ID) {
+          if (!cancelled) {
+            setQuoteLoading(false);
+            setQuotePath([]);
+            setRouterQuoteReady(false);
+            setState((prev) => ({ ...prev, amountOut: state.amountIn }));
+          }
+          return;
+        }
+
+        try {
+          if (!cancelled) setQuoteLoading(true);
+          const adapter = await getViemAdapter(walletClient, publicClient);
+          const kit = await getAppKit();
+          const estimate = await withCircleApiProxy(() =>
+            kit.estimateSwap({
+              from: { adapter, chain: "Arc_Testnet" },
+              tokenIn: fromToken,
+              tokenOut: toToken,
+              amountIn: state.amountIn,
+              config: { kitKey: appKitKey, allowanceStrategy: "approve", slippageBps: slippageBps(state.slippage) },
+            })
+          );
+          const nextAmount = appKitAmount(estimate?.estimatedOutput) || state.amountIn;
+          if (!cancelled) {
+            setQuotePath([]);
+            setRouterQuoteReady(false);
+            setState((prev) => ({ ...prev, amountOut: nextAmount }));
+          }
+        } catch {
+          if (!cancelled) {
+            setQuotePath([]);
+            setRouterQuoteReady(false);
+            setState((prev) => ({ ...prev, amountOut: state.amountIn }));
+          }
+        } finally {
+          if (!cancelled) setQuoteLoading(false);
         }
         return;
       }
 
-      if (routeMode !== "router" || !router || !publicClient || currentChainId !== ARC_CHAIN_ID || !fromTokenAddress || !toTokenAddress) {
+      if (!router || !publicClient || currentChainId !== ARC_CHAIN_ID || !fromTokenAddress || !toTokenAddress) {
         if (!cancelled) {
           setQuoteLoading(false);
           setQuotePath([]);
+          setRouterQuoteReady(false);
           setState((prev) => ({ ...prev, amountOut: "" }));
         }
         return;
@@ -143,11 +195,13 @@ export function useArcSwap() {
 
         if (!cancelled) {
           setQuotePath(nextPath);
+          setRouterQuoteReady(true);
           setState((prev) => ({ ...prev, amountOut: cleanAmount(amounts[amounts.length - 1], TOKEN_DECIMALS[toToken]) }));
         }
       } catch {
         if (!cancelled) {
           setQuotePath([]);
+          setRouterQuoteReady(false);
           setState((prev) => ({ ...prev, amountOut: "" }));
         }
       } finally {
@@ -159,7 +213,7 @@ export function useArcSwap() {
     return () => {
       cancelled = true;
     };
-  }, [amountIn, buildCandidatePaths, canUseAppKitSwap, currentChainId, fromToken, fromTokenAddress, publicClient, routeMode, router, state.amountIn, toToken, toTokenAddress]);
+  }, [amountIn, appKitKey, appKitReady, buildCandidatePaths, canUseAppKitSwap, currentChainId, fromToken, fromTokenAddress, isConnected, publicClient, router, state.amountIn, state.slippage, toToken, toTokenAddress, walletClient]);
 
   useEffect(() => {
     let cancelled = false;
@@ -238,16 +292,16 @@ export function useArcSwap() {
     try {
       updateState({ status: "swapping", error: undefined });
 
-      if (!router || !fromTokenAddress || !toTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress) || isAddressEqual(toTokenAddress, zeroAddress)) {
+      if (routeMode === "appkit") {
         if (!canUseAppKitSwap) {
           throw new Error("Swap route is temporarily unavailable for this token pair.");
         }
 
         if (!appKitKey) {
-          throw new Error("Swap route is warming up. Try again in a moment.");
+          throw new Error("Swap service is not configured. Add NEXT_PUBLIC_ARC_KIT_KEY and redeploy.");
         }
 
-        const adapter = await getBrowserViemAdapter();
+        const adapter = await getViemAdapter(walletClient, publicClient);
         const kit = await getAppKit();
         const result = await withCircleApiProxy(() =>
           kit.swap({
@@ -255,7 +309,7 @@ export function useArcSwap() {
             tokenIn: fromToken,
             tokenOut: toToken,
             amountIn: state.amountIn,
-            config: { kitKey: appKitKey, allowanceStrategy: "approve" },
+            config: { kitKey: appKitKey, allowanceStrategy: "approve", slippageBps: slippageBps(state.slippage) },
           })
         );
 
@@ -267,6 +321,14 @@ export function useArcSwap() {
 
         updateState({ status: "success", txHash: hash });
         return { hash, amountOut: estimatedOut };
+      }
+
+      if (routeMode === "appkit-missing-key") {
+        throw new Error("Swap service is not configured. Add NEXT_PUBLIC_ARC_KIT_KEY and redeploy.");
+      }
+
+      if (!router || !fromTokenAddress || !toTokenAddress || isAddressEqual(fromTokenAddress, zeroAddress) || isAddressEqual(toTokenAddress, zeroAddress)) {
+        throw new Error("Swap route is temporarily unavailable for this token pair.");
       }
 
       if (needsApproval) throw new Error(`Approve ${fromToken} before swapping.`);
@@ -301,7 +363,7 @@ export function useArcSwap() {
       updateState({ status: "error", error: err?.message || "Swap failed" });
       throw err;
     }
-  }, [address, amountIn, appKitKey, buildCandidatePaths, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, quotePath, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
+  }, [address, amountIn, appKitKey, buildCandidatePaths, canUseAppKitSwap, currentChainId, estimatedOut, fromToken, fromTokenAddress, isConnected, needsApproval, publicClient, quotePath, routeMode, router, state.amountIn, state.slippage, toToken, toTokenAddress, updateState, walletClient]);
 
   const reset = useCallback(() => {
     updateState({ status: "idle", txHash: undefined, error: undefined });
@@ -318,6 +380,7 @@ export function useArcSwap() {
     appKitReady,
     swapReady: routeMode === "router" || routeMode === "appkit",
     routeMode,
+    routeLabel: routeMode === "appkit" ? "Arc App Kit" : routeMode === "router" ? "Uniswap V2 Router" : routeMode === "appkit-missing-key" ? "Missing kit key" : routeMode === "quote-error" ? "No route" : "Unavailable",
     requiredChainId: ARC_CHAIN_ID,
     currentChainId,
     estimatedOut,

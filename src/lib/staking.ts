@@ -29,6 +29,9 @@ export interface StakingPoolView {
   unlockAt?: number;
   paused: boolean;
   metadata: string;
+  allowance?: bigint;
+  rewardVaultBalance?: string;
+  needsApproval?: boolean;
 }
 
 function parseAddress(value?: string) {
