@@ -11,7 +11,6 @@ import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 const BRIDGE_PROGRESS_STEPS = 2;
-const FAST_BRIDGE_MAX_FEE = process.env.NEXT_PUBLIC_ARC_BRIDGE_MAX_FEE || "2";
 export type BridgeProgressUpdate = { stepIndex: number; status: "active" | "done" };
 const ARC_SWAP_CONFIG = (kitKey: string) => ({
   kitKey,
@@ -94,9 +93,30 @@ function createTransactionProgress(onProgress?: (update: BridgeProgressUpdate) =
 function fastBridgeConfig() {
   return {
     transferSpeed: "FAST",
-    maxFee: FAST_BRIDGE_MAX_FEE,
     batchTransactions: false,
   };
+}
+
+function getBridgeStepError(result: any) {
+  const failedStep = Array.isArray(result?.steps) ? result.steps.find((step: any) => step?.state === "error") : undefined;
+  const failedName = failedStep?.name ? `${failedStep.name} step` : "Bridge";
+  const failedMessage = failedStep?.errorMessage || failedStep?.error?.message || result?.errorMessage || result?.error?.message;
+  return failedMessage ? `${failedName} failed: ${failedMessage}` : "Bridge transfer failed after approval. Please try again with a smaller amount or add more gas.";
+}
+
+function assertBridgeCompleted(result: any) {
+  if (result?.state === "error") throw new Error(getBridgeStepError(result));
+  const steps = Array.isArray(result?.steps) ? result.steps : [];
+  const burnStep = steps.find((step: any) => step?.name === "burn" && step?.state === "success" && (step?.txHash || step?.hash));
+  if (!burnStep && steps.length > 0) {
+    throw new Error("Bridge approval completed, but the transfer/burn transaction did not complete.");
+  }
+}
+
+function getBridgeTransferHash(result: any) {
+  const steps = Array.isArray(result?.steps) ? result.steps : [];
+  const transferStep = steps.find((step: any) => ["burn", "mint"].includes(step?.name) && (step?.txHash || step?.hash));
+  return transferStep?.txHash || transferStep?.hash || getAppKitResultHash(result);
 }
 
 export function useArcBridge() {
@@ -179,7 +199,8 @@ export function useArcBridge() {
           } as any)
         );
         progress.markResult(bridgeResult);
-        const hash = getAppKitResultHash(bridgeResult) || getAppKitResultHash(swapResult);
+        assertBridgeCompleted(bridgeResult);
+        const hash = getBridgeTransferHash(bridgeResult) || getAppKitResultHash(swapResult);
         if (!hash) throw new Error("EURC swap and bridge submitted but no transaction hash was returned.");
         progress.complete();
         updateState({ status: "success", txHash: hash });
@@ -197,6 +218,7 @@ export function useArcBridge() {
           } as any)
         );
         progress.markResult(bridgeResult);
+        assertBridgeCompleted(bridgeResult);
         const bridgeAmount = String(bridgeResult?.amount || state.amount);
         await promptWalletNetworkSwitch(ARC_CHAIN_ID).catch(() => undefined);
         const swapResult = await withCircleApiProxy<any>(() =>
@@ -226,7 +248,8 @@ export function useArcBridge() {
         } as any)
       );
       progress.markResult(result);
-      const hash = getAppKitResultHash(result);
+      assertBridgeCompleted(result);
+      const hash = getBridgeTransferHash(result);
 
       if (!hash) {
         throw new Error("Bridge submitted but no transaction hash was returned.");
