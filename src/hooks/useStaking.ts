@@ -17,6 +17,7 @@ import {
 import { createActivity } from "@/lib/profile";
 import { useProfile } from "@/hooks/useProfile";
 import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
+import type { TokenSymbol } from "@/types";
 
 const CUSTOM_TOKEN_KEY = "lunexis.staking.custom-tokens.v1";
 
@@ -83,6 +84,10 @@ function normalizeStakingError(error: any) {
 
 function isBigIntLike(value: unknown): value is bigint {
   return typeof value === "bigint";
+}
+
+function activityToken(symbol: string): TokenSymbol {
+  return symbol === "EURC" || symbol === "WETH" || symbol === "ETH" || symbol === "ARC" ? symbol : "USDC";
 }
 
 export function useStaking() {
@@ -305,7 +310,7 @@ export function useStaking() {
         account: address,
       });
       await publicClient.waitForTransactionReceipt({ hash });
-      pushActivity(createActivity("wallet", `Approved ${pool.token.symbol}`, `Approved staking contract for ${pool.token.symbol}.`, pool.token.symbol, "completed", hash));
+      pushActivity(createActivity("wallet", `Approved ${pool.token.symbol}`, `Approved staking contract for ${pool.token.symbol}.`, activityToken(pool.token.symbol), "completed", hash));
       await refresh();
       return { hash };
     } catch (error) {
@@ -329,7 +334,7 @@ export function useStaking() {
     setStatus("staking");
     try {
       const result = await sendStakingWrite("stake", [[pool.token.address, value], [value, pool.token.address], [value]]);
-      pushActivity(createActivity("wallet", `Staked ${pool.token.symbol}`, `Staked ${amount} ${pool.token.symbol} in Lunexis staking.`, pool.token.symbol, "completed", result.hash));
+      pushActivity(createActivity("wallet", `Staked ${pool.token.symbol}`, `Staked ${amount} ${pool.token.symbol} in Lunexis staking.`, activityToken(pool.token.symbol), "completed", result.hash));
       return result;
     } finally {
       setStatus("idle");
@@ -344,7 +349,7 @@ export function useStaking() {
     setStatus("unstaking");
     try {
       const result = await sendStakingWrite("unstake", [[pool.token.address, value], [value, pool.token.address], [value]]);
-      pushActivity(createActivity("wallet", `Unstaked ${pool.token.symbol}`, `Unstaked ${amount} ${pool.token.symbol}.`, pool.token.symbol, "completed", result.hash));
+      pushActivity(createActivity("wallet", `Unstaked ${pool.token.symbol}`, `Unstaked ${amount} ${pool.token.symbol}.`, activityToken(pool.token.symbol), "completed", result.hash));
       return result;
     } finally {
       setStatus("idle");
@@ -358,7 +363,7 @@ export function useStaking() {
     setStatus("claiming");
     try {
       const result = await sendStakingWrite("claimRewards", [[pool.token.address], []]);
-      pushActivity(createActivity("reward", `Claimed ${pool.rewardToken.symbol}`, `Claimed staking rewards from ${pool.token.symbol} staking.`, pool.rewardToken.symbol, "completed", result.hash));
+      pushActivity(createActivity("reward", `Claimed ${pool.rewardToken.symbol}`, `Claimed staking rewards from ${pool.token.symbol} staking.`, activityToken(pool.rewardToken.symbol), "completed", result.hash));
       return result;
     } finally {
       setStatus("idle");
