@@ -294,7 +294,7 @@ export default function BridgePage() {
 }
 
 function BridgeProgressModal({ activeStep, completedStep, token, fromLabel, toLabel }: { activeStep: number; completedStep: number; token: TokenSymbol; fromLabel: string; toLabel: string }) {
-  const steps = ["Transaction 1", "Transaction 2"];
+  const steps = ["Confirm", "Submit"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.76)", backdropFilter: "blur(12px)" }}>
