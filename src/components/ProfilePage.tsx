@@ -104,22 +104,12 @@ export default function ProfilePage() {
             <PortfolioShareCard />
           </div>
 
-          <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              ["XP", profile.xp.toLocaleString()],
-              ["Rewards", formatRewardTotals(profile.rewardTokenTotals, profile.rewardsEarned)],
-              ["Missions", `${profile.completedMissionIds.length} done`],
-            ].map(([label, value]) => (
-              <div key={label} className="arc-card rounded-2xl p-5">
-                <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495", letterSpacing: "0.1em" }}>{label}</div>
-                <div style={{ fontFamily: "'Space Grotesk'", fontSize: 28, fontWeight: 900, color: "#38bdf8", marginTop: 8 }}>{value}</div>
-              </div>
-            ))}
-
-            <div className="md:col-span-3 arc-card rounded-3xl p-6">
+          <section className="lg:col-span-2">
+            <div className="arc-card rounded-3xl p-6">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
-                  <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>Live Portfolio</h2>
+                  <div className="lunexis-kicker">Profile Dashboard</div>
+                  <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 22, fontWeight: 900, color: "#f8fbff", marginTop: 4 }}>Portfolio Overview</h2>
                   <p style={{ color: "#849495", fontSize: 12, marginTop: 4 }}>
                     {lastUpdated ? `Synced ${lastUpdated}` : "Reading balances from your connected wallet"}
                   </p>
@@ -128,6 +118,20 @@ export default function ProfilePage() {
                   {balancesLoading ? "Syncing..." : "Refresh"}
                 </button>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                {[
+                  ["XP", profile.xp.toLocaleString()],
+                  ["Rewards", formatRewardTotals(profile.rewardTokenTotals, profile.rewardsEarned)],
+                  ["Missions", `${profile.completedMissionIds.length} done`],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(56,189,248,0.12)" }}>
+                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: "#849495", letterSpacing: "0.12em", textTransform: "uppercase" }}>{label}</div>
+                    <div style={{ fontFamily: "'Space Grotesk'", fontSize: 24, fontWeight: 900, color: "#38bdf8", marginTop: 7 }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 {balances.map((balance) => (
                   <div key={balance.token} className="p-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${TOKEN_META[balance.token].accent}44` }}>
@@ -141,11 +145,14 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="md:col-span-3 arc-card rounded-3xl p-6">
-              <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff", marginBottom: 16 }}>Activity Timeline</h2>
-              <ActivityTimeline activities={profile.activities} />
+              <div className="mt-6 pt-5" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h2 style={{ fontFamily: "'Space Grotesk'", fontSize: 18, fontWeight: 900, color: "#f8fbff" }}>Activity Timeline</h2>
+                  <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800 }}>{profile.activities.length} events</span>
+                </div>
+                <ActivityTimeline activities={profile.activities} />
+              </div>
             </div>
           </section>
         </div>
