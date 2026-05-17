@@ -298,7 +298,7 @@ function BridgeProgressModal({ activeStep, token, fromLabel, toLabel, isEurc }: 
         <div className="flex items-center gap-4 mb-5">
           <div className="lunexis-bridge-orbit">
             <TokenIcon symbol={token} size={42} />
-            <span />
+            <span className="lunexis-bridge-orbit-dot" aria-hidden="true" />
           </div>
           <div>
             <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>
