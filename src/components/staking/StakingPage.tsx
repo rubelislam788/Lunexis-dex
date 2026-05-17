@@ -43,16 +43,6 @@ export default function StakingPage() {
   const [tokenSearch, setTokenSearch] = useState("");
   const [poolAmounts, setPoolAmounts] = useState<Record<number, string>>({});
 
-  const filteredTokens = useMemo(() => {
-    const query = tokenSearch.trim().toLowerCase();
-    if (!query) return staking.tokens;
-    return staking.tokens.filter((token) =>
-      token.symbol.toLowerCase().includes(query) ||
-      token.name.toLowerCase().includes(query) ||
-      token.address.toLowerCase().includes(query)
-    );
-  }, [staking.tokens, tokenSearch]);
-
   const totals = useMemo(() => {
     const staked = staking.pools.reduce((sum, pool) => sum + numeric(pool.userStaked), 0);
     const rewards = staking.pools.reduce((sum, pool) => sum + numeric(pool.pendingReward), 0);
@@ -107,7 +97,7 @@ export default function StakingPage() {
         {!staking.managerReady ? (
           <StakingInitializing />
         ) : (
-        <div className="lunexis-staking-layout grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+        <div className="lunexis-staking-layout grid grid-cols-1 gap-6">
           <main className="grid gap-6">
             <section className="lunexis-premium-card">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
@@ -172,22 +162,7 @@ export default function StakingPage() {
             </section>
           </main>
 
-          <aside className="grid gap-6 content-start">
-            <section className="lunexis-premium-card">
-              <div className="lunexis-kicker">Allowed Tokens</div>
-              <h2>Contract Assets</h2>
-              {staking.error && <div className="lunexis-staking-error">{staking.error}</div>}
-              <div className="lunexis-token-list">
-                {filteredTokens.map((token) => (
-                  <button key={token.address} className="is-active" type="button">
-                    {tokenAvatar(token, 34)}
-                    <span>{token.symbol}</span>
-                    <small>{token.balance ?? "0"}</small>
-                  </button>
-                ))}
-              </div>
-            </section>
-          </aside>
+          {staking.error && <aside className="grid gap-6 content-start"><div className="lunexis-staking-error">{staking.error}</div></aside>}
         </div>
         )}
       </div>
