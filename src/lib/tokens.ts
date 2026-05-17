@@ -41,7 +41,7 @@ export const TOKEN_META: Record<TokenSymbol, TokenMeta> = {
 };
 
 export const SWAP_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
-export const BRIDGE_TOKENS: TokenSymbol[] = ["USDC"];
+export const BRIDGE_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
 export const PORTFOLIO_TOKENS: TokenSymbol[] = ["USDC", "EURC"];
 
 export const TOKEN_DECIMALS: Record<TokenSymbol, number> = {
@@ -58,6 +58,7 @@ export const TOKEN_CONTRACTS: Partial<Record<TokenSymbol, Partial<Record<number,
     [ARC_TESTNET_CHAIN_ID]: (process.env.NEXT_PUBLIC_USDC_ADDRESS || process.env.NEXT_PUBLIC_USDC_ARC_ADDRESS || "0x3600000000000000000000000000000000000000") as Address,
   },
   EURC: {
+    [ETHEREUM_SEPOLIA_CHAIN_ID]: (process.env.NEXT_PUBLIC_EURC_SEPOLIA_ADDRESS || "0x08210f9170f89ab7658f0b5e3ff39b0e03c594d4") as Address,
     [ARC_TESTNET_CHAIN_ID]: (process.env.NEXT_PUBLIC_EURC_ADDRESS || process.env.NEXT_PUBLIC_EURC_ARC_ADDRESS || "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a") as Address,
   },
 };

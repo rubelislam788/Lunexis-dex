@@ -18,6 +18,7 @@ import {
 } from "@/lib/staking";
 import { createActivity } from "@/lib/profile";
 import { useProfile } from "@/hooks/useProfile";
+import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 
 const CUSTOM_TOKEN_KEY = "lunexis.staking.custom-tokens.v1";
 
@@ -104,7 +105,7 @@ export function useStaking() {
 
   const ensureArcNetwork = useCallback(async () => {
     if (chainId === STAKING_CHAIN_ID) return;
-    await switchChainAsync({ chainId: STAKING_CHAIN_ID });
+    await promptWalletNetworkSwitch(STAKING_CHAIN_ID, switchChainAsync);
   }, [chainId, switchChainAsync]);
 
   const readTokenInfo = useCallback(async (tokenAddress: string): Promise<StakingToken> => {
@@ -231,6 +232,8 @@ export function useStaking() {
     const value = parsePositiveAmount(amount, pool.token.decimals, "approval");
     const balance = parseUnits(pool.token.balance || "0", pool.token.decimals);
     if (value > balance) throw new Error(`Insufficient ${pool.token.symbol} balance for this approval.`);
+    const nativeGas = await publicClient.getBalance({ address }).catch(() => BigInt(0));
+    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on Arc Testnet before approving.");
     setStatus("approving");
     try {
       const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] });
@@ -255,6 +258,8 @@ export function useStaking() {
     const value = parsePositiveAmount(amount, pool.token.decimals, "staking");
     const balance = parseUnits(pool.token.balance || "0", pool.token.decimals);
     if (value > balance) throw new Error(`Insufficient ${pool.token.symbol} balance for this stake.`);
+    const nativeGas = await publicClient.getBalance({ address }).catch(() => BigInt(0));
+    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on Arc Testnet before staking.");
     const allowance = await publicClient.readContract({ address: pool.token.address, abi: ERC20_ABI, functionName: "allowance", args: [address, managerAddress] }).catch(() => BigInt(0));
     if ((allowance as bigint) < value) throw new Error(`Approve ${pool.token.symbol} before staking.`);
     setStatus("staking");

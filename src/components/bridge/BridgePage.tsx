@@ -15,6 +15,7 @@ import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
 import WalletButton from "@/components/ui/WalletButton";
+import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 
 const SOURCE_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ETH_SEPOLIA, SUPPORTED_CHAINS.ARC_TESTNET];
 const DEST_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ARC_TESTNET, SUPPORTED_CHAINS.ETH_SEPOLIA];
@@ -39,7 +40,7 @@ export default function BridgePage() {
   const [showFaucetHint, setShowFaucetHint] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string; explorerBaseUrl?: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
-  const availableBridgeTokens = ["USDC"] as TokenSymbol[];
+  const availableBridgeTokens = ["USDC", "EURC"] as TokenSymbol[];
   const onRequiredNetwork = currentChainId === requiredChainId;
   const requiredNetworkLabel = CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain;
   const sourceExplorerBaseUrl = state.fromChain === SUPPORTED_CHAINS.ARC_TESTNET ? "https://testnet.arcscan.app/tx/" : "https://sepolia.etherscan.io/tx/";
@@ -70,7 +71,7 @@ export default function BridgePage() {
 
   const switchToBridgeNetwork = async (chainId: number, label: string) => {
     try {
-      await switchChainAsync({ chainId });
+      await promptWalletNetworkSwitch(chainId, switchChainAsync);
       show(`Wallet switched to ${label}`, "success");
     } catch (err: any) {
       show(err?.message || "Network switch failed", "error");
@@ -186,10 +187,20 @@ export default function BridgePage() {
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Bridge Engine</span>
                 <span style={{ color: bridgeConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {bridgeMode === "appkit" ? "Arc App Kit" : "Live Path Pending"}
+                  {selectedToken === "EURC" ? "Arc App Kit Swap + Bridge" : bridgeMode === "appkit" ? "Arc App Kit" : "Live Path Pending"}
                 </span>
               </div>
             </div>
+            {selectedToken === "EURC" && (
+              <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.18)" }}>
+                <div style={{ color: "#8fe8ff", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  EURC Cross-Chain Route
+                </div>
+                <p style={{ color: "#d6edf8", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                  Circle bridge transfers USDC only, so EURC routes use Arc App Kit swap plus bridge. From Sepolia, the route spends USDC and converts to EURC on Arc.
+                </p>
+              </div>
+            )}
             {bridgeMode === "unsupported" && (
               <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
                 <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>

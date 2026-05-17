@@ -211,7 +211,11 @@ export default function StakingPage() {
                         const next = percent === 100 ? balance : balance * percent / 100;
                         setPoolAmounts((prev) => ({ ...prev, [pool.id]: next.toFixed(next >= 1 ? 4 : 6).replace(/\.?0+$/, "") }));
                       }}
-                      onApprove={() => run("Approval", () => staking.approve(pool, poolAmounts[pool.id] ?? "0"))}
+                      onApprove={() => run("Stake", async () => {
+                        const amount = poolAmounts[pool.id] ?? "0";
+                        await staking.approve(pool, amount);
+                        return staking.stake(pool, amount);
+                      })}
                       onStake={() => run("Stake", () => staking.stake(pool, poolAmounts[pool.id] ?? "0"))}
                       onUnstake={() => run("Unstake", () => staking.unstake(pool, poolAmounts[pool.id] ?? "0"))}
                       onClaim={() => run("Claim rewards", () => staking.claim(pool))}
@@ -431,7 +435,7 @@ function PoolCard({
         </div>
       )}
       <div className="lunexis-staking-actions">
-        {needsApproval && <button onClick={onApprove} disabled={status !== "idle" || !hasAmount || wrongNetwork}>Approve</button>}
+        {needsApproval && <button onClick={onApprove} disabled={status !== "idle" || !hasAmount || wrongNetwork}>Approve & Stake</button>}
         <button onClick={onStake} disabled={status !== "idle" || Boolean(stakeBlockReason)}>Stake</button>
         <button onClick={onUnstake} disabled={status !== "idle" || Boolean(unstakeBlockReason)}>Unstake</button>
         <button onClick={onClaim} disabled={status !== "idle" || Boolean(claimBlockReason)}>Claim</button>
