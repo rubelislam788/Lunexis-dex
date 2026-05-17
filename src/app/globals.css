@@ -2425,8 +2425,9 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   right: 0;
   top: calc(100% + 0.5rem);
   width: min(17rem, calc(100vw - 2rem));
+  min-width: min(17rem, calc(100vw - 2rem));
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(3.75rem, 1fr));
   gap: 0.5rem;
   padding: 0.7rem;
   border-radius: 1rem;
@@ -2438,14 +2439,22 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
 }
 
 .lunexis-slippage-menu button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   min-height: 34px;
+  min-width: 3.75rem;
   color: #9fb2c4;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 0.72rem;
   font-weight: 900;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 1;
 }
 
 .lunexis-slippage-menu button.is-active {
@@ -3615,7 +3624,7 @@ select.lunexis-staking-input {
   .lunexis-slippage-menu {
     left: 0;
     right: auto;
-    width: 100%;
+    width: min(17rem, calc(100vw - 2rem));
   }
 
   .lunexis-staking-hero,
@@ -6291,7 +6300,8 @@ html[data-lunexis-theme="morn"] .lunexis-page-back-button:hover {
     position: absolute !important;
     left: 0 !important;
     right: 0 !important;
-    width: min(100%, 320px) !important;
+    width: min(17rem, calc(100vw - 2rem)) !important;
+    min-width: min(17rem, calc(100vw - 2rem)) !important;
     margin-inline: auto;
     border-radius: 20px !important;
   }
