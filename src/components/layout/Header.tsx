@@ -21,12 +21,13 @@ const TOP_NAV_ITEMS: Array<{ page: Page; label: string; icon: string }> = [
 interface HeaderProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
+  onBack: () => void;
   onToggleSidebar: () => void;
   sidebarOpen: boolean;
   sidebarAvailable: boolean;
 }
 
-export default function Header({ currentPage, onNavigate, onToggleSidebar, sidebarOpen, sidebarAvailable }: HeaderProps) {
+export default function Header({ currentPage, onNavigate, onBack, onToggleSidebar, sidebarOpen, sidebarAvailable }: HeaderProps) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -55,6 +56,15 @@ export default function Header({ currentPage, onNavigate, onToggleSidebar, sideb
     >
       <div className="arc-floating-topbar pointer-events-auto">
         <div className="arc-topbar-left flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="arc-floating-back-button"
+            aria-label="Go back"
+            title="Back"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          </button>
           {sidebarAvailable ? (
             <button
               type="button"

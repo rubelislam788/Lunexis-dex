@@ -1910,6 +1910,7 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   }
 
   .arc-floating-action,
+  .arc-floating-back-button,
   .arc-floating-menu-button,
   .lunexis-icon-button {
     width: 40px !important;
@@ -3600,7 +3601,8 @@ select.lunexis-staking-input {
 
 .arc-floating-brand,
 .arc-floating-nav-link,
-.arc-floating-action {
+.arc-floating-action,
+.arc-floating-back-button {
   position: relative !important;
   overflow: hidden !important;
 }
@@ -3609,12 +3611,14 @@ select.lunexis-staking-input {
 .arc-floating-brand::after,
 .arc-floating-nav-link::after,
 .arc-floating-action::after,
+.arc-floating-back-button::after,
 .arc-floating-menu-button::after {
   content: none !important;
 }
 
 .arc-floating-nav-link::before,
 .arc-floating-action::before,
+.arc-floating-back-button::before,
 .arc-floating-menu-button::before {
   content: "" !important;
   display: block !important;
@@ -3631,6 +3635,7 @@ select.lunexis-staking-input {
 
 .arc-floating-nav-link:hover::before,
 .arc-floating-action:hover::before,
+.arc-floating-back-button:hover::before,
 .arc-floating-menu-button:hover::before {
   animation: sh02 0.5s 0s linear !important;
 }
@@ -3873,6 +3878,35 @@ select.lunexis-staking-input {
   transition: all 0.2s ease-out !important;
 }
 
+.arc-floating-back-button {
+  width: 38px;
+  height: 34px;
+  min-width: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: all 0.2s ease-in !important;
+  flex-shrink: 0;
+}
+
+.arc-floating-back-button span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.arc-floating-back-button:hover {
+  background: rgb(61, 106, 255) !important;
+  border-color: rgb(61, 106, 255) !important;
+  box-shadow: 0 0 30px 5px rgba(0, 142, 236, 0.815) !important;
+  transition: all 0.2s ease-out !important;
+}
+
 .arc-floating-menu-button .hamburger-label {
   width: 18px;
   height: 14px;
@@ -4043,7 +4077,7 @@ select.lunexis-staking-input {
   }
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.bg-transparent),
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent),
 a.arc-uiverse-button,
 .btn-primary,
 .btn-ghost,
@@ -4064,7 +4098,7 @@ a.arc-uiverse-button,
   transition: all 0.2s ease-in !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.bg-transparent):hover,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent):hover,
 a.arc-uiverse-button:hover,
 .btn-primary:hover,
 .btn-ghost:hover,
@@ -4075,7 +4109,7 @@ a.arc-uiverse-button:hover,
   transition: all 0.2s ease-out !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.bg-transparent)::before,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent)::before,
 a.arc-uiverse-button::before,
 .btn-primary::before,
 .btn-ghost::before,
@@ -4094,7 +4128,7 @@ a.arc-uiverse-button::before,
   transform: skewX(-20deg) !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.bg-transparent):hover::before,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent):hover::before,
 a.arc-uiverse-button:hover::before,
 .btn-primary:hover::before,
 .btn-ghost:hover::before,
@@ -4103,7 +4137,7 @@ a.arc-uiverse-button:hover::before,
   animation: sh02 0.5s 0s linear !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.bg-transparent)::after,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent)::after,
 a.arc-uiverse-button::after,
 .btn-primary::after,
 .btn-ghost::after,
@@ -4112,7 +4146,7 @@ a.arc-uiverse-button::after,
   content: none !important;
 }
 
-button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.bg-transparent):active,
+button:not(.arc-icon-action):not(.arc-sidebar-backdrop):not(.arc-sidebar-plain):not(.arc-floating-brand):not(.arc-floating-nav-link):not(.arc-floating-action):not(.arc-floating-menu-button):not(.arc-floating-back-button):not(.bg-transparent):active,
 a.arc-uiverse-button:active,
 .btn-primary:active,
 .btn-ghost:active,
@@ -5440,6 +5474,7 @@ a.arc-uiverse-button:active,
   }
 
   .arc-floating-action,
+  .arc-floating-back-button,
   .arc-floating-menu-button,
   .lunexis-icon-button {
     width: 38px !important;
@@ -5947,6 +5982,7 @@ a.arc-uiverse-button:active,
   }
 
   .arc-floating-action,
+  .arc-floating-back-button,
   .arc-floating-menu-button,
   .lunexis-icon-button {
     width: 34px !important;

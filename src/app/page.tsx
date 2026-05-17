@@ -170,6 +170,14 @@ export default function Home() {
     if (isOverlaySidebar) setSidebarOpen(false);
   };
 
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    navigate(currentPage === "landing" ? "missions" : "landing");
+  };
+
   const selectQuest = (quest: Quest) => {
     setSelectedQuest(quest);
     setCurrentPage("quest-detail");
@@ -202,6 +210,7 @@ export default function Home() {
       <Header
         currentPage={currentPage}
         onNavigate={navigate}
+        onBack={goBack}
         onToggleSidebar={toggleSidebar}
         sidebarOpen={isOverlaySidebar ? sidebarOpen : !sidebarCollapsed}
         sidebarAvailable={renderSidebar}
