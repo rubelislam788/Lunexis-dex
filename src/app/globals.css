@@ -7181,3 +7181,110 @@ video {
     transform: translateX(230%);
   }
 }
+
+/* High-contrast text pass for light themes */
+html[data-lunexis-theme="white"],
+html[data-lunexis-theme="morn"] {
+  --lunexis-text-strong: #102522;
+  --lunexis-text-main: #1e3a36;
+  --lunexis-text-muted: #466661;
+  --lunexis-text-soft: #5d7974;
+  --lunexis-accent-readable: #006f78;
+  --lunexis-danger-readable: #a21663;
+  --lunexis-success-readable: #08783f;
+  color: var(--lunexis-text-main);
+}
+
+html[data-lunexis-theme="morn"] {
+  --lunexis-text-strong: #173331;
+  --lunexis-text-main: #294944;
+  --lunexis-text-muted: #526f69;
+  --lunexis-text-soft: #637f78;
+  --lunexis-accent-readable: #0a6770;
+}
+
+html[data-lunexis-theme="white"] body,
+html[data-lunexis-theme="morn"] body,
+html[data-lunexis-theme="white"] .arc-page-shell,
+html[data-lunexis-theme="morn"] .arc-page-shell,
+html[data-lunexis-theme="white"] .arc-with-sidebar-page,
+html[data-lunexis-theme="morn"] .arc-with-sidebar-page {
+  color: var(--lunexis-text-main) !important;
+}
+
+html[data-lunexis-theme="white"] :where(h1, h2, h3, h4, h5, h6, strong, b, .font-bold, .font-semibold),
+html[data-lunexis-theme="morn"] :where(h1, h2, h3, h4, h5, h6, strong, b, .font-bold, .font-semibold),
+html[data-lunexis-theme="white"] :where([style*="#f8fbff"], [style*="color: white"], [style*="color:\"white\""], .text-white),
+html[data-lunexis-theme="morn"] :where([style*="#f8fbff"], [style*="color: white"], [style*="color:\"white\""], .text-white) {
+  color: var(--lunexis-text-strong) !important;
+  -webkit-text-fill-color: var(--lunexis-text-strong) !important;
+}
+
+html[data-lunexis-theme="white"] :where(p, label, small, span, li, td, th),
+html[data-lunexis-theme="morn"] :where(p, label, small, span, li, td, th),
+html[data-lunexis-theme="white"] :where([style*="#849495"], [style*="#9fb2c4"], [style*="#64748b"], [style*="#5f778b"]),
+html[data-lunexis-theme="morn"] :where([style*="#849495"], [style*="#9fb2c4"], [style*="#64748b"], [style*="#5f778b"]) {
+  color: var(--lunexis-text-muted) !important;
+  -webkit-text-fill-color: var(--lunexis-text-muted) !important;
+}
+
+html[data-lunexis-theme="white"] :where([style*="#38bdf8"], [style*="#50dfff"], .gradient-text, .arc-shimmer-text, .lunexis-kicker),
+html[data-lunexis-theme="morn"] :where([style*="#38bdf8"], [style*="#50dfff"], .gradient-text, .arc-shimmer-text, .lunexis-kicker) {
+  color: var(--lunexis-accent-readable) !important;
+  -webkit-text-fill-color: var(--lunexis-accent-readable) !important;
+  text-shadow: none !important;
+}
+
+html[data-lunexis-theme="white"] :where([style*="#ffb7eb"], [style*="#ff2db2"]),
+html[data-lunexis-theme="morn"] :where([style*="#ffb7eb"], [style*="#ff2db2"]) {
+  color: var(--lunexis-danger-readable) !important;
+  -webkit-text-fill-color: var(--lunexis-danger-readable) !important;
+}
+
+html[data-lunexis-theme="white"] :where([style*="#22c55e"]),
+html[data-lunexis-theme="morn"] :where([style*="#22c55e"]) {
+  color: var(--lunexis-success-readable) !important;
+  -webkit-text-fill-color: var(--lunexis-success-readable) !important;
+}
+
+html[data-lunexis-theme="white"] :where(.arc-card, .glass-panel, .lunexis-premium-card, .lunexis-profile-card, .lunexis-staking-pool-card, .arc-wallet-modal-panel, .lunexis-modal-overlay > .arc-card),
+html[data-lunexis-theme="morn"] :where(.arc-card, .glass-panel, .lunexis-premium-card, .lunexis-profile-card, .lunexis-staking-pool-card, .arc-wallet-modal-panel, .lunexis-modal-overlay > .arc-card) {
+  color: var(--lunexis-text-main) !important;
+}
+
+html[data-lunexis-theme="white"] :where(input, textarea, select, .arc-swap-amount-input, .lunexis-staking-input, .lunexis-token-search),
+html[data-lunexis-theme="morn"] :where(input, textarea, select, .arc-swap-amount-input, .lunexis-staking-input, .lunexis-token-search) {
+  color: var(--lunexis-text-strong) !important;
+  -webkit-text-fill-color: var(--lunexis-text-strong) !important;
+  caret-color: var(--lunexis-accent-readable) !important;
+}
+
+html[data-lunexis-theme="white"] :where(input, textarea)::placeholder,
+html[data-lunexis-theme="morn"] :where(input, textarea)::placeholder {
+  color: var(--lunexis-text-soft) !important;
+  -webkit-text-fill-color: var(--lunexis-text-soft) !important;
+  opacity: 1 !important;
+}
+
+html[data-lunexis-theme="white"] :where(select option),
+html[data-lunexis-theme="morn"] :where(select option) {
+  background: #f7fbf8 !important;
+  color: var(--lunexis-text-strong) !important;
+}
+
+html[data-lunexis-theme="white"] :where(.btn-primary:hover, .btn-ghost:hover, .btn-outline-cyan:hover, .arc-sidebar-nav-item:hover, .arc-sidebar-nav-item.is-active),
+html[data-lunexis-theme="morn"] :where(.btn-primary:hover, .btn-ghost:hover, .btn-outline-cyan:hover, .arc-sidebar-nav-item:hover, .arc-sidebar-nav-item.is-active) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-lunexis-theme="white"] :where(.btn-primary:hover *, .btn-ghost:hover *, .btn-outline-cyan:hover *, .arc-sidebar-nav-item:hover *, .arc-sidebar-nav-item.is-active *),
+html[data-lunexis-theme="morn"] :where(.btn-primary:hover *, .btn-ghost:hover *, .btn-outline-cyan:hover *, .arc-sidebar-nav-item:hover *, .arc-sidebar-nav-item.is-active *) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-lunexis-theme="white"] :where(.arc-skeleton),
+html[data-lunexis-theme="morn"] :where(.arc-skeleton) {
+  background: linear-gradient(90deg, rgba(16, 37, 34, 0.08), rgba(0, 111, 120, 0.16), rgba(16, 37, 34, 0.08)) !important;
+}
