@@ -6,6 +6,17 @@ import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 
 type ClipboardImageItem = new (items: Record<string, Blob>) => ClipboardItem;
 
+const SHARE_THEMES = {
+  nebula: { label: "Nebula", stops: ["#001d24", "#111a3f", "#340028"], text: "#ffffff", muted: "#9fb2c4", accent: "#38bdf8", accent2: "#ff4fc8" },
+  white: { label: "White", stops: ["#f7fbf8", "#ffffff", "#dff0ee"], text: "#0D1E1C", muted: "#3A5C58", accent: "#2A9D8F", accent2: "#C98A3B" },
+  aurora: { label: "Aurora", stops: ["#06261f", "#123e50", "#5f2d8c"], text: "#f4fffb", muted: "#b5d8d1", accent: "#34d399", accent2: "#a78bfa" },
+  sunset: { label: "Sunset", stops: ["#2a1329", "#7a2e43", "#ffb86b"], text: "#fff7ed", muted: "#ffd7b0", accent: "#ff8a5b", accent2: "#ffd166" },
+  ocean: { label: "Ocean", stops: ["#042f3a", "#075985", "#14b8a6"], text: "#ecfeff", muted: "#a7f3d0", accent: "#22d3ee", accent2: "#5eead4" },
+  arcadia: { label: "Arcadia", stops: ["#cfe0e8", "#dfeade", "#9cc7a7"], text: "#102522", muted: "#3c5b55", accent: "#0f766e", accent2: "#e879a7" },
+} as const;
+
+type ShareTheme = keyof typeof SHARE_THEMES;
+
 function parseUsd(value?: string) {
   const numeric = Number(String(value ?? "").replace(/[^0-9.-]/g, ""));
   return Number.isFinite(numeric) ? numeric : 0;
@@ -42,7 +53,7 @@ function svgToPngBlob(svg: string) {
 export default function PortfolioShareCard() {
   const { profile, address } = useProfile();
   const { balances } = usePortfolioBalances();
-  const [theme, setTheme] = useState("nebula");
+  const [theme, setTheme] = useState<ShareTheme>("nebula");
   const [copyStatus, setCopyStatus] = useState("");
 
   const stats = useMemo(() => {
@@ -54,30 +65,51 @@ export default function PortfolioShareCard() {
   const username = profile?.username ?? "Lunexis Operator";
   const wallet = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Wallet not connected";
   const topToken = stats.top?.token ?? "N/A";
+  const activeTheme = SHARE_THEMES[theme];
+  const arcadiaScene = theme === "arcadia"
+    ? `
+    <path d="M0 430 C170 330 280 390 430 315 C570 250 705 310 845 230 C1000 140 1095 215 1200 150 L1200 630 L0 630Z" fill="#b7d2ba" opacity=".82"/>
+    <path d="M0 515 C210 455 270 500 455 430 C620 368 760 410 910 350 C1040 298 1120 328 1200 280 L1200 630 L0 630Z" fill="#79aa83" opacity=".58"/>
+    <path d="M130 445 C330 380 520 392 700 330 C810 292 905 292 1000 250" fill="none" stroke="#f5f8ef" stroke-width="30" opacity=".72"/>
+    <circle cx="165" cy="125" r="86" fill="#ffffff" opacity=".26"/>
+    <g opacity=".34" fill="#ffffff">
+      <ellipse cx="245" cy="130" rx="78" ry="16"/>
+      <ellipse cx="562" cy="88" rx="62" ry="13"/>
+      <ellipse cx="925" cy="106" rx="70" ry="14"/>
+    </g>
+    <rect x="802" y="110" width="42" height="24" fill="#f2e7d8" opacity=".78"/>
+    <rect x="846" y="110" width="54" height="24" fill="#d85d91" opacity=".72"/>
+    <rect x="715" y="422" width="24" height="24" fill="#e879a7" opacity=".72"/>
+    <g opacity=".42" fill="#0f766e">
+      ${Array.from({ length: 22 }).map((_, index) => `<rect x="${index * 18}" y="${500 + (index % 3) * 7}" width="10" height="3" rx="1"/>`).join("")}
+      ${Array.from({ length: 18 }).map((_, index) => `<rect x="${930 + index * 14}" y="${205 + (index % 5) * 8}" width="8" height="3" rx="1"/>`).join("")}
+    </g>`
+    : "";
 
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
     <defs>
       <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-        <stop stop-color="${theme === "nebula" ? "#001d24" : "#f7fbf8"}"/>
-        <stop offset=".55" stop-color="${theme === "nebula" ? "#111a3f" : "#ffffff"}"/>
-        <stop offset="1" stop-color="${theme === "nebula" ? "#340028" : "#dff0ee"}"/>
+        <stop stop-color="${activeTheme.stops[0]}"/>
+        <stop offset=".55" stop-color="${activeTheme.stops[1]}"/>
+        <stop offset="1" stop-color="${activeTheme.stops[2]}"/>
       </linearGradient>
       <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
     <rect width="1200" height="630" fill="url(#bg)"/>
-    <circle cx="1020" cy="90" r="220" fill="#00dce5" opacity=".18"/>
-    <circle cx="150" cy="520" r="230" fill="#ff2db2" opacity=".14"/>
-    <rect x="70" y="72" width="1060" height="486" rx="46" fill="rgba(255,255,255,.06)" stroke="#38bdf8" stroke-width="2"/>
-    <text x="110" y="150" fill="#38bdf8" font-family="Inter, Arial" font-size="26" font-weight="800" letter-spacing="5">LUNEXIS PORTFOLIO</text>
-    <text x="110" y="245" fill="white" font-family="Inter, Arial" font-size="64" font-weight="900">${escapeXml(username)}</text>
-    <text x="112" y="292" fill="#9fb2c4" font-family="Inter, Arial" font-size="28">${escapeXml(wallet)}</text>
-    <text x="110" y="390" fill="#9ff7ff" font-family="Inter, Arial" font-size="28">Portfolio value</text>
-    <text x="110" y="456" fill="white" font-family="Inter, Arial" font-size="58" font-weight="900">$${stats.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</text>
-    <text x="670" y="378" fill="#9ff7ff" font-family="Inter, Arial" font-size="28">XP</text>
-    <text x="670" y="438" fill="#38bdf8" font-family="Inter, Arial" font-size="52" font-weight="900">${profile?.xp ?? 0}</text>
-    <text x="860" y="378" fill="#9ff7ff" font-family="Inter, Arial" font-size="28">Top asset</text>
-    <text x="860" y="438" fill="#ff4fc8" font-family="Inter, Arial" font-size="52" font-weight="900">${escapeXml(topToken)}</text>
+    ${arcadiaScene}
+    <circle cx="1020" cy="90" r="220" fill="${activeTheme.accent}" opacity=".18"/>
+    <circle cx="150" cy="520" r="230" fill="${activeTheme.accent2}" opacity=".14"/>
+    <rect x="70" y="72" width="1060" height="486" rx="46" fill="rgba(255,255,255,.13)" stroke="${activeTheme.accent}" stroke-width="2"/>
+    <text x="110" y="150" fill="${activeTheme.accent}" font-family="Inter, Arial" font-size="26" font-weight="800" letter-spacing="5">LUNEXIS PORTFOLIO</text>
+    <text x="110" y="245" fill="${activeTheme.text}" font-family="Inter, Arial" font-size="64" font-weight="900">${escapeXml(username)}</text>
+    <text x="112" y="292" fill="${activeTheme.muted}" font-family="Inter, Arial" font-size="28">${escapeXml(wallet)}</text>
+    <text x="110" y="390" fill="${activeTheme.accent}" font-family="Inter, Arial" font-size="28">Portfolio value</text>
+    <text x="110" y="456" fill="${activeTheme.text}" font-family="Inter, Arial" font-size="58" font-weight="900">$${stats.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</text>
+    <text x="670" y="378" fill="${activeTheme.accent}" font-family="Inter, Arial" font-size="28">XP</text>
+    <text x="670" y="438" fill="${activeTheme.accent}" font-family="Inter, Arial" font-size="52" font-weight="900">${profile?.xp ?? 0}</text>
+    <text x="860" y="378" fill="${activeTheme.accent}" font-family="Inter, Arial" font-size="28">Top asset</text>
+    <text x="860" y="438" fill="${activeTheme.accent2}" font-family="Inter, Arial" font-size="52" font-weight="900">${escapeXml(topToken)}</text>
   </svg>`;
 
   const copyCard = async () => {
@@ -114,9 +146,9 @@ export default function PortfolioShareCard() {
           <div className="lunexis-kicker">One Click Portfolio Share</div>
           <h2>Social Portfolio Card</h2>
         </div>
-        <div className="flex gap-2">
-          {["nebula", "white"].map((item) => (
-            <button key={item} onClick={() => setTheme(item)} className={theme === item ? "is-active" : ""}>{item}</button>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(SHARE_THEMES).map(([id, item]) => (
+            <button key={id} onClick={() => setTheme(id as ShareTheme)} className={theme === id ? "is-active" : ""}>{item.label}</button>
           ))}
         </div>
       </div>

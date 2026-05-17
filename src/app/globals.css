@@ -1313,6 +1313,73 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   color: #0D1E1C;
 }
 
+.lunexis-share-preview.is-aurora {
+  background:
+    radial-gradient(circle at 18% 24%, rgba(52,211,153,0.26), transparent 15rem),
+    radial-gradient(circle at 82% 20%, rgba(167,139,250,0.28), transparent 15rem),
+    linear-gradient(135deg, rgba(6,38,31,0.96), rgba(18,62,80,0.9), rgba(95,45,140,0.76));
+}
+
+.lunexis-share-preview.is-sunset {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255,209,102,0.28), transparent 15rem),
+    radial-gradient(circle at 78% 16%, rgba(255,138,91,0.32), transparent 16rem),
+    linear-gradient(135deg, rgba(42,19,41,0.96), rgba(122,46,67,0.9), rgba(255,184,107,0.74));
+}
+
+.lunexis-share-preview.is-ocean {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(34,211,238,0.26), transparent 15rem),
+    radial-gradient(circle at 80% 20%, rgba(94,234,212,0.28), transparent 16rem),
+    linear-gradient(135deg, rgba(4,47,58,0.96), rgba(7,89,133,0.9), rgba(20,184,166,0.72));
+}
+
+.lunexis-share-preview.is-arcadia {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7), transparent 8rem),
+    linear-gradient(180deg, rgba(207,224,232,0.96), rgba(223,234,222,0.9) 48%, rgba(156,199,167,0.9));
+  border-color: rgba(15,118,110,0.28);
+  color: #102522;
+}
+
+.lunexis-share-preview.is-arcadia::before {
+  content: "";
+  position: absolute;
+  inset: 28% -8% -18%;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at 16% 55%, rgba(9,73,65,0.46), transparent 18%),
+    radial-gradient(ellipse at 86% 20%, rgba(28,99,67,0.44), transparent 22%),
+    linear-gradient(156deg, transparent 0 34%, rgba(247,247,238,0.78) 35% 39%, transparent 40%),
+    linear-gradient(12deg, rgba(98,146,105,0.76), rgba(181,211,176,0.72), rgba(242,246,231,0.68));
+  clip-path: polygon(0 35%, 18% 23%, 36% 30%, 52% 16%, 68% 31%, 83% 13%, 100% 22%, 100% 100%, 0 100%);
+}
+
+.lunexis-share-preview.is-arcadia::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(0deg, rgba(15,118,110,0.2) 0 2px, transparent 2px 8px),
+    linear-gradient(90deg, transparent 0 4%, rgba(15,118,110,0.16) 4% 16%, transparent 16% 82%, rgba(15,118,110,0.14) 82% 98%, transparent 98%);
+  opacity: 0.42;
+  mask-image: radial-gradient(circle at 0% 80%, #000 0 20%, transparent 42%), radial-gradient(circle at 100% 30%, #000 0 18%, transparent 36%);
+  -webkit-mask-image: radial-gradient(circle at 0% 80%, #000 0 20%, transparent 42%), radial-gradient(circle at 100% 30%, #000 0 18%, transparent 36%);
+}
+
+.lunexis-share-preview.is-arcadia :is(span, small, p) {
+  color: #3c5b55;
+}
+
+.lunexis-share-preview.is-arcadia h3,
+.lunexis-share-preview.is-arcadia strong {
+  color: #102522;
+}
+
 .lunexis-share-preview span,
 .lunexis-share-preview small {
   color: #8fe8ff;
