@@ -59,7 +59,7 @@ export default function ActivityTimeline({ activities }: { activities: ActivityI
       {selectedActivity && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ background: "rgba(0,0,0,0.76)", backdropFilter: "blur(12px)" }}
+          style={{ background: "rgba(5,14,22,0.28)", backdropFilter: "blur(5px)" }}
           onClick={() => setSelectedActivity(null)}
         >
           <div className="arc-card rounded-[28px] p-6 w-[min(460px,92vw)]" onClick={(event) => event.stopPropagation()}>
