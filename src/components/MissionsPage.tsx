@@ -918,9 +918,6 @@ function QuestCard({
           <button disabled={completed || isChecking || isTimeLocked} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
             {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
           </button>
-          <button disabled={!completed || isTimeLocked} onClick={onClaim} className="btn-primary px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-            {isTimeLocked ? timeState : "Claim"}
-          </button>
         </div>
       </div>
     </article>
