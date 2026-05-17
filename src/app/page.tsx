@@ -8,6 +8,7 @@ import LandingPage from "@/components/LandingPage";
 import MissionsPage from "@/components/MissionsPage";
 import QuestDetailPage from "@/components/QuestDetailPage";
 import SwapPage from "@/components/swap/SwapPage";
+import BridgePage from "@/components/bridge/BridgePage";
 import StakingPage from "@/components/staking/StakingPage";
 import ProfilePage from "@/components/ProfilePage";
 import RewardsPage from "@/components/RewardsPage";
@@ -22,10 +23,10 @@ import { hasLocalMissionDrafts, loadLocalMissions } from "@/lib/mission-storage"
 
 export const dynamic = "force-dynamic";
 
-const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "staking", "profile"];
+const PAGES_WITH_SIDEBAR: Page[] = ["missions", "quest-detail", "leaderboard", "rewards", "stats", "swap", "bridge", "staking", "profile"];
 const NAV_STORAGE_KEY = "lunexis.current-page.v1";
 const QUEST_HASH_PREFIX = "quest/";
-const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "staking", "profile"];
+const NAV_PAGES: Page[] = ["landing", "missions", "leaderboard", "rewards", "stats", "swap", "bridge", "staking", "profile"];
 
 function findQuestById(questId: string | undefined, quests: Quest[]) {
   if (!questId) return undefined;
@@ -220,6 +221,7 @@ export default function Home() {
         {currentPage === "landing" && <LandingPage onNavigate={navigate} />}
         {currentPage === "missions" && <MissionsPage onNavigate={navigate} onSelectQuest={selectQuest} />}
         {currentPage === "swap" && <SwapPage />}
+        {currentPage === "bridge" && <BridgePage />}
         {currentPage === "staking" && <StakingPage />}
         {currentPage === "leaderboard" && <LeaderboardPage />}
         {currentPage === "rewards" && <RewardsPage />}

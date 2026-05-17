@@ -86,7 +86,16 @@ export async function getViemAdapter(walletClient: WalletClient, publicClient: P
 
   return new ViemAdapter(
     {
-      getPublicClient: () => publicClient,
+      getPublicClient: ({ chain }: any = {}) =>
+        createPublicClient({
+          chain: chain ?? publicClient.chain,
+          transport: isArcTestnetViemChain(chain ?? publicClient.chain)
+            ? createArcFallbackTransport(true)
+            : fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url), { retryCount: 2, timeout: 10000 })), {
+                rank: true,
+                retryCount: 2,
+              }),
+        }),
       getWalletClient: () => walletClient,
     } as any,
     {
@@ -106,7 +115,7 @@ export async function getBrowserViemAdapter(): Promise<any> {
 
   return createViemAdapterFromProvider({
     provider: (window as any).ethereum,
-    getPublicClient: ({ chain }: any) =>
+    getPublicClient: ({ chain }: any = {}) =>
       createPublicClient({
         chain,
         transport: isArcTestnetViemChain(chain)

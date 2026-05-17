@@ -13,8 +13,9 @@ const TOP_NAV_ITEMS: Array<{ page: Page; label: string; icon: string }> = [
   { page: "leaderboard", label: "Leaderboard", icon: "leaderboard" },
   { page: "rewards", label: "Rewards", icon: "workspace_premium" },
   { page: "stats", label: "Stats", icon: "query_stats" },
-  { page: "staking", label: "Stake", icon: "account_balance" },
   { page: "swap", label: "Swap", icon: "swap_horiz" },
+  { page: "bridge", label: "Bridge", icon: "account_tree" },
+  { page: "staking", label: "Stake", icon: "account_balance" },
 ];
 
 interface HeaderProps {

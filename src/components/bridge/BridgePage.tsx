@@ -20,7 +20,7 @@ const DEST_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ARC_TESTNET];
 
 export default function BridgePage() {
   const { isConnected, address } = useAccount();
-  const { state, updateState, executeBridge, approve, needsApproval, bridgeConfigured, bridgeReady, bridgeMode, currentChainId, requiredChainId, reset } = useArcBridge();
+  const { state, updateState, executeBridge, needsApproval, bridgeConfigured, bridgeReady, bridgeMode, currentChainId, requiredChainId, reset } = useArcBridge();
   const { pushActivity } = useProfile();
   const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
@@ -28,9 +28,9 @@ export default function BridgePage() {
   const [activeStep, setActiveStep] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
-  const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string } | null>(null);
+  const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string; explorerBaseUrl?: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
-  const availableBridgeTokens = bridgeMode === "contract" ? BRIDGE_TOKENS : (["USDC"] as TokenSymbol[]);
+  const availableBridgeTokens = ["USDC"] as TokenSymbol[];
 
   const handleBridge = async () => {
     setConfirmOpen(false);
@@ -45,7 +45,7 @@ export default function BridgePage() {
       setTimeout(() => setActiveStep(4), 4200);
       const result = await executeBridge();
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
-      setSuccessTx({ hash: result?.hash, gasFee: result?.gasFee, timestamp: new Date().toISOString() });
+      setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString(), explorerBaseUrl: result?.explorerBaseUrl });
       refresh();
       show(`Bridged ${state.amount} ${selectedToken}`, "success");
     } catch (err: any) {
@@ -56,20 +56,10 @@ export default function BridgePage() {
     }
   };
 
-  const handleApprove = async () => {
-    try {
-      const result = await approve();
-      pushActivity(createActivity("wallet", `Approved ${selectedToken}`, `Approval confirmed for bridge execution with ${selectedToken}.`, selectedToken, "completed", result?.hash));
-      show(`Approved ${selectedToken} for bridge`, "success");
-    } catch (err: any) {
-      show(err?.message || "Bridge approval failed", "error");
-    }
-  };
-
   const handleSwitchNetwork = async () => {
     try {
       await switchChainAsync({ chainId: requiredChainId });
-      show("Wallet switched to Ethereum", "success");
+      show("Wallet switched to Ethereum Sepolia", "success");
     } catch (err: any) {
       show(err?.message || "Network switch failed", "error");
     }
@@ -146,13 +136,13 @@ export default function BridgePage() {
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Source Network</span>
                 <span style={{ color: currentChainId === requiredChainId ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === requiredChainId ? "Ethereum" : "Switch Network"}
+                  {currentChainId === requiredChainId ? "Ethereum Sepolia" : "Switch to Ethereum Sepolia"}
                 </span>
               </div>
               <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ color: "#849495" }}>Bridge Engine</span>
                 <span style={{ color: bridgeConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {bridgeMode === "contract" ? "Bridge Contract" : bridgeMode === "appkit" ? "Arc App Kit" : "Live Path Pending"}
+                  {bridgeMode === "appkit" ? "Arc App Kit" : "Live Path Pending"}
                 </span>
               </div>
             </div>
@@ -162,7 +152,7 @@ export default function BridgePage() {
                   Bridge Path Not Available
                 </div>
                 <p style={{ color: "#f2cadf", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  Live bridging currently supports USDC into ARC Chain by default.
+                  Live bridging currently supports USDC from Ethereum Sepolia to Arc Testnet.
                 </p>
               </div>
             )}
@@ -171,14 +161,14 @@ export default function BridgePage() {
                 {isSwitchingNetwork ? "Switching Network..." : "Switch Network"}
               </button>
             )}
-            {needsApproval && currentChainId === requiredChainId && (
-              <button disabled={state.status === "approving" || !state.amount} onClick={handleApprove} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
-                {state.status === "approving" ? `Approving ${selectedToken}...` : `Approve ${selectedToken}`}
-              </button>
-            )}
             <button disabled={isLoading || !state.amount || needsApproval || !bridgeReady || currentChainId !== requiredChainId} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
               {isLoading ? "Routing Bridge..." : isConnected ? "Review Bridge" : "Connect Wallet to Bridge"}
             </button>
+            {state.error && (
+              <div className="mt-3 rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)", color: "#ffb7eb", fontSize: 12 }}>
+                {state.error}
+              </div>
+            )}
             {!isConnected && (
               <div className="mt-3 flex items-center justify-between rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.06)", border: "1px solid rgba(255,45,178,0.16)" }}>
                 <span style={{ color: "#849495", fontSize: 12 }}>Need test tokens for bridging?</span>
@@ -192,7 +182,7 @@ export default function BridgePage() {
               </div>
             )}
             {state.txHash && (
-              <a href={`https://testnet.arcscan.app/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
+              <a href={`https://sepolia.etherscan.io/tx/${state.txHash}`} target="_blank" rel="noreferrer" className="btn-ghost block text-center w-full py-3 rounded-2xl mt-3">
                 View Transaction
               </a>
             )}
@@ -202,7 +192,7 @@ export default function BridgePage() {
           <aside className="lg:col-span-2 flex flex-col gap-4">
             <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Bridge Progress</h3>
-              {["Approve", "Lock / Burn", "Attest", "Mint"].map((label, index) => (
+              {["Confirm", "Burn", "Attest", "Mint"].map((label, index) => (
                 <div key={label} className="flex items-center gap-3 mb-3 p-3 rounded-xl" style={{ background: activeStep === index + 1 ? "rgba(255,45,178,0.12)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: activeStep > index ? "#38bdf8" : "rgba(255,255,255,0.06)", color: "white", fontFamily: "'Space Grotesk'", fontSize: 11 }}>{activeStep > index ? "OK" : index + 1}</span>
                   <span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{label}</span>
@@ -245,7 +235,7 @@ export default function BridgePage() {
         txHash={successTx?.hash}
         gasFee={successTx?.gasFee}
         timestamp={successTx?.timestamp}
-        explorerBaseUrl="https://testnet.arcscan.app/tx/"
+        explorerBaseUrl={successTx?.explorerBaseUrl ?? "https://sepolia.etherscan.io/tx/"}
         onClose={() => setSuccessTx(null)}
       />
     </div>
