@@ -187,13 +187,6 @@ export default function StakingPage() {
                 ))}
               </div>
             </section>
-
-            <section className="lunexis-premium-card">
-              <div className="lunexis-kicker">Staking Contract</div>
-              <h2>ARC Testnet Live</h2>
-              <p className="lunexis-staking-muted break-all">{staking.managerAddress}</p>
-              <div className="lunexis-staking-warning mt-3">Approve is sent to the token contract. Stake, unstake, and claim are sent to this staking contract.</div>
-            </section>
           </aside>
         </div>
         )}
