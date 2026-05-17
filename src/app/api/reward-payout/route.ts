@@ -13,6 +13,7 @@ type ProfileRecord = { completedMissionIds?: string[]; claimedRewardIds?: string
 type ProfileStore = Record<string, ProfileRecord>;
 const PROFILE_STORE_KEY = "lunexis:profiles:v1";
 const REWARD_STORE_KEY = "lunexis:rewards:v1";
+const MAX_UNPUBLISHED_REWARD_AMOUNT = Number(process.env.MAX_UNPUBLISHED_REWARD_AMOUNT || 25);
 export const dynamic = "force-dynamic";
 type RewardStore = { rewards?: RewardConfig[] };
 
@@ -138,9 +139,13 @@ export async function POST(request: Request) {
     const publishedRewards = normalizeRewards(rewardStore.rewards ?? DEFAULT_REWARDS);
     const reward = publishedRewards.find((item) => item.id === rewardId);
     if (!reward) {
-      return NextResponse.json({ code: "REWARD_NOT_PUBLISHED", error: "This reward is not published yet. Ask the admin to save rewards again." }, { status: 404 });
-    }
-    if (reward.token !== token || Number(reward.amount) !== amount) {
+      if (requiredMissionIds.length === 0) {
+        return NextResponse.json({ code: "REWARD_NOT_PUBLISHED", error: "This reward is not published yet. Ask the admin to save rewards again." }, { status: 404 });
+      }
+      if (Number.isFinite(MAX_UNPUBLISHED_REWARD_AMOUNT) && amount > MAX_UNPUBLISHED_REWARD_AMOUNT) {
+        return NextResponse.json({ code: "REWARD_NOT_PUBLISHED", error: "This custom reward is not published yet. Ask the admin to save rewards before claiming larger payouts." }, { status: 404 });
+      }
+    } else if (reward.token !== token || Number(reward.amount) !== amount) {
       return NextResponse.json({ error: "Reward details changed. Refresh the Rewards page and try again." }, { status: 409 });
     }
   }
