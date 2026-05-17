@@ -11,7 +11,7 @@ import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 const BRIDGE_PROGRESS_STEPS = 2;
-const FAST_BRIDGE_MAX_FEE = process.env.NEXT_PUBLIC_ARC_BRIDGE_MAX_FEE || "0.5";
+const FAST_BRIDGE_MAX_FEE = process.env.NEXT_PUBLIC_ARC_BRIDGE_MAX_FEE || "2";
 export type BridgeProgressUpdate = { stepIndex: number; status: "active" | "done" };
 
 function parseTokenAmount(value: string, decimals: number) {
