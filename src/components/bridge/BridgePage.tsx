@@ -177,20 +177,6 @@ export default function BridgePage() {
               className="w-full px-4 py-4 rounded-2xl mb-5"
             />
 
-            <div className="grid gap-3 mb-3">
-              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ color: "#849495" }}>Source Network</span>
-                <span style={{ color: currentChainId === requiredChainId ? "#38bdf8" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {currentChainId === requiredChainId ? requiredNetworkLabel : `Switch to ${requiredNetworkLabel}`}
-                </span>
-              </div>
-              <div className="flex justify-between rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ color: "#849495" }}>Bridge Engine</span>
-                <span style={{ color: bridgeConfigured ? "#22c55e" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>
-                  {selectedToken === "EURC" ? "Arc App Kit Swap + Bridge" : bridgeMode === "appkit" ? "Arc App Kit" : "Live Path Pending"}
-                </span>
-              </div>
-            </div>
             {selectedToken === "EURC" && (
               <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.18)" }}>
                 <div style={{ color: "#8fe8ff", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase" }}>
