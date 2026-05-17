@@ -179,12 +179,12 @@ export default function BridgePage() {
               <label style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, color: "#849495", textTransform: "uppercase" }}>Amount</label>
               <div className="flex items-center gap-4 mt-2">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={state.amount}
                   onChange={(event) => updateState({ amount: event.target.value })}
-                  placeholder="1.00"
-                  className="flex-1 bg-transparent border-none outline-none"
-                  style={{ fontFamily: "'Space Grotesk'", fontSize: 32, fontWeight: 900, color: "#f8fbff" }}
+                  placeholder="0.00"
+                  className="arc-swap-amount-input flex-1"
                 />
                 <TokenIcon symbol={selectedToken} size={46} />
               </div>
