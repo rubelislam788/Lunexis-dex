@@ -4,7 +4,7 @@ import type { TokenSymbol } from "@/types";
 export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; size?: number }) {
   const token = TOKEN_META[symbol];
   const showArcBadge = symbol === "USDC" || symbol === "EURC";
-  const badgeSize = Math.max(12, Math.round(size * 0.38));
+  const badgeSize = Math.max(14, Math.round(size * 0.46));
 
   return (
     <span
@@ -28,20 +28,26 @@ export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; 
           aria-hidden="true"
           className="absolute grid place-items-center rounded-full"
           style={{
-            right: -Math.max(1, Math.round(size * 0.03)),
-            bottom: -Math.max(1, Math.round(size * 0.03)),
+            right: -Math.max(1, Math.round(size * 0.08)),
+            bottom: -Math.max(1, Math.round(size * 0.08)),
             width: badgeSize,
             height: badgeSize,
-            background: "rgba(2, 13, 31, 0.9)",
-            border: "1px solid rgba(125, 211, 252, 0.75)",
-            boxShadow: "0 0 10px rgba(56, 189, 248, 0.5)",
+            background: "linear-gradient(180deg, #f8fbff 0%, #bfe9ff 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.92)",
+            boxShadow: "0 0 0 1px rgba(4, 24, 55, 0.75), 0 0 12px rgba(56, 189, 248, 0.7)",
             overflow: "hidden",
           }}
         >
           <img
             src="/arc-assets/arc-badge.png"
             alt=""
-            style={{ width: badgeSize, height: badgeSize, objectFit: "cover" }}
+            style={{
+              width: badgeSize,
+              height: badgeSize,
+              objectFit: "cover",
+              transform: "scale(1.7) translateY(4%)",
+              filter: "brightness(1.12) contrast(1.16) saturate(1.08)",
+            }}
           />
         </span>
       )}
