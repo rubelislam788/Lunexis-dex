@@ -2563,6 +2563,18 @@ html[data-lunexis-theme="morn"] .lunexis-bg-particles span {
   white-space: nowrap;
 }
 
+.lunexis-quick-amounts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.lunexis-quick-amounts button {
+  min-height: 26px !important;
+  white-space: nowrap;
+}
+
 .lunexis-amount-live-meta strong.is-success {
   color: #22c55e;
   background: rgba(34,197,94,0.08);

@@ -626,10 +626,8 @@ function TokenAmountPanel({ label, token, amount, balance, price, quote, impact,
             <span>{price}</span>
             {quote && <span>{quote}</span>}
             {impact && <strong className={`is-${impactTone}`}>{impact}</strong>}
-          </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {onQuickAmount && (
-              <>
+              <div className="lunexis-quick-amounts">
                 {[
                   ["25%", 25],
                   ["50%", 50],
@@ -645,7 +643,7 @@ function TokenAmountPanel({ label, token, amount, balance, price, quote, impact,
                     {quickLabel}
                   </button>
                 ))}
-              </>
+              </div>
             )}
           </div>
         </div>
