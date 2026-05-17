@@ -260,7 +260,7 @@ export default function StakingPage() {
               </div>
             </section>
 
-            {staking.isAdmin && (
+            {staking.canCreatePools ? (
               <section className="lunexis-premium-card">
                 <div className="lunexis-kicker">Private Admin</div>
                 <h2>Pool Manager</h2>
@@ -291,15 +291,25 @@ export default function StakingPage() {
                   <option value="FixedReward">Fixed reward pool</option>
                 </select>
                 <input value={adminDraft.metadata} onChange={(event) => setAdminDraft((prev) => ({ ...prev, metadata: event.target.value }))} placeholder="Pool metadata" className="lunexis-staking-input" />
-                <div className="lunexis-staking-warning mb-3">Fund the staking manager with the reward token before users claim rewards.</div>
+                <div className="lunexis-staking-warning mb-3">Pool creation uses native USDC gas. Fund the manager with reward tokens before users claim rewards.</div>
                 <button onClick={createPool} disabled={staking.status === "creating" || !staking.canCreatePools} className="btn-primary w-full py-3 rounded-2xl mt-2">
                   {staking.status === "creating" ? "Creating..." : staking.canCreatePools ? "Create Pool" : "Owner Wallet Required"}
                 </button>
-                {!staking.canCreatePools && (
-                  <div className="lunexis-staking-error mt-3">
-                    Connected admin is not the staking manager owner. Pool creation must be sent from the owner wallet.
-                  </div>
-                )}
+              </section>
+            ) : staking.isAdmin ? (
+              <section className="lunexis-premium-card">
+                <div className="lunexis-kicker">Private Admin</div>
+                <h2>Owner Wallet Required</h2>
+                <p className="lunexis-staking-muted">This wallet is listed as admin in the app, but the staking contract only allows the onchain owner to create pools.</p>
+                <div className="lunexis-staking-error mt-3">
+                  Connect the staking manager owner wallet and make sure it has native USDC gas on Arc Testnet.
+                </div>
+              </section>
+            ) : (
+              <section className="lunexis-premium-card">
+                <div className="lunexis-kicker">Staking Setup</div>
+                <h2>Pool setup pending</h2>
+                <p className="lunexis-staking-muted">USDC and EURC staking pools appear here after the contract owner initializes them.</p>
               </section>
             )}
           </aside>

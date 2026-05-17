@@ -317,20 +317,26 @@ export function useStaking() {
 
   const createPool = useCallback(async (input: CreatePoolInput) => {
     const managerAddress = STAKING_MANAGER_ADDRESS;
-    if (!walletClient || !publicClient || !managerAddress) throw new Error("Connect admin wallet and configure staking manager.");
+    if (!walletClient || !publicClient || !address || !managerAddress) throw new Error("Connect admin wallet and configure staking manager.");
     if (!isContractOwner) throw new Error("Only the staking manager owner wallet can create pools.");
     await ensureArcNetwork();
+    const managerCode = await publicClient.getCode({ address: managerAddress }).catch(() => undefined);
+    if (!managerCode || managerCode === "0x") throw new Error("No staking manager contract was found at the configured address.");
+    const nativeGas = await publicClient.getBalance({ address }).catch(() => BigInt(0));
+    if (nativeGas <= BigInt(0)) throw new Error("Add native USDC gas on Arc Testnet before sending transactions.");
     setStatus("creating");
     try {
       const aprBps = Math.round(Number(input.apr || 0) * 100);
       const lockDuration = Math.round(Number(input.lockDays || 0) * 86400);
-      const hash = await walletClient.writeContract({
+      const poolArgs = [input.stakeToken, input.rewardToken, aprBps, BigInt(lockDuration), poolTypeValue(input.poolType), input.metadata || "Lunexis ARC staking pool"] as const;
+      const { request } = await publicClient.simulateContract({
         address: managerAddress,
         abi: STAKING_MANAGER_ABI,
         functionName: "createPool",
-        args: [input.stakeToken, input.rewardToken, aprBps, BigInt(lockDuration), poolTypeValue(input.poolType), input.metadata || "Lunexis ARC staking pool"],
+        args: poolArgs,
         account: walletClient.account!,
       });
+      const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
       await refresh();
       return { hash };
@@ -339,7 +345,7 @@ export function useStaking() {
     } finally {
       setStatus("idle");
     }
-  }, [ensureArcNetwork, isContractOwner, publicClient, refresh, walletClient]);
+  }, [address, ensureArcNetwork, isContractOwner, publicClient, refresh, walletClient]);
 
   return {
     addCustomToken,
