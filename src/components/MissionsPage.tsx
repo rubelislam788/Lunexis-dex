@@ -124,6 +124,33 @@ function getMissingMissionSteps(quest: Quest) {
   return getMissionSteps(quest).filter((step) => !verified.has(step.id));
 }
 
+function saveMissionStepProof(questId: string, stepIds: string[]) {
+  if (typeof window === "undefined" || stepIds.length === 0) return;
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
+    const nextIds = Array.from(new Set([...(stored[questId] ?? []), ...stepIds]));
+    window.localStorage.setItem(MISSION_STEP_PROOF_KEY, JSON.stringify({ ...stored, [questId]: nextIds }));
+  } catch {
+    // Step proof is client-side progress only; ignore storage failures.
+  }
+}
+
+function socialProofStepIds(quest: Quest, proofKey: string) {
+  const steps = getMissionSteps(quest);
+  if (quest.id === "social-follow") {
+    if (proofKey === "rubelFollow") return steps.filter((step) => /rubel/i.test(step.title)).map((step) => step.id);
+    if (proofKey === "arcFollow") return steps.filter((step) => /arc/i.test(step.title)).map((step) => step.id);
+  }
+  if (quest.id === "social-rubel-post" && proofKey === "rubelPost") return steps.map((step) => step.id);
+  if (quest.id === "social-arc-post" && proofKey === "arcPost") return steps.map((step) => step.id);
+  if (proofKey.startsWith(`${quest.id}-`)) {
+    const links = getMissionSocialLinks(quest);
+    const linkIndex = links.findIndex((link) => missionSocialProofKey(quest.id, link.id) === proofKey);
+    return steps[linkIndex] ? [steps[linkIndex].id] : steps.slice(0, 1).map((step) => step.id);
+  }
+  return [];
+}
+
 async function publishMissions(quests: Quest[], adminAddress?: string) {
   await fetch("/api/missions", {
     method: "POST",
@@ -266,6 +293,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
   const saveLinkProof = (quest: Quest, key: string) => {
     const nextProof = saveProof(key);
+    saveMissionStepProof(quest.id, socialProofStepIds(quest, key));
     const links = getMissionSocialLinks(quest);
     const allLinksVisited = links.length > 0 && links.every((link) => nextProof[missionSocialProofKey(quest.id, link.id)]);
     const missingSteps = getMissingMissionSteps(quest);

@@ -11,6 +11,12 @@ type MissionStore = {
   quests: Quest[];
 };
 
+function mergeWithDefaultMissions(quests: Quest[]) {
+  const savedIds = new Set(quests.map((quest) => quest.id));
+  const missingDefaults = QUESTS.filter((quest) => !savedIds.has(quest.id));
+  return [...quests, ...missingDefaults];
+}
+
 function normalizeQuest(value: unknown): Quest | null {
   if (!value || typeof value !== "object") return null;
   const quest = value as Partial<Quest>;
@@ -39,7 +45,7 @@ function normalizeQuest(value: unknown): Quest | null {
 export async function GET() {
   const store = await readPersistentValue<MissionStore | null>(STORE_KEY, null);
   const hasSavedQuests = Boolean(store && Array.isArray(store.quests) && store.quests.length);
-  return NextResponse.json({ quests: hasSavedQuests ? store!.quests : QUESTS, isDefault: !hasSavedQuests });
+  return NextResponse.json({ quests: hasSavedQuests ? mergeWithDefaultMissions(store!.quests) : QUESTS, isDefault: !hasSavedQuests });
 }
 
 export async function POST(request: Request) {
@@ -58,6 +64,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No valid missions to save" }, { status: 400 });
   }
 
-  const store = await writePersistentValue<MissionStore>(STORE_KEY, { quests });
+  const store = await writePersistentValue<MissionStore>(STORE_KEY, { quests: mergeWithDefaultMissions(quests) });
   return NextResponse.json({ quests: store.quests });
 }

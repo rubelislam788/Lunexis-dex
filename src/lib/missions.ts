@@ -26,6 +26,16 @@ const BASE_QUESTS: Quest[] = [
     { id: "q4-t3", title: "Keep gas available on Arc." },
     { id: "q4-t4", title: "Verify both actions." },
   ] },
+  { id: "social-follow", title: "Follow Community Signals", description: "Open and follow the Rubel and Arc X profiles to unlock the social reward route.", reward: "Social Signal", rewardAmt: 0, xp: 350, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 2, tags: ["Social", "X"], tasks: [
+    { id: "social-follow-rubel", title: "Open Rubel profile." },
+    { id: "social-follow-arc", title: "Open Arc profile." },
+  ] },
+  { id: "social-rubel-post", title: "Rubel Post Signal", description: "Open the Rubel post action and return to verify your social visit.", reward: "Social Signal", rewardAmt: 0, xp: 300, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Social", "Post"], tasks: [
+    { id: "social-rubel-post-open", title: "Open the Rubel post action." },
+  ] },
+  { id: "social-arc-post", title: "Arc Post Signal", description: "Open the Arc post action and return to verify your social visit.", reward: "Social Signal", rewardAmt: 0, xp: 300, difficulty: "Easy", category: "Social", progress: 0, totalSteps: 1, tags: ["Social", "Arc"], tasks: [
+    { id: "social-arc-post-open", title: "Open the Arc post action." },
+  ] },
 ];
 
 export const QUESTS: Quest[] = BASE_QUESTS.map((quest) => ({
