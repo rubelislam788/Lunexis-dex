@@ -37,6 +37,7 @@ export default function BridgePage() {
   const { switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const [activeStep, setActiveStep] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string; explorerBaseUrl?: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
@@ -51,6 +52,7 @@ export default function BridgePage() {
       show("Please connect your wallet first", "error");
       return;
     }
+    setProgressOpen(true);
     setActiveStep(1);
     try {
       setTimeout(() => setActiveStep(2), 1200);
@@ -61,9 +63,11 @@ export default function BridgePage() {
       setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString(), explorerBaseUrl: result?.explorerBaseUrl });
       refresh();
       show(`Bridged ${state.amount} ${selectedToken}`, "success");
+      setTimeout(() => setProgressOpen(false), 900);
     } catch (err: any) {
       const message = err?.message || "Bridge failed";
       setActiveStep(0);
+      setProgressOpen(false);
       setShowFaucetHint(/insufficient|funds|balance/i.test(message));
       show(message, "error");
     }
@@ -237,16 +241,6 @@ export default function BridgePage() {
 
           <aside className="lg:col-span-2 flex flex-col gap-4">
             <div className="arc-card rounded-3xl p-5">
-              <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Bridge Progress</h3>
-              {["Confirm", "Burn", "Attest", "Mint"].map((label, index) => (
-                <div key={label} className="flex items-center gap-3 mb-3 p-3 rounded-xl" style={{ background: activeStep === index + 1 ? "rgba(255,45,178,0.12)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: activeStep > index ? "#38bdf8" : "rgba(255,255,255,0.06)", color: "white", fontFamily: "'Space Grotesk'", fontSize: 11 }}>{activeStep > index ? "OK" : index + 1}</span>
-                  <span style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontWeight: 800 }}>{label}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="arc-card rounded-3xl p-5">
               <h3 style={{ fontFamily: "'Space Grotesk'", fontSize: 16, fontWeight: 900, color: "#f8fbff", marginBottom: 14 }}>Bridge Balances</h3>
               {balances.filter((item) => BRIDGE_TOKENS.includes(item.token)).map((item) => (
                 <div key={item.token} className="flex items-center justify-between rounded-xl p-3 mb-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -271,6 +265,15 @@ export default function BridgePage() {
           </div>
         </div>
       )}
+      {progressOpen && (
+        <BridgeProgressModal
+          activeStep={activeStep}
+          token={selectedToken}
+          fromLabel={CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain}
+          toLabel={CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}
+          isEurc={selectedToken === "EURC"}
+        />
+      )}
       <TransactionSuccessModal
         open={Boolean(successTx)}
         kind="bridge"
@@ -284,6 +287,50 @@ export default function BridgePage() {
         explorerBaseUrl={successTx?.explorerBaseUrl ?? sourceExplorerBaseUrl}
         onClose={() => setSuccessTx(null)}
       />
+    </div>
+  );
+}
+
+function BridgeProgressModal({ activeStep, token, fromLabel, toLabel, isEurc }: { activeStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean }) {
+  const steps = isEurc
+    ? ["Confirm", "Swap", "Bridge", "Receive"]
+    : ["Confirm", "Burn", "Attest", "Mint"];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.76)", backdropFilter: "blur(12px)" }}>
+      <div className="arc-card rounded-3xl p-6 w-[min(460px,92vw)]">
+        <div className="flex items-center gap-4 mb-5">
+          <div className="lunexis-bridge-orbit">
+            <TokenIcon symbol={token} size={42} />
+            <span />
+          </div>
+          <div>
+            <div style={{ color: "#38bdf8", fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Bridge in progress
+            </div>
+            <h3 style={{ color: "#f8fbff", fontFamily: "'Space Grotesk'", fontSize: 20, fontWeight: 900 }}>
+              {fromLabel} to {toLabel}
+            </h3>
+          </div>
+        </div>
+        <div className="lunexis-bridge-flow">
+          {steps.map((step, index) => {
+            const stepNumber = index + 1;
+            const done = activeStep > stepNumber;
+            const active = activeStep === stepNumber;
+            return (
+              <div key={step} className={`${done ? "is-done" : ""} ${active ? "is-active" : ""}`}>
+                <i>{done ? "OK" : stepNumber}</i>
+                <span>{step}</span>
+                <b />
+              </div>
+            );
+          })}
+        </div>
+        <p style={{ color: "#9fb2c4", fontSize: 13, lineHeight: 1.6, marginTop: 18 }}>
+          Keep the wallet open and confirm prompts as they appear. This popup updates while the bridge route is submitted.
+        </p>
+      </div>
     </div>
   );
 }

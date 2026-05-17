@@ -7031,3 +7031,153 @@ video {
     letter-spacing: 0.03em !important;
   }
 }
+
+.lunexis-bridge-orbit {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 24px;
+  background: radial-gradient(circle at 40% 30%, rgba(56, 189, 248, 0.24), rgba(255, 45, 178, 0.08));
+  border: 1px solid rgba(143, 232, 255, 0.22);
+  box-shadow: 0 0 34px rgba(56, 189, 248, 0.18);
+  overflow: hidden;
+}
+
+.lunexis-bridge-orbit::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px dashed rgba(143, 232, 255, 0.5);
+  border-radius: inherit;
+  animation: lunexisBridgeSpin 2.4s linear infinite;
+}
+
+.lunexis-bridge-orbit > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lunexis-bridge-orbit span {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  top: 10px;
+  left: 50%;
+  border-radius: 999px;
+  background: #8fe8ff;
+  box-shadow: 0 0 18px rgba(143, 232, 255, 0.9);
+  transform-origin: 0 26px;
+  animation: lunexisBridgeOrbit 1.6s linear infinite;
+}
+
+.lunexis-bridge-flow {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lunexis-bridge-flow > div {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 56px;
+  border-radius: 18px;
+  padding: 0.65rem 0.8rem;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #9fb2c4;
+}
+
+.lunexis-bridge-flow i {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #dff8ff;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.lunexis-bridge-flow span {
+  color: #f8fbff;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 900;
+}
+
+.lunexis-bridge-flow b {
+  width: 32px;
+  height: 4px;
+  justify-self: end;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.lunexis-bridge-flow b::after {
+  content: "";
+  display: block;
+  width: 45%;
+  height: 100%;
+  border-radius: inherit;
+  background: #38bdf8;
+  opacity: 0;
+}
+
+.lunexis-bridge-flow > div.is-active {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.26);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+.lunexis-bridge-flow > div.is-active i {
+  background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+  color: #fff;
+}
+
+.lunexis-bridge-flow > div.is-active b::after {
+  opacity: 1;
+  animation: lunexisBridgePulse 1.05s ease-in-out infinite;
+}
+
+.lunexis-bridge-flow > div.is-done {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.22);
+}
+
+.lunexis-bridge-flow > div.is-done i {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.lunexis-bridge-flow > div.is-done b {
+  background: rgba(34, 197, 94, 0.4);
+}
+
+@keyframes lunexisBridgeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lunexisBridgeOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lunexisBridgePulse {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(230%);
+  }
+}
