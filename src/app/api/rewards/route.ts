@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_WALLET_ADDRESS } from "@/lib/admin";
 import { DEFAULT_REWARDS, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 import { QUESTS } from "@/lib/missions";
-import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
+import { persistentStorageBackend, persistentStorageConfigured, readPersistentEnvelope, readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
 import type { Quest } from "@/types";
 
 const STORE_KEY = "lunexis:rewards:v1";
@@ -33,16 +33,32 @@ async function readPublishedMissionIds() {
 }
 
 function filterRewardsForPublishedMissions(rewards: RewardConfig[], missionIds: Set<string>) {
-  return rewards.filter((reward) => (
-    reward.missionIds.length === 0 ||
-    reward.missionIds.every((missionId) => missionKeyAliases(missionId).some((alias) => missionIds.has(alias)))
-  ));
+  return rewards.filter((reward) => {
+    const active = !reward.visibility || reward.visibility === "active";
+    return active && (
+      reward.missionIds.length === 0 ||
+      reward.missionIds.every((missionId) => missionKeyAliases(missionId).some((alias) => missionIds.has(alias)))
+    );
+  });
 }
 
-export async function GET() {
-  const store = await readPersistentValue<RewardStore>(STORE_KEY, { rewards: DEFAULT_REWARDS });
+export async function GET(request: Request) {
+  const adminAddress = request.headers.get("x-admin-wallet")?.toLowerCase();
+  const isAdmin = adminAddress === ADMIN_WALLET_ADDRESS;
+  const envelope = await readPersistentEnvelope<RewardStore>(STORE_KEY, { rewards: DEFAULT_REWARDS });
+  const store = envelope.value;
   const missionIds = await readPublishedMissionIds();
-  return NextResponse.json({ rewards: filterRewardsForPublishedMissions(normalizeRewards(store.rewards), missionIds) });
+  const rewards = normalizeRewards(store.rewards);
+  return NextResponse.json({
+    rewards: isAdmin ? rewards.filter((reward) => reward.visibility !== "deleted") : filterRewardsForPublishedMissions(rewards, missionIds),
+    storageConfigured: persistentStorageConfigured(),
+    storageBackend: persistentStorageBackend(),
+    updatedAt: envelope.updatedAt ?? null,
+  }, {
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    },
+  });
 }
 
 export async function POST(request: Request) {

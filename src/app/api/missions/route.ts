@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { Quest } from "@/types";
 import { QUESTS } from "@/lib/missions";
 import { ADMIN_WALLET_ADDRESS } from "@/lib/admin";
-import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
+import { persistentStorageBackend, persistentStorageConfigured, readPersistentEnvelope, writePersistentValue } from "@/lib/persistent-store";
 
 const STORE_KEY = "lunexis:missions:v1";
 export const dynamic = "force-dynamic";
@@ -11,11 +11,16 @@ type MissionStore = {
   quests: Quest[];
 };
 
+function isPublicMission(quest: Quest) {
+  return !quest.visibility || quest.visibility === "active";
+}
+
 function normalizeQuest(value: unknown): Quest | null {
   if (!value || typeof value !== "object") return null;
   const quest = value as Partial<Quest>;
   if (!quest.id || !quest.title || !quest.description) return null;
   const tasks = Array.isArray(quest.tasks) ? quest.tasks.filter((task) => task && typeof task.id === "string" && typeof task.title === "string") : [];
+  const now = new Date().toISOString();
   return {
     id: String(quest.id),
     title: String(quest.title),
@@ -33,13 +38,31 @@ function normalizeQuest(value: unknown): Quest | null {
     startsAt: typeof quest.startsAt === "string" ? quest.startsAt : undefined,
     endsAt: typeof quest.endsAt === "string" ? quest.endsAt : undefined,
     socialLinks: Array.isArray(quest.socialLinks) ? quest.socialLinks.filter((link) => link && typeof link.id === "string" && typeof link.label === "string" && typeof link.url === "string") : [],
+    visibility: quest.visibility === "inactive" || quest.visibility === "hidden" || quest.visibility === "deleted" ? quest.visibility : "active",
+    createdBy: typeof quest.createdBy === "string" ? quest.createdBy : undefined,
+    createdAt: typeof quest.createdAt === "string" ? quest.createdAt : now,
+    updatedAt: now,
   };
 }
 
-export async function GET() {
-  const store = await readPersistentValue<MissionStore | null>(STORE_KEY, null);
+export async function GET(request: Request) {
+  const adminAddress = request.headers.get("x-admin-wallet")?.toLowerCase();
+  const envelope = await readPersistentEnvelope<MissionStore | null>(STORE_KEY, null);
+  const store = envelope.value;
   const hasSavedQuests = Boolean(store && Array.isArray(store.quests) && store.quests.length);
-  return NextResponse.json({ quests: hasSavedQuests ? store!.quests : QUESTS, isDefault: !hasSavedQuests });
+  const isAdmin = adminAddress === ADMIN_WALLET_ADDRESS;
+  const quests = hasSavedQuests ? store!.quests : QUESTS;
+  return NextResponse.json({
+    quests: isAdmin ? quests.filter((quest) => quest.visibility !== "deleted") : quests.filter(isPublicMission),
+    isDefault: !hasSavedQuests,
+    storageConfigured: persistentStorageConfigured(),
+    storageBackend: persistentStorageBackend(),
+    updatedAt: envelope.updatedAt ?? null,
+  }, {
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    },
+  });
 }
 
 export async function POST(request: Request) {

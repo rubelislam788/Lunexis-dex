@@ -8,7 +8,7 @@ export const MISSION_REMOVED_KEY = "arcquest.mission-removed.v1";
 
 export const DEFAULT_MISSION_DAYS = 7;
 
-export type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt" | "socialLinks">>;
+export type EditableQuestPatch = Partial<Pick<Quest, "title" | "description" | "reward" | "rewardAmt" | "xp" | "difficulty" | "category" | "tags" | "startsAt" | "endsAt" | "socialLinks" | "visibility">>;
 
 export const addDaysIso = (date: Date, days: number) => {
   const next = new Date(date);

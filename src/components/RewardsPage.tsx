@@ -9,27 +9,8 @@ import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import { isAdminWallet } from "@/lib/admin";
 import { DEFAULT_REWARDS, XP_TO_USDC_AMOUNT, XP_TO_USDC_COST, formatRewardAmount, formatRewardTotals, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 import { QUESTS } from "@/lib/missions";
-import { MISSION_STEP_PROOF_KEY, hasLocalMissionDrafts, loadLocalMissions } from "@/lib/mission-storage";
+import { MISSION_STEP_PROOF_KEY } from "@/lib/mission-storage";
 import type { Quest } from "@/types";
-
-const REWARD_STORAGE_KEY = "lunexis.rewards.v1";
-
-function readStoredRewards() {
-  if (typeof window === "undefined") return DEFAULT_REWARDS;
-  try {
-    return normalizeRewards(JSON.parse(window.localStorage.getItem(REWARD_STORAGE_KEY) || "null"));
-  } catch {
-    return DEFAULT_REWARDS;
-  }
-}
-
-function rewardsSignature(rewards: RewardConfig[]) {
-  return JSON.stringify(normalizeRewards(rewards));
-}
-
-function isDefaultRewardSet(rewards: RewardConfig[]) {
-  return rewardsSignature(rewards) === rewardsSignature(DEFAULT_REWARDS);
-}
 
 function missionIdsToText(missionIds: string[]) {
   return missionIds.join(", ");
@@ -108,50 +89,32 @@ export default function RewardsPage() {
   const [claimErrors, setClaimErrors] = useState<Record<string, string>>({});
   const [successReward, setSuccessReward] = useState<{ amount: string; txHash?: string } | null>(null);
   const [payoutStatus, setPayoutStatus] = useState<{ configured: boolean; address?: string; balances?: Array<{ token: string; displayAmount: string }>; error?: string } | null>(null);
+  const [saveError, setSaveError] = useState("");
   const isRewardAdmin = isAdminWallet(address);
   const availableXp = Math.max(0, (profile?.xp ?? 0) - (profile?.xpConverted ?? 0));
   const visibleRewards = isRewardAdmin ? rewards : rewards.filter((reward) => rewardHasPublishedMissionLocks(reward, quests));
 
   useEffect(() => {
-    const admin = Boolean(address && isAdminWallet(address));
-    const localRewards = admin ? readStoredRewards() : DEFAULT_REWARDS;
-    if (admin) {
-      setRewards(localRewards);
-      setQuests(loadLocalMissions(QUESTS));
-    }
-    fetch("/api/rewards", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => {
-        if (Array.isArray(data?.rewards)) {
-          const nextRewards = normalizeRewards(data.rewards);
-          if (admin && !isDefaultRewardSet(localRewards) && isDefaultRewardSet(nextRewards)) {
-            setRewards(localRewards);
-            if (address) {
-              void fetch("/api/rewards", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-admin-wallet": address,
-                },
-                body: JSON.stringify({ rewards: localRewards }),
-              }).catch(() => null);
-            }
-            return;
-          }
-          setRewards(nextRewards);
-          if (admin) window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
-        }
-      })
-      .catch(() => null);
+    let cancelled = false;
 
-    fetch("/api/missions", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => {
-        if (Array.isArray(data?.quests) && data.quests.length > 0 && (!admin || !hasLocalMissionDrafts())) {
-          setQuests(data.quests);
-        }
-      })
-      .catch(() => null);
+    const syncRewardsAndMissions = () => {
+      const headers = address && isAdminWallet(address) ? { "x-admin-wallet": address } : undefined;
+      void Promise.all([
+        fetch("/api/rewards", { cache: "no-store", headers }).then((response) => response.ok ? response.json() : null).catch(() => null),
+        fetch("/api/missions", { cache: "no-store", headers }).then((response) => response.ok ? response.json() : null).catch(() => null),
+      ]).then(([rewardData, missionData]) => {
+        if (cancelled) return;
+        if (Array.isArray(rewardData?.rewards)) setRewards(normalizeRewards(rewardData.rewards));
+        if (Array.isArray(missionData?.quests) && missionData.quests.length > 0) setQuests(missionData.quests);
+      });
+    };
+
+    syncRewardsAndMissions();
+    const timer = window.setInterval(syncRewardsAndMissions, 3500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [address]);
 
   useEffect(() => {
@@ -168,8 +131,8 @@ export default function RewardsPage() {
   const persistRewards = async (next: RewardConfig[]) => {
     if (!isRewardAdmin || !address) return false;
     const nextRewards = normalizeRewards(next);
-    window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
     setSaveState("saving");
+    setSaveError("");
     const response = await fetch("/api/rewards", {
       method: "POST",
       headers: {
@@ -178,8 +141,15 @@ export default function RewardsPage() {
       },
       body: JSON.stringify({ rewards: nextRewards }),
     }).catch(() => null);
-    setSaveState(response?.ok ? "saved" : "error");
-    return Boolean(response?.ok);
+    const data = await response?.json().catch(() => null);
+    if (response?.ok) {
+      if (Array.isArray(data?.rewards)) setRewards(normalizeRewards(data.rewards));
+      setSaveState("saved");
+      return true;
+    }
+    setSaveState("error");
+    setSaveError(data?.error || "Could not publish rewards.");
+    return false;
   };
 
   const updateReward = (rewardId: string, patch: Partial<RewardConfig>) => {
@@ -200,6 +170,10 @@ export default function RewardsPage() {
       token: "USDC",
       requirement: "Admin configured reward",
       missionIds: [],
+      visibility: "active",
+      createdBy: address,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     setRewards((current) => {
       const next = [...current, reward];
@@ -230,7 +204,6 @@ export default function RewardsPage() {
     if (!isRewardAdmin || !address) return false;
     const nextRewards = normalizeRewards(rewards);
     setRewards(nextRewards);
-    window.localStorage.setItem(REWARD_STORAGE_KEY, JSON.stringify(nextRewards));
     return await persistRewards(nextRewards);
   };
 
@@ -376,7 +349,7 @@ export default function RewardsPage() {
             </div>
             {saveState !== "idle" && (
               <p style={{ color: saveState === "error" ? "#ffb7eb" : "#22c55e", fontSize: 12, marginBottom: 16 }}>
-                {saveState === "saved" ? "Rewards saved and published." : saveState === "error" ? "Could not publish rewards. Local changes are saved in this browser." : "Saving rewards..."}
+                {saveState === "saved" ? "Rewards saved and published for all users." : saveState === "error" ? saveError || "Could not publish rewards." : "Saving rewards..."}
               </p>
             )}
             <div className="rounded-2xl p-4 mb-5" style={{ background: payoutStatus?.configured ? "rgba(34,197,94,0.08)" : "rgba(255,45,178,0.08)", border: `1px solid ${payoutStatus?.configured ? "rgba(34,197,94,0.18)" : "rgba(255,45,178,0.18)"}` }}>
@@ -410,6 +383,14 @@ export default function RewardsPage() {
                       <select value={reward.token} onChange={(event) => updateReward(reward.id, { token: event.target.value as RewardConfig["token"] })} className="rounded-2xl px-4 py-3">
                         <option value="USDC">USDC</option>
                         <option value="EURC">EURC</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-2">
+                      <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}>Visibility</span>
+                      <select value={reward.visibility ?? "active"} onChange={(event) => updateReward(reward.id, { visibility: event.target.value as RewardConfig["visibility"] })} className="rounded-2xl px-4 py-3">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="hidden">Hidden</option>
                       </select>
                     </label>
                     <label className="grid gap-2 md:col-span-2">

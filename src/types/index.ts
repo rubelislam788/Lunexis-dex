@@ -31,6 +31,10 @@ export interface Quest {
   startsAt?: string;
   endsAt?: string;
   socialLinks?: MissionSocialLink[];
+  visibility?: "active" | "inactive" | "hidden" | "deleted";
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LeaderboardEntry {

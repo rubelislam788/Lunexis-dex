@@ -10,6 +10,10 @@ export interface RewardConfig {
   token: Extract<TokenSymbol, "USDC" | "EURC">;
   requirement: string;
   missionIds: string[];
+  visibility?: "active" | "inactive" | "hidden" | "deleted";
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const DEFAULT_REWARDS: RewardConfig[] = [
@@ -30,7 +34,11 @@ export function normalizeRewards(value: unknown): RewardConfig[] {
       const token = reward.token === "EURC" ? "EURC" : "USDC";
       const requirement = typeof reward.requirement === "string" ? reward.requirement : "";
       const missionIds = Array.isArray(reward.missionIds) ? reward.missionIds.filter((missionId): missionId is string => typeof missionId === "string").map((missionId) => missionId.trim()).filter(Boolean) : [];
-      return { id, title, amount, token, requirement, missionIds };
+      const visibility = reward.visibility === "inactive" || reward.visibility === "hidden" || reward.visibility === "deleted" ? reward.visibility : "active";
+      const createdBy = typeof reward.createdBy === "string" ? reward.createdBy : undefined;
+      const createdAt = typeof reward.createdAt === "string" ? reward.createdAt : undefined;
+      const updatedAt = typeof reward.updatedAt === "string" ? reward.updatedAt : undefined;
+      return { id, title, amount, token, requirement, missionIds, visibility, createdBy, createdAt, updatedAt };
     })
     .filter((item): item is RewardConfig => Boolean(item));
   return rewards.length ? rewards : DEFAULT_REWARDS;

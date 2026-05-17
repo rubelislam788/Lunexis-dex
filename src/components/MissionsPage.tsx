@@ -17,9 +17,6 @@ import {
   MISSION_STEP_PROOF_KEY,
   addDaysIso,
   ensureMissionSchedule,
-  hasLocalMissionDrafts,
-  loadLocalMissions,
-  saveLocalMissions,
   type EditableQuestPatch,
 } from "@/lib/mission-storage";
 
@@ -152,11 +149,16 @@ function socialProofStepIds(quest: Quest, proofKey: string) {
 }
 
 async function publishMissions(quests: Quest[], adminAddress?: string) {
-  await fetch("/api/missions", {
+  const response = await fetch("/api/missions", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(adminAddress ? { "x-admin-wallet": adminAddress } : {}) },
     body: JSON.stringify({ quests }),
-  }).catch(() => null);
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.error || "Could not publish missions.");
+  }
+  return data as { quests?: Quest[] };
 }
 
 interface MissionsPageProps {
@@ -177,34 +179,38 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
   const [successReward, setSuccessReward] = useState<{ title: string; amount: string; message: string; txHash?: string } | null>(null);
   const [missionClock, setMissionClock] = useState(() => Date.now());
+  const [publishState, setPublishState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [publishMessage, setPublishMessage] = useState("");
   const isMissionAdmin = isAdminWallet(address);
 
   useEffect(() => {
-    const admin = Boolean(address && isAdminWallet(address));
-    const localDrafts = hasLocalMissionDrafts();
-    const localMissions = loadLocalMissions(QUESTS);
     try {
       setProof(JSON.parse(window.localStorage.getItem(PROOF_KEY) || "{}"));
-      if (admin && localDrafts) {
-        setQuests(localMissions);
-      }
     } catch {
       setProof({});
     }
 
-    fetch("/api/missions", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => {
+    let cancelled = false;
+    const syncMissions = () => {
+      fetch("/api/missions", {
+        cache: "no-store",
+        headers: address && isAdminWallet(address) ? { "x-admin-wallet": address } : undefined,
+      })
+        .then((response) => response.ok ? response.json() : null)
+        .then((data) => {
+          if (cancelled) return;
         if (Array.isArray(data?.quests) && data.quests.length > 0) {
-          if (admin && data.isDefault && localDrafts) {
-            void publishMissions(localMissions, address);
-            return;
-          }
-          if (admin && localDrafts) return;
           setQuests(ensureMissionSchedule(data.quests));
         }
-      })
-      .catch(() => null);
+        })
+        .catch(() => null);
+    };
+    syncMissions();
+    const timer = window.setInterval(syncMissions, 3500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [address]);
 
   useEffect(() => {
@@ -219,8 +225,19 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   }, [isMissionAdmin]);
 
   const persistMissions = (nextQuests: Quest[]) => {
-    saveLocalMissions(nextQuests, QUESTS);
-    void publishMissions(nextQuests, address);
+    if (!address) return;
+    setPublishState("saving");
+    setPublishMessage("Publishing mission changes...");
+    void publishMissions(nextQuests, address)
+      .then((data) => {
+        if (Array.isArray(data.quests)) setQuests(ensureMissionSchedule(data.quests));
+        setPublishState("saved");
+        setPublishMessage("Mission changes published for all users.");
+      })
+      .catch((error: any) => {
+        setPublishState("error");
+        setPublishMessage(error?.message || "Could not publish missions.");
+      });
   };
 
   const updateMission = (questId: string, patch: EditableQuestPatch) => {
@@ -275,6 +292,10 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
       ],
       startsAt,
       endsAt: addDaysIso(new Date(startsAt), DEFAULT_MISSION_DAYS),
+      visibility: "active",
+      createdBy: address,
+      createdAt: startsAt,
+      updatedAt: startsAt,
     };
     const nextQuests = [...quests, mission];
     setQuests(nextQuests);
@@ -477,6 +498,12 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
         </div>
 
         {isMissionAdmin && showMissionAdmin && (
+          <>
+          {publishState !== "idle" && (
+            <div className="mb-4 rounded-2xl px-4 py-3" style={{ background: publishState === "error" ? "rgba(255,45,178,0.1)" : "rgba(34,197,94,0.09)", border: `1px solid ${publishState === "error" ? "rgba(255,45,178,0.2)" : "rgba(34,197,94,0.22)"}`, color: publishState === "error" ? "#ffb7eb" : "#86efac", fontSize: 12 }}>
+              {publishMessage}
+            </div>
+          )}
           <MissionControlPanel
             quests={quests}
             selectedQuestId={missionControlQuestId}
@@ -492,6 +519,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
               if (isMissionAdmin) markMissionComplete(quest.id, quest.xp);
             }}
           />
+          </>
         )}
 
         <MissionSection
@@ -692,6 +720,14 @@ function MissionControlPanel({
         <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
           <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Category</span>
           <input value={selected.category} onChange={(event) => onUpdateMission(selected.id, { category: event.target.value })} className="mt-2 w-full rounded-2xl px-4 py-3" />
+        </label>
+        <label className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
+          <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Visibility</span>
+          <select value={selected.visibility ?? "active"} onChange={(event) => onUpdateMission(selected.id, { visibility: event.target.value as Quest["visibility"] })} className="mt-2 w-full rounded-2xl px-4 py-3">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="hidden">Hidden</option>
+          </select>
         </label>
         <label className="lg:col-span-2 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,217,255,0.12)" }}>
           <span style={{ color: "#849495", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>Tags</span>
