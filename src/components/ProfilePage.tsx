@@ -11,8 +11,6 @@ import ActivityTimeline from "@/components/ActivityTimeline";
 import AnimatedBalance from "@/components/ui/AnimatedBalance";
 import SmartPortfolioAssistant from "@/components/portfolio/SmartPortfolioAssistant";
 import PortfolioShareCard from "@/components/portfolio/PortfolioShareCard";
-import AiProfileCard from "@/components/profile/AiProfileCard";
-import WalletSecurityChecker from "@/components/security/WalletSecurityChecker";
 import WalletButton from "@/components/ui/WalletButton";
 
 export default function ProfilePage() {
@@ -149,9 +147,7 @@ export default function ProfilePage() {
           </section>
         </div>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-          <AiProfileCard />
           <PortfolioShareCard />
-          <WalletSecurityChecker />
         </div>
       </div>
       {isEditing && (
