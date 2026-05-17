@@ -6690,3 +6690,344 @@ html[data-lunexis-theme] .arc-hero-section .arc-title-gradient {
     line-height: 1.08 !important;
   }
 }
+
+/* Whole-app responsive hardening */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.arc-app-root,
+.arc-page-shell,
+.arc-with-sidebar-page,
+.arc-page-shell > .relative,
+.arc-with-sidebar-page > .relative,
+.arc-card,
+.glass-panel,
+.lunexis-premium-card,
+.lunexis-profile-card,
+.lunexis-staking-pool-card {
+  min-width: 0;
+}
+
+.arc-page-shell :where(button, a, input, select, textarea) {
+  max-width: 100%;
+}
+
+.arc-page-shell :where(button, a.btn-primary, a.btn-ghost, a.btn-outline-cyan) {
+  min-height: 42px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.arc-page-shell :where(input, select, textarea) {
+  font-size: 16px;
+}
+
+.arc-page-shell :where(.grid, .flex) > * {
+  min-width: 0;
+}
+
+.arc-page-shell :where(h1, h2, h3, p, span, strong, small, label, div) {
+  max-width: 100%;
+}
+
+.arc-page-shell :where(h1, h2, h3, p, span, strong, small, label) {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1024px) {
+  .arc-page-shell,
+  .arc-with-sidebar-page {
+    min-height: 100dvh;
+  }
+
+  .arc-page-shell > .relative,
+  .arc-with-sidebar-page > .relative {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .arc-page-shell :where(.xl\:grid-cols-\[minmax\(0\,760px\)_minmax\(320px\,420px\)\], .xl\:grid-cols-\[minmax\(0\,1fr\)_360px\], .xl\:grid-cols-2) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll;
+    animation: none !important;
+  }
+
+  body::before,
+  body::after {
+    opacity: 0.28;
+    animation: none !important;
+  }
+
+  .arc-page-shell,
+  .arc-with-sidebar-page {
+    padding-top: calc(4.25rem + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(6.9rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .arc-page-shell > .relative,
+  .arc-with-sidebar-page > .relative,
+  .arc-page-shell .max-w-7xl,
+  .arc-page-shell .max-w-4xl,
+  .arc-with-sidebar-page .max-w-7xl,
+  .arc-with-sidebar-page .max-w-4xl {
+    width: 100% !important;
+    padding-left: max(0.9rem, env(safe-area-inset-left)) !important;
+    padding-right: max(0.9rem, env(safe-area-inset-right)) !important;
+    padding-top: 0.85rem !important;
+    padding-bottom: 0 !important;
+  }
+
+  .arc-page-shell h1,
+  .arc-with-sidebar-page h1 {
+    font-size: clamp(1.85rem, 9vw, 2.55rem) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .arc-page-shell h2,
+  .arc-with-sidebar-page h2 {
+    font-size: clamp(1.25rem, 6vw, 1.65rem) !important;
+    line-height: 1.15 !important;
+  }
+
+  .arc-page-shell h3,
+  .arc-with-sidebar-page h3 {
+    font-size: clamp(1rem, 4.8vw, 1.25rem) !important;
+    line-height: 1.18 !important;
+  }
+
+  .arc-page-shell p,
+  .arc-with-sidebar-page p {
+    font-size: clamp(0.82rem, 3.8vw, 0.98rem) !important;
+    line-height: 1.55 !important;
+  }
+
+  .arc-page-shell :where(.flex.items-start.justify-between, .flex.items-center.justify-between) {
+    align-items: stretch !important;
+  }
+
+  .arc-page-shell :where(.flex.items-start.justify-between, .flex.items-center.justify-between):not(.arc-token-amount-row) {
+    flex-direction: column !important;
+  }
+
+  .arc-page-shell :where(.grid-cols-2, .grid-cols-3, .grid-cols-4, .md\:grid-cols-2, .md\:grid-cols-3, .lg\:grid-cols-2, .lg\:grid-cols-3, .lg\:grid-cols-5, .lg\:grid-cols-3, .md\:grid-cols-5) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .arc-page-shell :where(.lg\:col-span-2, .lg\:col-span-3, .md\:col-span-2, .md\:col-span-3) {
+    grid-column: auto !important;
+  }
+
+  .arc-card,
+  .glass-panel,
+  .lunexis-premium-card,
+  .lunexis-profile-card,
+  .lunexis-staking-pool-card {
+    border-radius: 20px !important;
+    padding: clamp(0.95rem, 4vw, 1.25rem) !important;
+  }
+
+  .arc-card:hover,
+  .glass-panel:hover,
+  .lunexis-premium-card:hover,
+  .lunexis-staking-pool-card:hover {
+    transform: none !important;
+  }
+
+  .arc-floating-topbar {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    min-width: 0 !important;
+  }
+
+  .arc-topbar-nav {
+    display: none !important;
+  }
+
+  .arc-topbar-wallet {
+    min-width: 0;
+    max-width: min(52vw, 13rem);
+  }
+
+  .lunexis-wallet-trigger {
+    min-width: 0 !important;
+  }
+
+  .lunexis-wallet-trigger.is-connected {
+    max-width: min(52vw, 13rem) !important;
+  }
+
+  .lunexis-wallet-trigger.is-connected .flex-col {
+    max-width: calc(52vw - 3.5rem);
+  }
+
+  .arc-token-amount-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .arc-token-selector-column {
+    align-items: stretch !important;
+    justify-items: stretch !important;
+    padding-top: 0 !important;
+  }
+
+  .arc-token-selector-column > button,
+  .arc-token-selector-column > div {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .arc-swap-amount-input,
+  .arc-page-shell input[type="number"][style*="Space Grotesk"] {
+    font-size: clamp(1.55rem, 9vw, 2.1rem) !important;
+    min-height: 54px !important;
+  }
+
+  .lunexis-route-preview > div {
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .lunexis-staking-stats,
+  .lunexis-staking-pool-grid,
+  .lunexis-starter-pool-grid,
+  .lunexis-pool-metrics,
+  .lunexis-staking-init-steps {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lunexis-staking-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lunexis-staking-actions button,
+  .lunexis-stake-percent-row button {
+    min-height: 44px !important;
+  }
+
+  .lunexis-staking-input,
+  .lunexis-token-search,
+  .arc-page-shell input,
+  .arc-page-shell select,
+  .arc-page-shell textarea {
+    min-height: 44px !important;
+  }
+
+  .lunexis-token-list {
+    max-height: min(48dvh, 22rem) !important;
+  }
+
+  .lunexis-token-list button,
+  .lunexis-staking-activity > div {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+  }
+
+  .lunexis-token-list small,
+  .lunexis-staking-activity small {
+    grid-column: 2 !important;
+  }
+
+  .fixed.inset-0.z-50,
+  .lunexis-modal-overlay,
+  .arc-wallet-modal-backdrop,
+  .arc-success-backdrop {
+    padding: max(0.9rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) max(0.9rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left)) !important;
+  }
+
+  .fixed.inset-0.z-50 > .arc-card,
+  .fixed.inset-0.z-50 > div,
+  .lunexis-modal-overlay > .arc-card,
+  .arc-wallet-modal-panel {
+    width: min(100%, 30rem) !important;
+    max-width: calc(100vw - 1.8rem) !important;
+    max-height: min(88dvh, 42rem) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .fixed.inset-0.z-50 .flex.gap-3 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .fixed.inset-0.z-50 .flex.gap-3 > button {
+    width: 100% !important;
+  }
+
+  .lunexis-smart-error {
+    left: 0.85rem !important;
+    right: 0.85rem !important;
+    bottom: calc(6.4rem + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .arc-page-shell,
+  .arc-with-sidebar-page {
+    padding-top: calc(4rem + env(safe-area-inset-top)) !important;
+  }
+
+  .arc-card,
+  .glass-panel,
+  .lunexis-premium-card,
+  .lunexis-profile-card,
+  .lunexis-staking-pool-card {
+    border-radius: 18px !important;
+  }
+
+  .arc-page-shell :where(.rounded-3xl) {
+    border-radius: 18px !important;
+  }
+
+  .arc-page-shell :where(.rounded-2xl) {
+    border-radius: 14px !important;
+  }
+
+  .lunexis-mobile-bottom-nav {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    width: calc(100vw - 1rem) !important;
+    border-radius: 22px !important;
+  }
+
+  .lunexis-mobile-bottom-nav button {
+    min-height: 2.45rem !important;
+  }
+
+  .lunexis-mobile-bottom-nav small {
+    font-size: 0.5rem !important;
+  }
+
+  .lunexis-staking-actions,
+  .lunexis-stake-percent-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .arc-page-shell :where(.btn-primary, .btn-ghost, .btn-outline-cyan, button) {
+    letter-spacing: 0.03em !important;
+  }
+}
