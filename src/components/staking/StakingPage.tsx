@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isAddress, parseUnits, type Address } from "viem";
 import { useStaking } from "@/hooks/useStaking";
 import type { StakingPoolType, StakingPoolView, StakingToken } from "@/lib/staking";
@@ -63,6 +63,18 @@ export default function StakingPage() {
     );
   }, [staking.tokens, tokenSearch]);
 
+  useEffect(() => {
+    if (adminDraft.stakeToken || staking.tokens.length === 0) return;
+    const defaultToken = staking.tokens.find((token) => token.symbol === "USDC") ?? staking.tokens[0];
+    setSelectedToken(defaultToken);
+    setAdminDraft((prev) => ({
+      ...prev,
+      stakeToken: defaultToken.address,
+      rewardToken: defaultToken.address,
+      metadata: `Lunexis ${defaultToken.symbol} ARC Testnet staking pool`,
+    }));
+  }, [adminDraft.stakeToken, staking.tokens]);
+
   const totals = useMemo(() => {
     const staked = staking.pools.reduce((sum, pool) => sum + numeric(pool.userStaked), 0);
     const rewards = staking.pools.reduce((sum, pool) => sum + numeric(pool.pendingReward), 0);
@@ -70,10 +82,20 @@ export default function StakingPage() {
     return { staked, rewards, active };
   }, [staking.pools]);
 
+  const useTokenForPool = (token: StakingToken) => {
+    setSelectedToken(token);
+    setAdminDraft((prev) => ({
+      ...prev,
+      stakeToken: token.address,
+      rewardToken: token.address,
+      metadata: `Lunexis ${token.symbol} ARC Testnet staking pool`,
+    }));
+  };
+
   const addToken = async () => {
     try {
       const token = await staking.addCustomToken(tokenAddress);
-      setSelectedToken(token);
+      useTokenForPool(token);
       setTokenAddress("");
       show(`${token.symbol} added to staking`, "success");
     } catch (error: any) {
@@ -229,7 +251,7 @@ export default function StakingPage() {
               <button onClick={addToken} className="btn-primary w-full py-3 rounded-2xl mt-3">Validate & Add Token</button>
               <div className="lunexis-token-list">
                 {filteredTokens.map((token) => (
-                  <button key={token.address} onClick={() => setSelectedToken(token)} className={selectedToken?.address === token.address ? "is-active" : ""}>
+                  <button key={token.address} onClick={() => useTokenForPool(token)} className={selectedToken?.address === token.address ? "is-active" : ""}>
                     {tokenAvatar(token, 34)}
                     <span>{token.symbol}</span>
                     <small>{token.balance ?? "0"}</small>
@@ -242,8 +264,23 @@ export default function StakingPage() {
               <section className="lunexis-premium-card">
                 <div className="lunexis-kicker">Private Admin</div>
                 <h2>Pool Manager</h2>
-                <input value={adminDraft.stakeToken} onChange={(event) => setAdminDraft((prev) => ({ ...prev, stakeToken: event.target.value }))} placeholder="Stake token address" className="lunexis-staking-input" />
-                <input value={adminDraft.rewardToken} onChange={(event) => setAdminDraft((prev) => ({ ...prev, rewardToken: event.target.value }))} placeholder="Reward token address" className="lunexis-staking-input" />
+                {selectedToken && (
+                  <div className="lunexis-staking-warning mb-3">
+                    {selectedToken.symbol} selected. Stake and reward addresses are filled with this token contract.
+                  </div>
+                )}
+                <input
+                  value={adminDraft.stakeToken}
+                  onChange={(event) => setAdminDraft((prev) => ({ ...prev, stakeToken: event.target.value, rewardToken: event.target.value }))}
+                  placeholder="Stake token address"
+                  className="lunexis-staking-input"
+                />
+                <input
+                  value={adminDraft.rewardToken}
+                  onChange={(event) => setAdminDraft((prev) => ({ ...prev, rewardToken: event.target.value }))}
+                  placeholder="Reward token address"
+                  className="lunexis-staking-input"
+                />
                 <div className="grid grid-cols-2 gap-2">
                   <input value={adminDraft.apr} onChange={(event) => setAdminDraft((prev) => ({ ...prev, apr: event.target.value }))} placeholder="APR %" className="lunexis-staking-input" />
                   <input value={adminDraft.lockDays} onChange={(event) => setAdminDraft((prev) => ({ ...prev, lockDays: event.target.value }))} placeholder="Lock days" className="lunexis-staking-input" />
