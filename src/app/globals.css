@@ -7443,3 +7443,45 @@ html[data-lunexis-theme="morn"] .arc-sidebar-tools {
   border-color: var(--lunexis-border-a) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
+
+/* Clear bridge token selected state */
+.lunexis-bridge-token-card.is-active,
+.lunexis-bridge-token-card[aria-pressed="true"] {
+  transform: translateY(-2px) !important;
+  border-width: 2px !important;
+  background:
+    radial-gradient(circle at 14% 50%, rgba(56, 189, 248, 0.26), transparent 34%),
+    linear-gradient(135deg, rgba(11, 35, 58, 0.96), rgba(14, 31, 64, 0.86)) !important;
+  box-shadow:
+    0 0 0 1px rgba(143, 232, 255, 0.42),
+    0 0 34px rgba(56, 189, 248, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+.lunexis-bridge-token-check {
+  margin-left: auto;
+  width: 1.55rem;
+  height: 1.55rem;
+  display: grid !important;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.16);
+  color: #5cff9c !important;
+  -webkit-text-fill-color: #5cff9c !important;
+  font-size: 1.12rem !important;
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.22);
+}
+
+html[data-lunexis-theme="white"] .lunexis-bridge-token-card.is-active,
+html[data-lunexis-theme="white"] .lunexis-bridge-token-card[aria-pressed="true"],
+html[data-lunexis-theme="morn"] .lunexis-bridge-token-card.is-active,
+html[data-lunexis-theme="morn"] .lunexis-bridge-token-card[aria-pressed="true"] {
+  background:
+    radial-gradient(circle at 14% 50%, rgba(42, 157, 143, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(226, 244, 239, 0.88)) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 111, 120, 0.28),
+    0 18px 42px rgba(26, 122, 110, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
+}

@@ -170,6 +170,9 @@ export default function BridgePage() {
                         Balance: {balanceLabel(symbol)}
                       </div>
                     </div>
+                    {selectedToken === symbol && (
+                      <span className="lunexis-bridge-token-check material-symbols-outlined" aria-hidden="true">check_circle</span>
+                    )}
                   </button>
                 ))}
               </div>
