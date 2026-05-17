@@ -132,7 +132,7 @@ export function useArcSwap() {
           if (!cancelled) setQuoteLoading(true);
           const adapter = await getViemAdapter(walletClient, publicClient);
           const kit = await getAppKit();
-          const estimate = await withCircleApiProxy(() =>
+          const estimate = await withCircleApiProxy<any>(() =>
             kit.estimateSwap({
               from: { adapter, chain: "Arc_Testnet" },
               tokenIn: fromToken,
