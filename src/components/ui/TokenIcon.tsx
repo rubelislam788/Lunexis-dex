@@ -39,14 +39,13 @@ export default function TokenIcon({ symbol, size = 36 }: { symbol: TokenSymbol; 
           }}
         >
           <img
-            src="/arc-assets/arc-badge.png"
+            src="/arc-assets/arc-badge.svg"
             alt=""
             style={{
               width: badgeSize,
               height: badgeSize,
-              objectFit: "cover",
-              transform: "scale(1.7) translateY(4%)",
-              filter: "brightness(1.12) contrast(1.16) saturate(1.08)",
+              objectFit: "contain",
+              filter: "drop-shadow(0 1px 1px rgba(0, 11, 28, 0.35))",
             }}
           />
         </span>
