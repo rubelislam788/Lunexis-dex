@@ -65,7 +65,7 @@ export default function BridgePage() {
     try {
       const result = await executeBridge((update) => {
         setBridgeProgress((prev) => update.status === "done"
-          ? { activeStep: Math.max(prev.activeStep, Math.min(4, update.stepIndex + 1)), completedStep: Math.max(prev.completedStep, update.stepIndex) }
+          ? { activeStep: Math.max(prev.activeStep, Math.min(2, update.stepIndex + 1)), completedStep: Math.max(prev.completedStep, Math.min(2, update.stepIndex)) }
           : { activeStep: update.stepIndex, completedStep: Math.max(prev.completedStep, update.stepIndex - 1) }
         );
       });
@@ -274,8 +274,6 @@ export default function BridgePage() {
           token={selectedToken}
           fromLabel={CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain}
           toLabel={CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}
-          isEurc={selectedToken === "EURC"}
-          fromChain={state.fromChain as SupportedChain}
         />
       )}
       <TransactionSuccessModal
@@ -295,12 +293,8 @@ export default function BridgePage() {
   );
 }
 
-function BridgeProgressModal({ activeStep, completedStep, token, fromLabel, toLabel, isEurc, fromChain }: { activeStep: number; completedStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean; fromChain: SupportedChain }) {
-  const steps = isEurc
-    ? fromChain === SUPPORTED_CHAINS.ETH_SEPOLIA
-      ? ["Confirm", "Bridge", "Swap", "Receive"]
-      : ["Confirm", "Swap", "Bridge", "Receive"]
-    : ["Confirm", "Submit", "Relay", "Receive"];
+function BridgeProgressModal({ activeStep, completedStep, token, fromLabel, toLabel }: { activeStep: number; completedStep: number; token: TokenSymbol; fromLabel: string; toLabel: string }) {
+  const steps = ["Transaction 1", "Transaction 2"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.76)", backdropFilter: "blur(12px)" }}>
@@ -334,7 +328,7 @@ function BridgeProgressModal({ activeStep, completedStep, token, fromLabel, toLa
           })}
         </div>
         <p style={{ color: "#9fb2c4", fontSize: 13, lineHeight: 1.6, marginTop: 18 }}>
-          Keep the wallet open and confirm prompts as they appear. This popup updates while the bridge route is submitted.
+          Keep the wallet open. Each confirmed wallet transaction completes one step.
         </p>
       </div>
     </div>

@@ -10,6 +10,8 @@ import { promptWalletNetworkSwitch } from "@/lib/wallet-network";
 
 const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
+const BRIDGE_PROGRESS_STEPS = 2;
+const FAST_BRIDGE_MAX_FEE = process.env.NEXT_PUBLIC_ARC_BRIDGE_MAX_FEE || "0.5";
 export type BridgeProgressUpdate = { stepIndex: number; status: "active" | "done" };
 
 function parseTokenAmount(value: string, decimals: number) {
@@ -62,9 +64,9 @@ function createTransactionProgress(onProgress?: (update: BridgeProgressUpdate) =
   const markHash = (hash: string) => {
     if (!hash || seen.has(hash)) return;
     seen.add(hash);
-    completedStep = Math.min(4, completedStep + 1);
+    completedStep = Math.min(BRIDGE_PROGRESS_STEPS, completedStep + 1);
     onProgress?.({ stepIndex: completedStep, status: "done" });
-    if (completedStep < 4) onProgress?.({ stepIndex: completedStep + 1, status: "active" });
+    if (completedStep < BRIDGE_PROGRESS_STEPS) onProgress?.({ stepIndex: completedStep + 1, status: "active" });
   };
 
   const markResult = (result: any) => {
@@ -72,7 +74,7 @@ function createTransactionProgress(onProgress?: (update: BridgeProgressUpdate) =
   };
 
   const complete = () => {
-    onProgress?.({ stepIndex: 4, status: "done" });
+    onProgress?.({ stepIndex: BRIDGE_PROGRESS_STEPS, status: "done" });
   };
 
   const registerKitEvents = (kit: any) => {
@@ -83,6 +85,14 @@ function createTransactionProgress(onProgress?: (update: BridgeProgressUpdate) =
   };
 
   return { markResult, complete, registerKitEvents };
+}
+
+function fastBridgeConfig() {
+  return {
+    transferSpeed: "FAST",
+    maxFee: FAST_BRIDGE_MAX_FEE,
+    batchTransactions: true,
+  };
 }
 
 export function useArcBridge() {
@@ -161,6 +171,7 @@ export function useArcBridge() {
             to: { adapter, chain: "Ethereum_Sepolia", recipientAddress: toAddress, useCircleRelayer: true },
             amount: bridgeAmount,
             token: "USDC",
+            config: fastBridgeConfig(),
           } as any)
         );
         progress.markResult(bridgeResult);
@@ -178,6 +189,7 @@ export function useArcBridge() {
             to: { adapter, chain: "Arc_Testnet", recipientAddress: toAddress, useCircleRelayer: true },
             amount: state.amount,
             token: "USDC",
+            config: fastBridgeConfig(),
           } as any)
         );
         progress.markResult(bridgeResult);
@@ -206,6 +218,7 @@ export function useArcBridge() {
           to: { adapter, chain: state.toChain, recipientAddress: toAddress, useCircleRelayer: true },
           amount: state.amount,
           token: "USDC",
+          config: fastBridgeConfig(),
         } as any)
       );
       progress.markResult(result);
