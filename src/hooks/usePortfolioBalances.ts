@@ -1,40 +1,48 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPublicClient, erc20Abi, formatUnits, isAddressEqual, zeroAddress, type Address, type PublicClient } from "viem";
+import { createPublicClient, erc20Abi, fallback, formatUnits, http, isAddressEqual, zeroAddress, type Address, type PublicClient } from "viem";
 import { useAccount } from "wagmi";
 import type { PortfolioBalance, TokenSymbol } from "@/types";
-import { arcChain } from "@/lib/wagmi";
-import { ARC_TESTNET_CHAIN_ID, createArcFallbackTransport } from "@/lib/arc-kit";
-import { PORTFOLIO_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS, TOKEN_META } from "@/lib/tokens";
+import { arcChain, ethereumSepoliaChain } from "@/lib/wagmi";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, ETHEREUM_SEPOLIA_RPC_URLS, createArcFallbackTransport, normalizeRpcUrl } from "@/lib/arc-kit";
+import { PORTFOLIO_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
+const SEPOLIA_CHAIN_ID = ETHEREUM_SEPOLIA_CHAIN_ID;
 
 const chainClients: Record<number, PublicClient> = {
   [ARC_CHAIN_ID]: createPublicClient({
     chain: arcChain,
     transport: createArcFallbackTransport(true),
   }),
-};
-
-const tokenChains: Record<TokenSymbol, number> = {
-  ETH: ARC_CHAIN_ID,
-  ARC: ARC_CHAIN_ID,
-  USDC: ARC_CHAIN_ID,
-  EURC: ARC_CHAIN_ID,
-  WETH: ARC_CHAIN_ID,
+  [SEPOLIA_CHAIN_ID]: createPublicClient({
+    chain: ethereumSepoliaChain,
+    transport: fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url), { retryCount: 2, timeout: 10000 })), {
+      rank: true,
+      retryCount: 2,
+    }),
+  }),
 };
 
 type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
 
-function emptyBalances(isLoading = false): PortfolioBalance[] {
+function chainLabel(chainId: number) {
+  return chainId === SEPOLIA_CHAIN_ID ? "Ethereum Sepolia" : "Arc Testnet";
+}
+
+function balanceChainId(chainId?: number) {
+  return chainId === SEPOLIA_CHAIN_ID ? SEPOLIA_CHAIN_ID : ARC_CHAIN_ID;
+}
+
+function emptyBalances(isLoading = false, chainId = ARC_CHAIN_ID): PortfolioBalance[] {
   return PORTFOLIO_TOKENS.map((token) => ({
     token,
     amount: "0",
     displayAmount: `0.00 ${token}`,
     value: "$0.00",
     unitPrice: "Price syncing",
-    chain: TOKEN_META[token].chain,
+    chain: chainLabel(chainId),
     isLoading,
   }));
 }
@@ -94,8 +102,8 @@ async function fetchTokenPrices(): Promise<TokenPriceMap> {
   };
 }
 
-async function readTokenBalance(address: Address, token: TokenSymbol) {
-  const chainId = tokenChains[token];
+async function readTokenBalance(address: Address, token: TokenSymbol, requestedChainId = ARC_CHAIN_ID) {
+  const chainId = balanceChainId(requestedChainId);
   const client = chainClients[chainId];
 
   if (!client) return { raw: BigInt(0), decimals: TOKEN_DECIMALS[token] };
@@ -127,16 +135,17 @@ async function readTokenBalance(address: Address, token: TokenSymbol) {
   return { raw, decimals: Number(decimals) };
 }
 
-export function usePortfolioBalances(refreshMs = 12000) {
+export function usePortfolioBalances(refreshMs = 12000, chainId = ARC_CHAIN_ID) {
   const { address, isConnected } = useAccount();
-  const [balances, setBalances] = useState<PortfolioBalance[]>(emptyBalances());
+  const requestedChainId = balanceChainId(chainId);
+  const [balances, setBalances] = useState<PortfolioBalance[]>(emptyBalances(false, requestedChainId));
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
   const inFlight = useRef(false);
 
   const refresh = useCallback(async () => {
     if (!isConnected || !address) {
-      setBalances(emptyBalances());
+      setBalances(emptyBalances(false, requestedChainId));
       setLastUpdated("");
       return;
     }
@@ -144,13 +153,13 @@ export function usePortfolioBalances(refreshMs = 12000) {
 
     inFlight.current = true;
     setIsLoading(true);
-    setBalances((prev) => prev.length ? prev.map((item) => ({ ...item, isLoading: true })) : emptyBalances(true));
+    setBalances((prev) => prev.length ? prev.map((item) => ({ ...item, chain: chainLabel(requestedChainId), isLoading: true })) : emptyBalances(true, requestedChainId));
 
     try {
       const prices = await fetchTokenPrices();
       const next = await Promise.all(PORTFOLIO_TOKENS.map(async (token) => {
         try {
-          const { raw, decimals } = await readTokenBalance(address, token);
+          const { raw, decimals } = await readTokenBalance(address, token, requestedChainId);
           const amount = cleanAmount(raw, decimals);
 
           return {
@@ -159,7 +168,7 @@ export function usePortfolioBalances(refreshMs = 12000) {
             displayAmount: displayAmountFor(token, amount),
             value: valueFor(token, amount, prices),
             unitPrice: unitPriceFor(token, prices),
-            chain: TOKEN_META[token].chain,
+            chain: chainLabel(requestedChainId),
             isLoading: false,
           };
         } catch {
@@ -169,7 +178,7 @@ export function usePortfolioBalances(refreshMs = 12000) {
             displayAmount: displayAmountFor(token, "0"),
             value: valueFor(token, "0", prices),
             unitPrice: unitPriceFor(token, prices),
-            chain: TOKEN_META[token].chain,
+            chain: chainLabel(requestedChainId),
             isLoading: false,
           };
         }
@@ -181,7 +190,7 @@ export function usePortfolioBalances(refreshMs = 12000) {
       inFlight.current = false;
       setIsLoading(false);
     }
-  }, [address, isConnected]);
+  }, [address, isConnected, requestedChainId]);
 
   useEffect(() => {
     refresh();

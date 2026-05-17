@@ -33,7 +33,6 @@ export default function BridgePage() {
   const { isConnected, address } = useAccount();
   const { state, updateState, executeBridge, needsApproval, bridgeConfigured, bridgeReady, bridgeMode, currentChainId, requiredChainId, reset } = useArcBridge();
   const { pushActivity } = useProfile();
-  const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances();
   const { show, ToastContainer } = useToast();
   const { switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
   const [activeStep, setActiveStep] = useState(0);
@@ -46,6 +45,7 @@ export default function BridgePage() {
   const onRequiredNetwork = currentChainId === requiredChainId;
   const requiredNetworkLabel = CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain;
   const sourceExplorerBaseUrl = state.fromChain === SUPPORTED_CHAINS.ARC_TESTNET ? "https://testnet.arcscan.app/tx/" : "https://sepolia.etherscan.io/tx/";
+  const { balances, isLoading: balancesLoading, refresh } = usePortfolioBalances(12000, requiredChainId);
   const balanceLabel = (symbol: TokenSymbol) => {
     const item = balances.find((balance) => balance.token === symbol);
     if (balancesLoading || item?.isLoading) return "Loading...";
@@ -143,7 +143,9 @@ export default function BridgePage() {
             </div>
 
             <div className="rounded-3xl p-5 mb-5" style={{ background: "rgba(0,0,0,0.32)", border: `1px solid ${TOKEN_META[selectedToken].accent}44` }}>
-              <label style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, color: "#849495", textTransform: "uppercase" }}>Token</label>
+              <label style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 800, color: "#849495", textTransform: "uppercase" }}>
+                Bridge Balances - {requiredNetworkLabel}
+              </label>
               <div className="grid grid-cols-2 gap-3 mt-3">
                 {availableBridgeTokens.map((symbol) => (
                   <button
