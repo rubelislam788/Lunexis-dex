@@ -14,8 +14,8 @@ export default function ActivityTimeline({ activities }: { activities: ActivityI
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        {activities.slice(0, 8).map((item) => (
+      <div className="lunexis-activity-scroll flex flex-col gap-3">
+        {activities.map((item) => (
           <button
             key={item.id}
             type="button"
