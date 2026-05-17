@@ -51,6 +51,9 @@ export default function BridgePage() {
     if (balancesLoading || item?.isLoading) return "Loading...";
     return item?.displayAmount || `${item?.amount ?? "0"} ${symbol}`;
   };
+  const selectBridgeToken = (symbol: TokenSymbol) => {
+    updateState({ token: symbol, error: undefined });
+  };
 
   const handleBridge = async () => {
     setConfirmOpen(false);
@@ -150,9 +153,14 @@ export default function BridgePage() {
                 {availableBridgeTokens.map((symbol) => (
                   <button
                     key={symbol}
-                    onClick={() => updateState({ token: symbol })}
-                    className="flex items-center gap-3 rounded-2xl p-3"
-                    style={{ background: selectedToken === symbol ? "rgba(56,189,248,0.14)" : "rgba(255,255,255,0.04)", border: `1px solid ${TOKEN_META[symbol].accent}55` }}
+                    type="button"
+                    onClick={() => selectBridgeToken(symbol)}
+                    aria-pressed={selectedToken === symbol}
+                    className={`lunexis-bridge-token-card flex items-center gap-3 rounded-2xl p-3 ${selectedToken === symbol ? "is-active" : ""}`}
+                    style={{
+                      borderColor: selectedToken === symbol ? TOKEN_META[symbol].accent : `${TOKEN_META[symbol].accent}55`,
+                      boxShadow: selectedToken === symbol ? `0 0 0 1px ${TOKEN_META[symbol].accent}66, 0 16px 36px ${TOKEN_META[symbol].accent}20` : undefined,
+                    }}
                   >
                     <TokenIcon symbol={symbol} size={40} />
                     <div className="text-left">
