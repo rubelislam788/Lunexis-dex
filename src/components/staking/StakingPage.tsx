@@ -176,7 +176,6 @@ export default function StakingPage() {
             <section className="lunexis-premium-card">
               <div className="lunexis-kicker">Allowed Tokens</div>
               <h2>Contract Assets</h2>
-              <p className="lunexis-staking-muted">These tokens are loaded from `getAllowedTokens()` on the new ARC Testnet staking contract.</p>
               {staking.error && <div className="lunexis-staking-error">{staking.error}</div>}
               <div className="lunexis-token-list">
                 {filteredTokens.map((token) => (
@@ -324,7 +323,7 @@ function EmptyStakingGuide() {
     <div className="lunexis-staking-empty">
       <span className="material-symbols-outlined">lock_open</span>
       <strong>No allowed staking tokens found</strong>
-      <p>The frontend is connected to the new ARC Testnet staking contract and is waiting for `getAllowedTokens()` to return stakeable assets.</p>
+      <p>No stakeable ARC Testnet assets are available yet.</p>
     </div>
   );
 }
