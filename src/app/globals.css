@@ -3363,6 +3363,7 @@ select.lunexis-staking-input {
 }
 
 .lunexis-stake-percent-row button,
+.lunexis-stake-mini-button,
 .lunexis-staking-actions button,
 .lunexis-staking-alert button {
   min-height: 38px;
@@ -3373,6 +3374,12 @@ select.lunexis-staking-input {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 0.68rem !important;
   font-weight: 900 !important;
+}
+
+.lunexis-stake-mini-button {
+  min-width: 64px;
+  align-self: end;
+  margin-top: 0.75rem;
 }
 
 .lunexis-staking-actions button:nth-child(2),

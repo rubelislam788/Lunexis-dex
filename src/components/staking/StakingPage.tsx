@@ -42,6 +42,7 @@ export default function StakingPage() {
   const { show, ToastContainer } = useToast();
   const [tokenSearch, setTokenSearch] = useState("");
   const [poolAmounts, setPoolAmounts] = useState<Record<number, string>>({});
+  const [unstakeAmounts, setUnstakeAmounts] = useState<Record<number, string>>({});
 
   const totals = useMemo(() => {
     const staked = staking.pools.reduce((sum, pool) => sum + numeric(pool.userStaked), 0);
@@ -49,6 +50,15 @@ export default function StakingPage() {
     const active = staking.pools.filter((pool) => numeric(pool.userStaked) > 0).length;
     return { staked, rewards, active };
   }, [staking.pools]);
+  const visiblePools = useMemo(() => {
+    const query = tokenSearch.trim().toLowerCase();
+    if (!query) return staking.pools;
+    return staking.pools.filter((pool) =>
+      pool.token.symbol.toLowerCase().includes(query) ||
+      pool.token.name.toLowerCase().includes(query) ||
+      pool.token.address.toLowerCase().includes(query)
+    );
+  }, [staking.pools, tokenSearch]);
 
   const run = async (label: string, action: () => Promise<any>) => {
     try {
@@ -115,26 +125,29 @@ export default function StakingPage() {
                 <EmptyStakingGuide />
               ) : (
                 <div className="lunexis-staking-pool-grid">
-                  {staking.pools.map((pool) => (
+                  {visiblePools.map((pool) => (
                     <PoolCard
                       key={pool.id}
                       pool={pool}
-                      amount={poolAmounts[pool.id] ?? ""}
+                      stakeAmount={poolAmounts[pool.id] ?? ""}
+                      unstakeAmount={unstakeAmounts[pool.id] ?? ""}
                       isConnected={staking.isConnected}
                       wrongNetwork={staking.wrongNetwork}
                       status={staking.status}
-                      onAmount={(value) => setPoolAmounts((prev) => ({ ...prev, [pool.id]: value }))}
-                      onPercent={(percent) => {
+                      onStakeAmount={(value) => setPoolAmounts((prev) => ({ ...prev, [pool.id]: value }))}
+                      onUnstakeAmount={(value) => setUnstakeAmounts((prev) => ({ ...prev, [pool.id]: value }))}
+                      onStakePercent={(percent) => {
                         const balance = numeric(pool.token.balance);
                         const next = percent === 100 ? balance : balance * percent / 100;
                         setPoolAmounts((prev) => ({ ...prev, [pool.id]: next.toFixed(next >= 1 ? 4 : 6).replace(/\.?0+$/, "") }));
                       }}
+                      onUnstakeMax={() => setUnstakeAmounts((prev) => ({ ...prev, [pool.id]: pool.userStaked }))}
                       onApprove={() => run("Approve", async () => {
                         const amount = poolAmounts[pool.id] ?? "0";
                         return staking.approve(pool, amount);
                       })}
                       onStake={() => run("Stake", () => staking.stake(pool, poolAmounts[pool.id] ?? "0"))}
-                      onUnstake={() => run("Unstake", () => staking.unstake(pool, poolAmounts[pool.id] ?? "0"))}
+                      onUnstake={() => run("Unstake", () => staking.unstake(pool, unstakeAmounts[pool.id] ?? "0"))}
                       onClaim={() => run("Claim rewards", () => staking.claim(pool))}
                     />
                   ))}
@@ -172,44 +185,52 @@ export default function StakingPage() {
 
 function PoolCard({
   pool,
-  amount,
+  stakeAmount,
+  unstakeAmount,
   isConnected,
   wrongNetwork,
   status,
-  onAmount,
-  onPercent,
+  onStakeAmount,
+  onUnstakeAmount,
+  onStakePercent,
+  onUnstakeMax,
   onApprove,
   onStake,
   onUnstake,
   onClaim,
 }: {
   pool: StakingPoolView;
-  amount: string;
+  stakeAmount: string;
+  unstakeAmount: string;
   isConnected: boolean;
   wrongNetwork: boolean;
   status: string;
-  onAmount: (value: string) => void;
-  onPercent: (percent: number) => void;
+  onStakeAmount: (value: string) => void;
+  onUnstakeAmount: (value: string) => void;
+  onStakePercent: (percent: number) => void;
+  onUnstakeMax: () => void;
   onApprove: () => void;
   onStake: () => void;
   onUnstake: () => void;
   onClaim: () => void;
 }) {
   const utilization = Math.min(100, numeric(pool.totalStaked) > 0 ? (numeric(pool.userStaked) / numeric(pool.totalStaked)) * 100 : 0);
-  const amountRaw = parseTokenAmount(amount, pool.token.decimals);
+  const stakeAmountRaw = parseTokenAmount(stakeAmount, pool.token.decimals);
+  const unstakeAmountRaw = parseTokenAmount(unstakeAmount, pool.token.decimals);
   const balanceRaw = parseTokenAmount(pool.token.balance || "0", pool.token.decimals) ?? BigInt(0);
   const userStakedRaw = parseTokenAmount(pool.userStaked || "0", pool.token.decimals) ?? BigInt(0);
   const pendingRaw = parseTokenAmount(pool.pendingReward || "0", pool.rewardToken.decimals) ?? BigInt(0);
-  const hasAmount = Boolean(amountRaw && amountRaw > BigInt(0));
-  const needsApproval = Boolean(hasAmount && pool.allowance !== undefined && pool.allowance < amountRaw!);
+  const hasStakeAmount = Boolean(stakeAmountRaw && stakeAmountRaw > BigInt(0));
+  const hasUnstakeAmount = Boolean(unstakeAmountRaw && unstakeAmountRaw > BigInt(0));
+  const needsApproval = Boolean(hasStakeAmount && pool.allowance !== undefined && pool.allowance < stakeAmountRaw!);
   const isLocked = Boolean(pool.unlockAt && pool.unlockAt * 1000 > Date.now());
   const stakeBlockReason = !isConnected
     ? "Connect wallet"
     : wrongNetwork
       ? "Switch to ARC Testnet"
-      : !hasAmount
-        ? "Enter an amount"
-        : amountRaw! > balanceRaw
+      : !hasStakeAmount
+        ? "Enter a stake amount"
+        : stakeAmountRaw! > balanceRaw
           ? `Not enough ${pool.token.symbol}`
           : pool.paused
             ? "Pool paused"
@@ -220,9 +241,9 @@ function PoolCard({
     ? "Connect wallet"
     : wrongNetwork
       ? "Switch to ARC Testnet"
-      : !hasAmount
-        ? "Enter an amount"
-        : amountRaw! > userStakedRaw
+      : !hasUnstakeAmount
+        ? "Enter an unstake amount"
+        : unstakeAmountRaw! > userStakedRaw
           ? "Amount exceeds stake"
           : isLocked
             ? `Locked until ${new Date((pool.unlockAt ?? 0) * 1000).toLocaleDateString()}`
@@ -234,8 +255,10 @@ function PoolCard({
       : pendingRaw <= BigInt(0)
         ? "No rewards yet"
         : "";
-  const actionHint = hasAmount
-    ? stakeBlockReason || unstakeBlockReason
+  const actionHint = hasStakeAmount
+    ? stakeBlockReason
+    : hasUnstakeAmount
+      ? unstakeBlockReason
     : pendingRaw > BigInt(0)
       ? claimBlockReason
       : stakeBlockReason;
@@ -264,11 +287,15 @@ function PoolCard({
         <span>My stake vs contract balance</span>
         <i><b style={{ width: `${utilization}%` }} /></i>
       </div>
-      <input value={amount} onChange={(event) => onAmount(event.target.value)} placeholder={`Amount in ${pool.token.symbol}`} className="lunexis-staking-input" inputMode="decimal" />
+      <input value={stakeAmount} onChange={(event) => onStakeAmount(event.target.value)} placeholder={`Stake amount in ${pool.token.symbol}`} className="lunexis-staking-input" inputMode="decimal" />
       <div className="lunexis-stake-percent-row">
         {[25, 50, 75, 100].map((percent) => (
-          <button key={percent} onClick={() => onPercent(percent)}>{percent === 100 ? "MAX" : `${percent}%`}</button>
+          <button key={percent} onClick={() => onStakePercent(percent)}>{percent === 100 ? "MAX" : `${percent}%`}</button>
         ))}
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <input value={unstakeAmount} onChange={(event) => onUnstakeAmount(event.target.value)} placeholder={`Unstake amount in ${pool.token.symbol}`} className="lunexis-staking-input" inputMode="decimal" />
+        <button type="button" onClick={onUnstakeMax} className="lunexis-stake-mini-button">MAX</button>
       </div>
       {numeric(pool.token.balance) <= 0 && <div className="lunexis-staking-warning">Low balance detected for this token.</div>}
       {actionHint && (
@@ -277,7 +304,7 @@ function PoolCard({
         </div>
       )}
       <div className="lunexis-staking-actions">
-        {needsApproval && <button onClick={onApprove} disabled={status !== "idle" || !hasAmount || wrongNetwork}>Approve</button>}
+        {needsApproval && <button onClick={onApprove} disabled={status !== "idle" || !hasStakeAmount || wrongNetwork}>Approve</button>}
         <button onClick={onStake} disabled={status !== "idle" || Boolean(stakeBlockReason)}>Stake</button>
         <button onClick={onUnstake} disabled={status !== "idle" || Boolean(unstakeBlockReason)}>Unstake</button>
         <button onClick={onClaim} disabled={status !== "idle" || Boolean(claimBlockReason)}>Claim</button>
