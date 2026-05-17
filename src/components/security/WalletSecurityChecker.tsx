@@ -19,7 +19,6 @@ export default function WalletSecurityChecker() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="lunexis-kicker">Wallet Security Checker</div>
-          <h2>Approval Guard</h2>
           <p>Indexed approval and contract interaction analysis from your Lunexis activity.</p>
         </div>
         <span className={`lunexis-risk-pill is-${risk.toLowerCase()}`}>{risk}</span>

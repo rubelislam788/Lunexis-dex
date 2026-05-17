@@ -25,7 +25,6 @@ export default function AiProfileCard() {
           <span>LX</span>
         )}
         <div>
-          <div className="lunexis-kicker">AI Generated Identity</div>
           <h2>{profile?.username ?? "Lunexis Operator"}</h2>
           <p>{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Wallet profile"}</p>
         </div>
