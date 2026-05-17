@@ -13,6 +13,10 @@ const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
 const BRIDGE_PROGRESS_STEPS = 2;
 const FAST_BRIDGE_MAX_FEE = process.env.NEXT_PUBLIC_ARC_BRIDGE_MAX_FEE || "2";
 export type BridgeProgressUpdate = { stepIndex: number; status: "active" | "done" };
+const ARC_SWAP_CONFIG = (kitKey: string) => ({
+  kitKey,
+  allowanceStrategy: "permit",
+} as const);
 
 function parseTokenAmount(value: string, decimals: number) {
   if (!value.trim()) return BigInt(0);
@@ -160,7 +164,7 @@ export function useArcBridge() {
             tokenIn: "EURC",
             tokenOut: "USDC",
             amountIn: state.amount,
-            config: { kitKey: appKitKey, allowanceStrategy: "approve" },
+            config: ARC_SWAP_CONFIG(appKitKey),
           } as any)
         );
         progress.markResult(swapResult);
@@ -201,7 +205,7 @@ export function useArcBridge() {
             tokenIn: "USDC",
             tokenOut: "EURC",
             amountIn: bridgeAmount,
-            config: { kitKey: appKitKey, allowanceStrategy: "approve" },
+            config: ARC_SWAP_CONFIG(appKitKey),
           } as any)
         );
         progress.markResult(swapResult);
