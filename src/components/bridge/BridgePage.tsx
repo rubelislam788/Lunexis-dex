@@ -201,16 +201,6 @@ export default function BridgePage() {
             />
             <div className="lunexis-bridge-recipient-hint mb-5">Send this to another wallet</div>
 
-            {selectedToken === "EURC" && (
-              <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.18)" }}>
-                <div style={{ color: "#8fe8ff", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                  EURC Cross-Chain Route
-                </div>
-                <p style={{ color: "#d6edf8", fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
-                  Circle bridge transfers USDC only, so EURC routes use Arc App Kit swap plus bridge. From Sepolia, the route spends USDC and converts to EURC on Arc.
-                </p>
-              </div>
-            )}
             {bridgeMode === "unsupported" && (
               <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)" }}>
                 <div style={{ color: "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>
