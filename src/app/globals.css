@@ -7363,3 +7363,83 @@ html[data-lunexis-theme="morn"] :where(.lunexis-analysis-body, .lunexis-analysis
   -webkit-text-fill-color: var(--lunexis-text-strong) !important;
   text-shadow: none !important;
 }
+
+/* Theme-matched sidebar pass */
+html[data-lunexis-theme="dark"] .arc-sidebar-shell {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(74, 158, 232, 0.14), transparent 11rem),
+    linear-gradient(180deg, rgba(20, 25, 32, 0.96), rgba(10, 14, 20, 0.96)) !important;
+  border-color: rgba(30, 48, 80, 0.9) !important;
+}
+
+html[data-lunexis-theme="neon"] .arc-sidebar-shell {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 45, 178, 0.2), transparent 12rem),
+    radial-gradient(circle at 88% 18%, rgba(132, 64, 255, 0.16), transparent 11rem),
+    linear-gradient(180deg, rgba(29, 0, 45, 0.94), rgba(7, 0, 28, 0.96)) !important;
+  border-color: rgba(255, 45, 178, 0.28) !important;
+  box-shadow: 0 28px 88px rgba(0, 0, 0, 0.58), 0 0 34px rgba(255, 45, 178, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-lunexis-theme="morn"] .arc-sidebar-shell {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(126, 214, 208, 0.2), transparent 12rem),
+    radial-gradient(circle at 90% 18%, rgba(216, 122, 154, 0.1), transparent 11rem),
+    linear-gradient(180deg, rgba(247, 250, 248, 0.86), rgba(222, 236, 229, 0.78)) !important;
+  border-color: rgba(31, 77, 72, 0.12) !important;
+  color: #173331 !important;
+  box-shadow: 0 24px 72px rgba(43, 88, 75, 0.14), 0 0 32px rgba(126, 214, 208, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-lunexis-theme="dark"] :where(.arc-sidebar-nav-item, .arc-sidebar-profile, .arc-sidebar-plain),
+html[data-lunexis-theme="neon"] :where(.arc-sidebar-nav-item, .arc-sidebar-profile, .arc-sidebar-plain) {
+  color: rgba(248, 251, 255, 0.76) !important;
+}
+
+html[data-lunexis-theme="white"] :where(.arc-sidebar-nav-item, .arc-sidebar-profile, .arc-sidebar-plain),
+html[data-lunexis-theme="morn"] :where(.arc-sidebar-nav-item, .arc-sidebar-profile, .arc-sidebar-plain) {
+  color: var(--lunexis-text-muted) !important;
+  -webkit-text-fill-color: var(--lunexis-text-muted) !important;
+}
+
+html[data-lunexis-theme="dark"] :where(.arc-sidebar-nav-item:hover, .arc-sidebar-nav-item.is-active, .arc-sidebar-profile:hover) {
+  background: linear-gradient(135deg, #4a9ee8, #7ec8f0) !important;
+  color: #07111f !important;
+  -webkit-text-fill-color: #07111f !important;
+  box-shadow: 0 0 26px rgba(74, 158, 232, 0.34) !important;
+}
+
+html[data-lunexis-theme="neon"] :where(.arc-sidebar-nav-item:hover, .arc-sidebar-nav-item.is-active, .arc-sidebar-profile:hover) {
+  background: linear-gradient(135deg, #ff2db2, #8440ff) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 0 30px rgba(255, 45, 178, 0.36), 0 0 22px rgba(132, 64, 255, 0.24) !important;
+}
+
+html[data-lunexis-theme="white"] :where(.arc-sidebar-nav-item:hover, .arc-sidebar-nav-item.is-active, .arc-sidebar-profile:hover),
+html[data-lunexis-theme="morn"] :where(.arc-sidebar-nav-item:hover, .arc-sidebar-nav-item.is-active, .arc-sidebar-profile:hover) {
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.92), rgba(91, 191, 181, 0.86)) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(26, 122, 110, 0.2) !important;
+}
+
+html[data-lunexis-theme] :where(.arc-sidebar-nav-item:hover *, .arc-sidebar-nav-item.is-active *, .arc-sidebar-profile:hover *) {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-lunexis-theme="white"] :where(.arc-sidebar-profile-text strong, .arc-sidebar-profile-text span, .arc-sidebar-more, .arc-sidebar-tools-label),
+html[data-lunexis-theme="morn"] :where(.arc-sidebar-profile-text strong, .arc-sidebar-profile-text span, .arc-sidebar-more, .arc-sidebar-tools-label) {
+  color: var(--lunexis-text-muted) !important;
+  -webkit-text-fill-color: var(--lunexis-text-muted) !important;
+}
+
+html[data-lunexis-theme="dark"] .arc-sidebar-tools,
+html[data-lunexis-theme="neon"] .arc-sidebar-tools,
+html[data-lunexis-theme="white"] .arc-sidebar-tools,
+html[data-lunexis-theme="morn"] .arc-sidebar-tools {
+  background: color-mix(in srgb, var(--lunexis-card-a) 72%, transparent) !important;
+  border-color: var(--lunexis-border-a) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
