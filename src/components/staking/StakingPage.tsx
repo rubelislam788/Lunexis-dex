@@ -79,8 +79,10 @@ export default function StakingPage() {
     setPoolAmounts((prev) => ({ ...prev, [pool.id]: next.toFixed(next >= 1 ? 4 : 6).replace(/\.?0+$/, "") }));
   };
 
-  const setUnstakeMax = (pool: StakingPoolView) => {
-    setUnstakeAmounts((prev) => ({ ...prev, [pool.id]: pool.userStaked }));
+  const setUnstakePercent = (pool: StakingPoolView, percent: number) => {
+    const staked = numeric(pool.userStaked);
+    const next = percent === 100 ? staked : staked * percent / 100;
+    setUnstakeAmounts((prev) => ({ ...prev, [pool.id]: next.toFixed(next >= 1 ? 4 : 6).replace(/\.?0+$/, "") }));
   };
 
   return (
@@ -191,7 +193,7 @@ export default function StakingPage() {
           onStakeAmount={(value) => setPoolAmounts((prev) => ({ ...prev, [modalPool.id]: value }))}
           onUnstakeAmount={(value) => setUnstakeAmounts((prev) => ({ ...prev, [modalPool.id]: value }))}
           onStakePercent={(percent) => setStakePercent(modalPool, percent)}
-          onUnstakeMax={() => setUnstakeMax(modalPool)}
+          onUnstakePercent={(percent) => setUnstakePercent(modalPool, percent)}
           onClose={() => setActionModal(null)}
           onApprove={() => run("Approve", () => staking.approve(modalPool, poolAmounts[modalPool.id] ?? "0"))}
           onStake={async () => {
@@ -280,7 +282,7 @@ function StakingActionModal({
   onStakeAmount,
   onUnstakeAmount,
   onStakePercent,
-  onUnstakeMax,
+  onUnstakePercent,
   onClose,
   onApprove,
   onStake,
@@ -296,7 +298,7 @@ function StakingActionModal({
   onStakeAmount: (value: string) => void;
   onUnstakeAmount: (value: string) => void;
   onStakePercent: (percent: number) => void;
-  onUnstakeMax: () => void;
+  onUnstakePercent: (percent: number) => void;
   onClose: () => void;
   onApprove: () => void;
   onStake: () => void | Promise<void>;
@@ -349,10 +351,14 @@ function StakingActionModal({
             </div>
           </>
         ) : (
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <>
             <input value={unstakeAmount} onChange={(event) => onUnstakeAmount(event.target.value)} placeholder={`Unstake amount in ${pool.token.symbol}`} className="lunexis-staking-input" inputMode="decimal" autoFocus />
-            <button type="button" onClick={onUnstakeMax} className="lunexis-stake-mini-button">MAX</button>
-          </div>
+            <div className="lunexis-stake-percent-row">
+              {[25, 50, 75, 100].map((percent) => (
+                <button key={percent} onClick={() => onUnstakePercent(percent)}>{percent === 100 ? "MAX" : `${percent}%`}</button>
+              ))}
+            </div>
+          </>
         )}
 
         {blockReason && <div className="lunexis-staking-warning">{blockReason}</div>}
