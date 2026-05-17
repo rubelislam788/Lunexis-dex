@@ -57,8 +57,9 @@ export default function ProfilePage() {
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="arc-card rounded-3xl p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="grid gap-6">
+            <section className="arc-card rounded-3xl p-6">
             <div className="flex items-center gap-4">
               <div className="relative">
                 {profile.avatarDataUrl ? (
@@ -99,7 +100,9 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
-          </section>
+            </section>
+            <PortfolioShareCard />
+          </div>
 
           <section className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
@@ -145,9 +148,6 @@ export default function ProfilePage() {
               <ActivityTimeline activities={profile.activities} />
             </div>
           </section>
-        </div>
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-          <PortfolioShareCard />
         </div>
       </div>
       {isEditing && (
