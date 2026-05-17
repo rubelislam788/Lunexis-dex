@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcBridge } from "@/hooks/useArcBridge";
-import type { BridgeProgressStep } from "@/hooks/useArcBridge";
+import type { BridgeProgressUpdate } from "@/hooks/useArcBridge";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 import { useToast } from "@/components/ui/Toast";
@@ -35,7 +35,7 @@ export default function BridgePage() {
   const { pushActivity } = useProfile();
   const { show, ToastContainer } = useToast();
   const { switchChainAsync, isPending: isSwitchingNetwork } = useSwitchChain();
-  const [activeStep, setActiveStep] = useState(0);
+  const [bridgeProgress, setBridgeProgress] = useState({ activeStep: 0, completedStep: 0 });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [showFaucetHint, setShowFaucetHint] = useState(false);
@@ -62,9 +62,15 @@ export default function BridgePage() {
       return;
     }
     setProgressOpen(true);
-    setActiveStep(1);
+    setBridgeProgress({ activeStep: 1, completedStep: 0 });
     try {
-      const result = await executeBridge((step) => setActiveStep(stepToProgressIndex(step, selectedToken, state.fromChain as SupportedChain)));
+      const result = await executeBridge((update) => {
+        const stepIndex = stepToProgressIndex(update, selectedToken, state.fromChain as SupportedChain);
+        setBridgeProgress((prev) => update.status === "done"
+          ? { activeStep: Math.max(prev.activeStep, stepIndex), completedStep: Math.max(prev.completedStep, stepIndex) }
+          : { activeStep: stepIndex, completedStep: Math.max(prev.completedStep, stepIndex - 1) }
+        );
+      });
       pushActivity(createActivity("bridge", "Bridge completed", `${state.amount} ${selectedToken} bridged from ${state.fromChain} to ${state.toChain}.`, selectedToken, "completed", result?.hash));
       setSuccessTx({ hash: result?.hash, timestamp: new Date().toISOString(), explorerBaseUrl: result?.explorerBaseUrl });
       refresh();
@@ -72,7 +78,7 @@ export default function BridgePage() {
       setTimeout(() => setProgressOpen(false), 900);
     } catch (err: any) {
       const message = err?.message || "Bridge failed";
-      setActiveStep(0);
+      setBridgeProgress({ activeStep: 0, completedStep: 0 });
       setProgressOpen(false);
       setShowFaucetHint(/insufficient|funds|balance/i.test(message));
       show(message, "error");
@@ -246,7 +252,7 @@ export default function BridgePage() {
                 View Transaction
               </a>
             )}
-            {state.status === "success" && <button onClick={() => { reset(); setActiveStep(0); }} className="btn-ghost w-full py-3 rounded-2xl mt-3">Bridge Again</button>}
+            {state.status === "success" && <button onClick={() => { reset(); setBridgeProgress({ activeStep: 0, completedStep: 0 }); }} className="btn-ghost w-full py-3 rounded-2xl mt-3">Bridge Again</button>}
           </section>
         </div>
       </div>
@@ -265,7 +271,8 @@ export default function BridgePage() {
       )}
       {progressOpen && (
         <BridgeProgressModal
-          activeStep={activeStep}
+          activeStep={bridgeProgress.activeStep}
+          completedStep={bridgeProgress.completedStep}
           token={selectedToken}
           fromLabel={CHAIN_META[state.fromChain as SupportedChain]?.label ?? state.fromChain}
           toLabel={CHAIN_META[state.toChain as SupportedChain]?.label ?? state.toChain}
@@ -290,19 +297,19 @@ export default function BridgePage() {
   );
 }
 
-function stepToProgressIndex(step: BridgeProgressStep, token: TokenSymbol, fromChain: SupportedChain) {
-  if (step === "confirm") return 1;
-  if (step === "receive") return 4;
+function stepToProgressIndex(update: BridgeProgressUpdate, token: TokenSymbol, fromChain: SupportedChain) {
+  if (update.step === "confirm") return 1;
+  if (update.step === "receive") return 4;
   if (token === "EURC" && fromChain === SUPPORTED_CHAINS.ETH_SEPOLIA) {
-    return step === "bridge" ? 2 : 3;
+    return update.step === "bridge" ? 2 : 3;
   }
   if (token !== "EURC") {
-    return step === "bridge" ? 2 : 3;
+    return update.step === "bridge" ? 2 : 3;
   }
-  return step === "swap" ? 2 : 3;
+  return update.step === "swap" ? 2 : 3;
 }
 
-function BridgeProgressModal({ activeStep, token, fromLabel, toLabel, isEurc, fromChain }: { activeStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean; fromChain: SupportedChain }) {
+function BridgeProgressModal({ activeStep, completedStep, token, fromLabel, toLabel, isEurc, fromChain }: { activeStep: number; completedStep: number; token: TokenSymbol; fromLabel: string; toLabel: string; isEurc: boolean; fromChain: SupportedChain }) {
   const steps = isEurc
     ? fromChain === SUPPORTED_CHAINS.ETH_SEPOLIA
       ? ["Confirm", "Bridge", "Swap", "Receive"]
@@ -329,8 +336,8 @@ function BridgeProgressModal({ activeStep, token, fromLabel, toLabel, isEurc, fr
         <div className="lunexis-bridge-flow">
           {steps.map((step, index) => {
             const stepNumber = index + 1;
-            const done = activeStep > stepNumber;
-            const active = activeStep === stepNumber;
+            const done = completedStep >= stepNumber;
+            const active = activeStep === stepNumber && !done;
             return (
               <div key={step} className={`${done ? "is-done" : ""} ${active ? "is-active" : ""}`}>
                 <i>{done ? "OK" : stepNumber}</i>
