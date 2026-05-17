@@ -1,22 +1,46 @@
 import { NextResponse } from "next/server";
-import { createPublicClient, createWalletClient, erc20Abi, fallback, http, isAddress, parseUnits, type Address } from "viem";
+import { createPublicClient, createWalletClient, erc20Abi, fallback, formatUnits, http, isAddress, parseUnits, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnetChain } from "@/lib/onchain";
 import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_RPC_URLS } from "@/lib/arc-kit";
 import { TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 import type { TokenSymbol } from "@/types";
 import { readPersistentValue, writePersistentValue } from "@/lib/persistent-store";
+import { DEFAULT_REWARDS, normalizeRewards, type RewardConfig } from "@/lib/rewards";
 
 const PAYOUT_TOKENS = new Set<TokenSymbol>(["USDC", "EURC"]);
 type ProfileRecord = { completedMissionIds?: string[]; claimedRewardIds?: string[]; xp?: number; xpConverted?: number } & Record<string, unknown>;
 type ProfileStore = Record<string, ProfileRecord>;
 const PROFILE_STORE_KEY = "lunexis:profiles:v1";
+const REWARD_STORE_KEY = "lunexis:rewards:v1";
 export const dynamic = "force-dynamic";
+type RewardStore = { rewards?: RewardConfig[] };
 
 function getPrivateKey() {
-  const key = process.env.REWARD_PAYOUT_PRIVATE_KEY || process.env.ARC_REWARD_PAYOUT_PRIVATE_KEY || "";
+  const key = process.env.REWARD_PAYOUT_PRIVATE_KEY || process.env.ARC_REWARD_PAYOUT_PRIVATE_KEY || process.env.ADMIN_WALLET_PRIVATE_KEY || process.env.PAYOUT_PRIVATE_KEY || "";
   if (!key) return "";
   return key.startsWith("0x") ? key as `0x${string}` : `0x${key}` as `0x${string}`;
+}
+
+function createRewardClients() {
+  const transport = fallback(ARC_TESTNET_RPC_URLS.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
+    rank: true,
+    retryCount: 2,
+  });
+  return {
+    publicClient: createPublicClient({ chain: arcTestnetChain, transport }),
+    transport,
+  };
+}
+
+function payoutAccount() {
+  const privateKey = getPrivateKey();
+  if (!privateKey) return null;
+  try {
+    return privateKeyToAccount(privateKey);
+  } catch {
+    return null;
+  }
 }
 
 function missionKeyAliases(value: string) {
@@ -26,6 +50,32 @@ function missionKeyAliases(value: string) {
   if (key.startsWith("custom-")) aliases.add(key.slice("custom-".length));
   else if (/^\d+$/.test(key)) aliases.add(`custom-${key}`);
   return Array.from(aliases);
+}
+
+export async function GET() {
+  const account = payoutAccount();
+  if (!account) {
+    return NextResponse.json({
+      configured: false,
+      error: "Set REWARD_PAYOUT_PRIVATE_KEY to the admin payout wallet private key, then fund that wallet with Arc Testnet USDC/EURC.",
+    });
+  }
+
+  const { publicClient } = createRewardClients();
+  const balances = await Promise.all((["USDC", "EURC"] as TokenSymbol[]).map(async (token) => {
+    const tokenAddress = TOKEN_CONTRACTS[token]?.[ARC_TESTNET_CHAIN_ID];
+    if (!tokenAddress) return { token, amount: "0", displayAmount: `0 ${token}` };
+    const raw = await publicClient.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [account.address],
+    }).catch(() => BigInt(0));
+    const amount = formatUnits(raw, TOKEN_DECIMALS[token]);
+    return { token, amount, displayAmount: `${Number(amount).toLocaleString(undefined, { maximumFractionDigits: 4 })} ${token}` };
+  }));
+
+  return NextResponse.json({ configured: true, address: account.address, balances });
 }
 
 export async function POST(request: Request) {
@@ -83,9 +133,21 @@ export async function POST(request: Request) {
     }
   }
 
-  const privateKey = getPrivateKey();
-  if (!privateKey) {
-    return NextResponse.json({ code: "PAYOUT_WALLET_OFFLINE", error: "Reward wallet is warming up. Please try again soon." }, { status: 503 });
+  if (xpCost <= 0) {
+    const rewardStore = await readPersistentValue<RewardStore>(REWARD_STORE_KEY, { rewards: DEFAULT_REWARDS });
+    const publishedRewards = normalizeRewards(rewardStore.rewards ?? DEFAULT_REWARDS);
+    const reward = publishedRewards.find((item) => item.id === rewardId);
+    if (!reward) {
+      return NextResponse.json({ error: "This reward is not published yet. Ask the admin to save rewards again." }, { status: 404 });
+    }
+    if (reward.token !== token || Number(reward.amount) !== amount) {
+      return NextResponse.json({ error: "Reward details changed. Refresh the Rewards page and try again." }, { status: 409 });
+    }
+  }
+
+  const account = payoutAccount();
+  if (!account) {
+    return NextResponse.json({ code: "PAYOUT_WALLET_OFFLINE", error: "Reward payout wallet is not configured. Set REWARD_PAYOUT_PRIVATE_KEY to your admin wallet private key in Vercel, then fund it with Arc Testnet USDC/EURC." }, { status: 503 });
   }
 
   const tokenAddress = TOKEN_CONTRACTS[token]?.[ARC_TESTNET_CHAIN_ID];
@@ -93,12 +155,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ code: "REWARD_TOKEN_OFFLINE", error: `${token} reward token is not ready yet.` }, { status: 503 });
   }
 
-  const account = privateKeyToAccount(privateKey);
-  const transport = fallback(ARC_TESTNET_RPC_URLS.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
-    rank: true,
-    retryCount: 2,
-  });
-  const publicClient = createPublicClient({ chain: arcTestnetChain, transport });
+  const { publicClient, transport } = createRewardClients();
   const walletClient = createWalletClient({ account, chain: arcTestnetChain, transport });
   const decimals = TOKEN_DECIMALS[token];
   const value = parseUnits(String(amount), decimals);
@@ -111,7 +168,7 @@ export async function POST(request: Request) {
   });
 
   if (balance < value) {
-    return NextResponse.json({ error: `Reward payout wallet has insufficient ${token}.` }, { status: 402 });
+    return NextResponse.json({ error: `Admin payout wallet ${account.address} has insufficient ${token}. Fund this wallet on Arc Testnet before users claim rewards.` }, { status: 402 });
   }
 
   const hash = await walletClient.writeContract({

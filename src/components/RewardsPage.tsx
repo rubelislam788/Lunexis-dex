@@ -68,6 +68,7 @@ export default function RewardsPage() {
   const [claimMessage, setClaimMessage] = useState("");
   const [claimErrors, setClaimErrors] = useState<Record<string, string>>({});
   const [successReward, setSuccessReward] = useState<{ amount: string; txHash?: string } | null>(null);
+  const [payoutStatus, setPayoutStatus] = useState<{ configured: boolean; address?: string; balances?: Array<{ token: string; displayAmount: string }>; error?: string } | null>(null);
   const isRewardAdmin = isAdminWallet(address);
   const availableXp = Math.max(0, (profile?.xp ?? 0) - (profile?.xpConverted ?? 0));
 
@@ -99,6 +100,13 @@ export default function RewardsPage() {
       })
       .catch(() => null);
   }, [address]);
+
+  useEffect(() => {
+    fetch("/api/reward-payout", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => setPayoutStatus(data))
+      .catch(() => setPayoutStatus(null));
+  }, [claimingRewardId]);
 
   useEffect(() => {
     if (!isRewardAdmin) setShowRewardAdmin(false);
@@ -297,6 +305,16 @@ export default function RewardsPage() {
                 {saveState === "saved" ? "Rewards saved and published." : saveState === "error" ? "Could not publish rewards. Local changes are saved in this browser." : "Saving rewards..."}
               </p>
             )}
+            <div className="rounded-2xl p-4 mb-5" style={{ background: payoutStatus?.configured ? "rgba(34,197,94,0.08)" : "rgba(255,45,178,0.08)", border: `1px solid ${payoutStatus?.configured ? "rgba(34,197,94,0.18)" : "rgba(255,45,178,0.18)"}` }}>
+              <div style={{ color: payoutStatus?.configured ? "#86efac" : "#ffb7eb", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Payout Wallet
+              </div>
+              <p style={{ color: "#dbeafe", fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
+                {payoutStatus?.configured
+                  ? `Rewards are paid from ${payoutStatus.address}. Balance: ${payoutStatus.balances?.map((item) => item.displayAmount).join(" / ") || "syncing"}.`
+                  : payoutStatus?.error || "Set REWARD_PAYOUT_PRIVATE_KEY in Vercel to your admin wallet private key and fund that wallet with Arc Testnet USDC/EURC."}
+              </p>
+            </div>
             <div className="grid gap-4">
               {rewards.map((reward, index) => (
                 <div key={reward.id} className="rounded-3xl p-4" style={{ background: "rgba(0,0,0,0.28)", border: "1px solid rgba(56,189,248,0.16)" }}>
