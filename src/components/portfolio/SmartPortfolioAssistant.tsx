@@ -104,10 +104,10 @@ export default function SmartPortfolioAssistant({ compact = false }: { compact?:
           </div>
         </div>
         <div className="lunexis-wallet-intelligence-mini-grid">
-          <div><span>Top</span><strong>{analysis.topHolding?.token ?? "Syncing"}</strong></div>
-          <div><span>Risk</span><strong>{analysis.riskyApproval ? "Review" : "Low"}</strong></div>
-          <div><span>Tx refs</span><strong>{analysis.contracts}</strong></div>
-          <div><span>Inactive</span><strong>{analysis.inactive.length}</strong></div>
+          <span><b>Top</b>{analysis.topHolding?.token ?? "Syncing"}</span>
+          <span><b>Risk</b>{analysis.riskyApproval ? "Review" : "Low"}</span>
+          <span><b>Tx</b>{analysis.contracts}</span>
+          <span><b>Inactive</b>{analysis.inactive.length}</span>
         </div>
         <div className="lunexis-wallet-intelligence-mini-bars">
           {analysis.allocations.slice(0, 4).map((item) => (
