@@ -277,7 +277,9 @@ export default function SwapPage() {
             ? routeMode === "appkit-missing-key"
               ? "Swap service not configured"
               : "No swap route"
-            : "Confirm Swap";
+            : routeMode === "appkit"
+              ? "Approve & Confirm Swap"
+              : "Confirm Swap";
   const actionDisabled = isLoading || !state.amountIn || needsApproval || (!swapReady && !wrongNetwork);
   return (
     <div className="arc-with-sidebar-page arc-page-shell">
