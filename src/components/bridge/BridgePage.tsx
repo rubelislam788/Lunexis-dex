@@ -14,6 +14,7 @@ import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
+import WalletButton from "@/components/ui/WalletButton";
 
 const SOURCE_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ETH_SEPOLIA];
 const DEST_CHAIN_OPTIONS: SupportedChain[] = [SUPPORTED_CHAINS.ARC_TESTNET];
@@ -31,6 +32,7 @@ export default function BridgePage() {
   const [successTx, setSuccessTx] = useState<{ hash?: string; gasFee?: string; timestamp: string; explorerBaseUrl?: string } | null>(null);
   const selectedToken = (state.token || "USDC") as TokenSymbol;
   const availableBridgeTokens = ["USDC"] as TokenSymbol[];
+  const onRequiredNetwork = currentChainId === requiredChainId;
 
   const handleBridge = async () => {
     setConfirmOpen(false);
@@ -156,14 +158,19 @@ export default function BridgePage() {
                 </p>
               </div>
             )}
-            {currentChainId !== requiredChainId && isConnected && (
-              <button disabled={isSwitchingNetwork} onClick={handleSwitchNetwork} className="btn-outline-cyan w-full py-4 rounded-2xl mb-3">
-                {isSwitchingNetwork ? "Switching Network..." : "Switch Network"}
+            {!isConnected ? (
+              <div className="w-full mb-3 [&>button]:w-full [&>button]:py-4 [&>button]:rounded-2xl [&>button]:justify-center">
+                <WalletButton />
+              </div>
+            ) : !onRequiredNetwork ? (
+              <button disabled={isSwitchingNetwork} onClick={handleSwitchNetwork} className="btn-primary w-full py-4 rounded-2xl mb-3">
+                {isSwitchingNetwork ? "Switching Network..." : "Switch to Ethereum Sepolia"}
+              </button>
+            ) : (
+              <button disabled={isLoading || !state.amount || needsApproval || !bridgeReady} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
+                {isLoading ? "Routing Bridge..." : "Review Bridge"}
               </button>
             )}
-            <button disabled={isLoading || !state.amount || needsApproval || !bridgeReady || currentChainId !== requiredChainId} onClick={() => setConfirmOpen(true)} className="btn-primary w-full py-4 rounded-2xl">
-              {isLoading ? "Routing Bridge..." : isConnected ? "Review Bridge" : "Connect Wallet to Bridge"}
-            </button>
             {state.error && (
               <div className="mt-3 rounded-2xl p-3" style={{ background: "rgba(255,45,178,0.08)", border: "1px solid rgba(255,45,178,0.18)", color: "#ffb7eb", fontSize: 12 }}>
                 {state.error}
