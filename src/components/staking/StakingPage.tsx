@@ -191,7 +191,7 @@ export default function StakingPage() {
               {staking.pools.length === 0 ? (
                 <EmptyStakingGuide
                   tokens={staking.tokens.filter((token) => token.symbol === "USDC" || token.symbol === "EURC")}
-                  isAdmin={staking.isAdmin}
+                  isAdmin={staking.canCreatePools}
                   status={staking.status}
                   onCreatePool={createStablePool}
                 />
@@ -292,9 +292,14 @@ export default function StakingPage() {
                 </select>
                 <input value={adminDraft.metadata} onChange={(event) => setAdminDraft((prev) => ({ ...prev, metadata: event.target.value }))} placeholder="Pool metadata" className="lunexis-staking-input" />
                 <div className="lunexis-staking-warning mb-3">Fund the staking manager with the reward token before users claim rewards.</div>
-                <button onClick={createPool} disabled={staking.status === "creating"} className="btn-primary w-full py-3 rounded-2xl mt-2">
-                  {staking.status === "creating" ? "Creating..." : "Create Pool"}
+                <button onClick={createPool} disabled={staking.status === "creating" || !staking.canCreatePools} className="btn-primary w-full py-3 rounded-2xl mt-2">
+                  {staking.status === "creating" ? "Creating..." : staking.canCreatePools ? "Create Pool" : "Owner Wallet Required"}
                 </button>
+                {!staking.canCreatePools && (
+                  <div className="lunexis-staking-error mt-3">
+                    Connected admin is not the staking manager owner. Pool creation must be sent from the owner wallet.
+                  </div>
+                )}
               </section>
             )}
           </aside>

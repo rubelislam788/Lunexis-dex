@@ -99,6 +99,7 @@ export function useStaking() {
   const isConfiguredAdmin = Boolean(address && STAKING_ADMIN_WALLET && address.toLowerCase() === STAKING_ADMIN_WALLET);
   const isContractOwner = Boolean(address && ownerAddress && isAddressEqual(address, ownerAddress));
   const isAdmin = isConfiguredAdmin || isContractOwner;
+  const canCreatePools = isContractOwner;
   const wrongNetwork = isConnected && chainId !== STAKING_CHAIN_ID;
 
   const ensureArcNetwork = useCallback(async () => {
@@ -317,7 +318,7 @@ export function useStaking() {
   const createPool = useCallback(async (input: CreatePoolInput) => {
     const managerAddress = STAKING_MANAGER_ADDRESS;
     if (!walletClient || !publicClient || !managerAddress) throw new Error("Connect admin wallet and configure staking manager.");
-    if (!isAdmin) throw new Error("Only the staking admin can create pools.");
+    if (!isContractOwner) throw new Error("Only the staking manager owner wallet can create pools.");
     await ensureArcNetwork();
     setStatus("creating");
     try {
@@ -338,7 +339,7 @@ export function useStaking() {
     } finally {
       setStatus("idle");
     }
-  }, [ensureArcNetwork, isAdmin, publicClient, refresh, walletClient]);
+  }, [ensureArcNetwork, isContractOwner, publicClient, refresh, walletClient]);
 
   return {
     addCustomToken,
@@ -349,6 +350,7 @@ export function useStaking() {
     ensureArcNetwork,
     error,
     isAdmin,
+    canCreatePools,
     isConnected,
     isSwitching,
     lastUpdated,
