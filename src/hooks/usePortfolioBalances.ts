@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPublicClient, erc20Abi, fallback, formatUnits, http, isAddressEqual, zeroAddress, type Address, type PublicClient } from "viem";
+import { createPublicClient, erc20Abi, formatUnits, isAddressEqual, zeroAddress, type Address, type PublicClient } from "viem";
 import { useAccount } from "wagmi";
 import type { PortfolioBalance, TokenSymbol } from "@/types";
 import { arcChain, ethereumSepoliaChain } from "@/lib/wagmi";
-import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, ETHEREUM_SEPOLIA_RPC_URLS, createArcFallbackTransport, normalizeRpcUrl } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ETHEREUM_SEPOLIA_CHAIN_ID, createArcFallbackTransport, createSepoliaFallbackTransport } from "@/lib/arc-kit";
 import { PORTFOLIO_TOKENS, TOKEN_CONTRACTS, TOKEN_DECIMALS } from "@/lib/tokens";
 
 const ARC_CHAIN_ID = ARC_TESTNET_CHAIN_ID;
@@ -18,10 +18,7 @@ const chainClients: Record<number, PublicClient> = {
   }),
   [SEPOLIA_CHAIN_ID]: createPublicClient({
     chain: ethereumSepoliaChain,
-    transport: fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url), { retryCount: 2, timeout: 10000 })), {
-      rank: true,
-      retryCount: 2,
-    }),
+    transport: createSepoliaFallbackTransport(true),
   }),
 };
 

@@ -1,6 +1,6 @@
 import { getDefaultConfig, type Chain } from "@rainbow-me/rainbowkit";
 import { fallback, http } from "wagmi";
-import { ARC_TESTNET_RPC_URLS, ETHEREUM_SEPOLIA_RPC_URLS, getArcBrowserRpcUrls, normalizeRpcUrl } from "@/lib/arc-kit";
+import { ARC_TESTNET_RPC_URLS, ETHEREUM_SEPOLIA_RPC_URLS, getArcBrowserRpcUrls, getSepoliaBrowserRpcUrls, normalizeRpcUrl } from "@/lib/arc-kit";
 import { arcTestnetChain } from "@/lib/onchain";
 
 export const arcChain = {
@@ -27,7 +27,7 @@ export const ethereumSepoliaChain = {
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "lunexis";
 const arcTransportUrls = typeof window === "undefined" ? ARC_TESTNET_RPC_URLS : getArcBrowserRpcUrls();
-const sepoliaTransportUrls = ETHEREUM_SEPOLIA_RPC_URLS.map(normalizeRpcUrl);
+const sepoliaTransportUrls = typeof window === "undefined" ? ETHEREUM_SEPOLIA_RPC_URLS : getSepoliaBrowserRpcUrls();
 
 export const wagmiChains: readonly [Chain, ...Chain[]] = [arcChain, ethereumSepoliaChain];
 

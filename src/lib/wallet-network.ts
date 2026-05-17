@@ -1,4 +1,4 @@
-import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URL, ETHEREUM_SEPOLIA_CHAIN_ID } from "@/lib/arc-kit";
+import { ARC_TESTNET_CHAIN_ID, ARC_TESTNET_EXPLORER_URL, ARC_TESTNET_RPC_URLS, ETHEREUM_SEPOLIA_CHAIN_ID, ETHEREUM_SEPOLIA_RPC_URLS } from "@/lib/arc-kit";
 
 type SwitchChain = (input: { chainId: number }) => Promise<unknown>;
 
@@ -7,14 +7,14 @@ const CHAIN_PARAMS: Record<number, any> = {
     chainId: `0x${ARC_TESTNET_CHAIN_ID.toString(16)}`,
     chainName: "Arc Testnet",
     nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-    rpcUrls: [ARC_TESTNET_RPC_URL],
+    rpcUrls: ARC_TESTNET_RPC_URLS,
     blockExplorerUrls: [ARC_TESTNET_EXPLORER_URL],
   },
   [ETHEREUM_SEPOLIA_CHAIN_ID]: {
     chainId: `0x${ETHEREUM_SEPOLIA_CHAIN_ID.toString(16)}`,
     chainName: "Ethereum Sepolia",
     nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"],
+    rpcUrls: ETHEREUM_SEPOLIA_RPC_URLS,
     blockExplorerUrls: ["https://sepolia.etherscan.io"],
   },
 };

@@ -7207,8 +7207,19 @@ body {
 }
 
 body {
+  min-height: 100svh;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 img,

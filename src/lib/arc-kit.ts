@@ -26,7 +26,7 @@ export const ETHEREUM_SEPOLIA_RPC_URLS = [
   "https://ethereum-sepolia-rpc.publicnode.com",
   "https://1rpc.io/sepolia",
   "https://sepolia.drpc.org",
-];
+].map(normalizeRpcUrl);
 
 export function normalizeRpcUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -37,8 +37,21 @@ export function getArcBrowserRpcUrls() {
   return [`${window.location.origin}/api/rpc/arc`, ...ARC_TESTNET_RPC_URLS];
 }
 
+export function getSepoliaBrowserRpcUrls() {
+  if (typeof window === "undefined") return ETHEREUM_SEPOLIA_RPC_URLS;
+  return [`${window.location.origin}/api/rpc/sepolia`, ...ETHEREUM_SEPOLIA_RPC_URLS];
+}
+
 export function createArcFallbackTransport(includeProxy = false) {
   const urls = includeProxy ? getArcBrowserRpcUrls() : ARC_TESTNET_RPC_URLS;
+  return fallback(urls.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
+    rank: true,
+    retryCount: 2,
+  });
+}
+
+export function createSepoliaFallbackTransport(includeProxy = false) {
+  const urls = includeProxy ? getSepoliaBrowserRpcUrls() : ETHEREUM_SEPOLIA_RPC_URLS;
   return fallback(urls.map((url) => http(url, { retryCount: 2, timeout: 10000 })), {
     rank: true,
     retryCount: 2,
@@ -91,10 +104,7 @@ export async function getViemAdapter(walletClient: WalletClient, publicClient: P
           chain: chain ?? publicClient.chain,
           transport: isArcTestnetViemChain(chain ?? publicClient.chain)
             ? createArcFallbackTransport(true)
-            : fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url), { retryCount: 2, timeout: 10000 })), {
-                rank: true,
-                retryCount: 2,
-              }),
+            : createSepoliaFallbackTransport(true),
         }),
       getWalletClient: () => walletClient,
     } as any,
@@ -120,7 +130,7 @@ export async function getBrowserViemAdapter(): Promise<any> {
         chain,
         transport: isArcTestnetViemChain(chain)
           ? createArcFallbackTransport(true)
-          : fallback(ETHEREUM_SEPOLIA_RPC_URLS.map((url) => http(normalizeRpcUrl(url)))),
+          : createSepoliaFallbackTransport(true),
       }),
     capabilities: {
       addressContext: "user-controlled",
