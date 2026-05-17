@@ -87,7 +87,7 @@ export function useArcBridge() {
       const adapter = await getViemAdapter(walletClient, publicClient);
       const kit = await getAppKit();
       if (token === "EURC" && state.fromChain === "Arc_Testnet") {
-        const swapResult = await withCircleApiProxy(() =>
+        const swapResult = await withCircleApiProxy<any>(() =>
           kit.swap({
             from: { adapter, chain: "Arc_Testnet" },
             tokenIn: "EURC",
@@ -97,7 +97,7 @@ export function useArcBridge() {
           } as any)
         );
         const bridgeAmount = String(swapResult?.amountOut || swapResult?.estimatedOutput?.amount || state.amount);
-        const bridgeResult = await withCircleApiProxy(() =>
+        const bridgeResult = await withCircleApiProxy<any>(() =>
           kit.bridge({
             from: { adapter, chain: "Arc_Testnet" },
             to: { adapter, chain: "Ethereum_Sepolia", recipientAddress: toAddress, useCircleRelayer: true },
@@ -112,7 +112,7 @@ export function useArcBridge() {
       }
 
       if (token === "EURC" && state.fromChain === "Ethereum_Sepolia") {
-        const bridgeResult = await withCircleApiProxy(() =>
+        const bridgeResult = await withCircleApiProxy<any>(() =>
           kit.bridge({
             from: { adapter, chain: "Ethereum_Sepolia" },
             to: { adapter, chain: "Arc_Testnet", recipientAddress: toAddress, useCircleRelayer: true },
@@ -122,7 +122,7 @@ export function useArcBridge() {
         );
         const bridgeAmount = String(bridgeResult?.amount || state.amount);
         await promptWalletNetworkSwitch(ARC_CHAIN_ID).catch(() => undefined);
-        const swapResult = await withCircleApiProxy(() =>
+        const swapResult = await withCircleApiProxy<any>(() =>
           kit.swap({
             from: { adapter, chain: "Arc_Testnet" },
             tokenIn: "USDC",
@@ -137,7 +137,7 @@ export function useArcBridge() {
         return { hash, explorerBaseUrl: "https://testnet.arcscan.app/tx/" };
       }
 
-      const result = await withCircleApiProxy(() =>
+      const result = await withCircleApiProxy<any>(() =>
         kit.bridge({
           from: { adapter, chain: state.fromChain },
           to: { adapter, chain: state.toChain, recipientAddress: toAddress, useCircleRelayer: true },
