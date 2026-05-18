@@ -3414,6 +3414,32 @@ select.lunexis-staking-input {
   text-align: left;
 }
 
+.lunexis-staking-activity > div {
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.lunexis-staking-activity > div:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56,189,248,0.24) !important;
+  background: rgba(56,189,248,0.055) !important;
+}
+
+.lunexis-staking-position-status {
+  color: #b8c6d8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 0;
+  background: transparent;
+  padding: 0.35rem 0.45rem;
+  border-radius: 999px;
+}
+
+.lunexis-staking-position-status:hover {
+  color: #8fe8ff;
+  background: rgba(56,189,248,0.1);
+}
+
 .lunexis-token-list button.is-active {
   border-color: rgba(56,189,248,0.35) !important;
   box-shadow: 0 0 20px rgba(56,189,248,0.14);
@@ -3428,7 +3454,8 @@ select.lunexis-staking-input {
 
 .lunexis-token-list small,
 .lunexis-staking-activity span,
-.lunexis-staking-activity small {
+.lunexis-staking-activity small,
+.lunexis-staking-position-status {
   color: #9fb2c4;
   font-size: 0.72rem;
 }

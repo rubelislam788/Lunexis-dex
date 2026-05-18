@@ -44,6 +44,7 @@ export default function StakingPage() {
   const [poolAmounts, setPoolAmounts] = useState<Record<number, string>>({});
   const [unstakeAmounts, setUnstakeAmounts] = useState<Record<number, string>>({});
   const [actionModal, setActionModal] = useState<{ mode: "stake" | "unstake"; pool: StakingPoolView } | null>(null);
+  const [infoPool, setInfoPool] = useState<StakingPoolView | null>(null);
 
   const totals = useMemo(() => {
     const staked = staking.pools.reduce((sum, pool) => sum + numeric(pool.userStaked), 0);
@@ -61,6 +62,7 @@ export default function StakingPage() {
     );
   }, [staking.pools, tokenSearch]);
   const modalPool = actionModal ? staking.pools.find((pool) => pool.id === actionModal.pool.id) ?? actionModal.pool : null;
+  const currentInfoPool = infoPool ? staking.pools.find((pool) => pool.id === infoPool.id) ?? infoPool : null;
 
   const run = async (label: string, action: () => Promise<any>) => {
     try {
@@ -164,13 +166,22 @@ export default function StakingPage() {
                 {staking.pools.filter((pool) => numeric(pool.userStaked) > 0 || numeric(pool.pendingReward) > 0).length === 0 ? (
                   <p>No active staking positions yet.</p>
                 ) : staking.pools.filter((pool) => numeric(pool.userStaked) > 0 || numeric(pool.pendingReward) > 0).map((pool) => (
-                  <div key={pool.id}>
+                  <div key={pool.id} onClick={() => setInfoPool(pool)} role="button" tabIndex={0} onKeyDown={(event) => event.key === "Enter" && setInfoPool(pool)}>
                     {tokenAvatar(pool.token, 34)}
                     <div>
                       <strong>{pool.token.symbol} position</strong>
                       <span>{pool.userStaked} staked - {pool.pendingReward} {pool.rewardToken.symbol} pending</span>
                     </div>
-                    <small>{pool.unlockAt && pool.unlockAt * 1000 > Date.now() ? `Unlocks ${new Date(pool.unlockAt * 1000).toLocaleDateString()}` : "Unlocked"}</small>
+                    <button
+                      type="button"
+                      className="lunexis-staking-position-status"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (!pool.unlockAt || pool.unlockAt * 1000 <= Date.now()) setActionModal({ mode: "unstake", pool });
+                      }}
+                    >
+                      {pool.unlockAt && pool.unlockAt * 1000 > Date.now() ? `Unlocks ${new Date(pool.unlockAt * 1000).toLocaleDateString()}` : "Unlocked"}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -203,6 +214,16 @@ export default function StakingPage() {
           onUnstake={async () => {
             const result = await run("Unstake", () => staking.unstake(modalPool, unstakeAmounts[modalPool.id] ?? "0"));
             if (result) setActionModal(null);
+          }}
+        />
+      )}
+      {currentInfoPool && (
+        <StakeInfoModal
+          pool={currentInfoPool}
+          onClose={() => setInfoPool(null)}
+          onUnstake={() => {
+            setInfoPool(null);
+            setActionModal({ mode: "unstake", pool: currentInfoPool });
           }}
         />
       )}
@@ -372,6 +393,49 @@ function StakingActionModal({
             </button>
           )}
           <button onClick={onClose} disabled={status !== "idle"}>Cancel</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StakeInfoModal({
+  pool,
+  onClose,
+  onUnstake,
+}: {
+  pool: StakingPoolView;
+  onClose: () => void;
+  onUnstake: () => void;
+}) {
+  const isUnlocked = !pool.unlockAt || pool.unlockAt * 1000 <= Date.now();
+
+  return (
+    <div className="lunexis-modal-overlay fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.42)", backdropFilter: "blur(8px)" }} onClick={onClose}>
+      <section className="lunexis-premium-card w-[min(560px,94vw)] modal-enter" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={`${pool.token.symbol} staking info`}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {tokenAvatar(pool.token, 42)}
+            <div>
+              <div className="lunexis-kicker">Staking Position</div>
+              <h2>{pool.token.symbol} info</h2>
+            </div>
+          </div>
+          <button onClick={onClose} className="arc-icon-action w-10 h-10 rounded-2xl" aria-label="Close staking info">x</button>
+        </div>
+
+        <div className="lunexis-pool-metrics">
+          <div><span>Wallet</span><strong>{pool.token.balance ?? "0"}</strong></div>
+          <div><span>My stake</span><strong>{pool.userStaked}</strong></div>
+          <div><span>Pending</span><strong>{pool.pendingReward} {pool.rewardToken.symbol}</strong></div>
+          <div><span>Status</span><strong>{isUnlocked ? "Unlocked" : `Unlocks ${new Date((pool.unlockAt ?? 0) * 1000).toLocaleDateString()}`}</strong></div>
+          <div><span>Contract balance</span><strong>{pool.rewardVaultBalance ?? "0"}</strong></div>
+          <div><span>Network</span><strong>ARC Testnet</strong></div>
+        </div>
+
+        <div className="lunexis-staking-actions lunexis-staking-modal-actions mt-4">
+          <button onClick={onUnstake} disabled={!isUnlocked || numeric(pool.userStaked) <= 0}>Unstake</button>
+          <button onClick={onClose}>Close</button>
         </div>
       </section>
     </div>
