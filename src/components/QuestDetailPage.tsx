@@ -71,6 +71,29 @@ function getStepActivityKind(step: MissionTask): "swap" | "bridge" | "stake" | n
   return null;
 }
 
+function getRequiredUsdAmount(step: MissionTask) {
+  const text = step.title.replace(/,/g, "");
+  if (/\bany amount\b/i.test(text)) return 0;
+  const patterns = [
+    /\$\s*(\d+(?:\.\d+)?)/i,
+    /(\d+(?:\.\d+)?)\s*\$/i,
+    /(?:at least|min(?:imum)?|more than|over)\s*(\d+(?:\.\d+)?)\s*(?:usd|usdc|eurc)?/i,
+    /(\d+(?:\.\d+)?)\s*(?:usd|usdc|eurc)\b/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return Number(match[1]);
+  }
+  return 0;
+}
+
+function getActivityAmount(text: string) {
+  const normalized = text.replace(/,/g, "");
+  const match = normalized.match(/(?:swapped|bridged|staked)\s+(\d+(?:\.\d+)?)/i)
+    ?? normalized.match(/(\d+(?:\.\d+)?)\s*(?:usd|usdc|eurc)\b/i);
+  return match?.[1] ? Number(match[1]) : 0;
+}
+
 function missionStepLaunchKey(questId: string, stepId: string) {
   return `${questId}-${stepId}`;
 }
@@ -130,9 +153,6 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
   const displayQuest = storedTasks?.length ? { ...quest, tasks: storedTasks, totalSteps: storedTasks.length } : quest;
   const steps = buildMissionSteps(displayQuest);
   const verifiedSet = new Set(verifiedTaskIds);
-  const verifiedCount = steps.filter((step) => verifiedSet.has(step.id)).length;
-  const progressPct = steps.length > 0 ? Math.min(100, (verifiedCount / steps.length) * 100) : 0;
-  const allStepsVerified = steps.length > 0 && verifiedCount === steps.length;
 
   const saveVerifiedTask = (taskId: string) => {
     if (!quest) return;
@@ -185,17 +205,31 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
     }
   };
 
-  const hasActivity = (kind: "swap" | "bridge" | "stake", since = 0) => {
+  const hasActivity = (kind: "swap" | "bridge" | "stake", since = 0, minimumAmount = 0) => {
     const activities = profile?.activities ?? [];
     return activities.some((activity) => {
       if (activity.status !== "completed") return false;
       if (since > 0 && new Date(activity.timestamp).getTime() + 1000 < since) return false;
-      if (kind === "stake") return /\bstak/i.test(`${activity.title} ${activity.description}`);
-      return activity.type === kind;
+      const activityText = `${activity.title} ${activity.description}`;
+      const typeMatches = kind === "stake" ? /\bstak/i.test(activityText) : activity.type === kind;
+      if (!typeMatches) return false;
+      return minimumAmount <= 0 || getActivityAmount(activityText) >= minimumAmount;
     });
   };
 
   const hasTokenBalance = (symbol: "USDC" | "EURC") => Number(balances.find((item) => item.token === symbol)?.amount ?? 0) > 0;
+
+  const isStepVerified = (step: MissionTask) => {
+    if (!verifiedSet.has(step.id)) return false;
+    const activityKind = getStepActivityKind(step);
+    if (!activityKind) return true;
+    const launchTime = getStepLaunchTime(step.id);
+    return launchTime > 0 && hasActivity(activityKind, launchTime, getRequiredUsdAmount(step));
+  };
+
+  const verifiedCount = steps.filter(isStepVerified).length;
+  const progressPct = steps.length > 0 ? Math.min(100, (verifiedCount / steps.length) * 100) : 0;
+  const allStepsVerified = steps.length > 0 && verifiedCount === steps.length;
 
   const runStepAction = (step: MissionTask, index: number) => {
     const stepAction = getStepAction(step, displayQuest, index);
@@ -224,20 +258,21 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
     const stepAction = getStepAction(step, displayQuest, index);
     const needsMissionLaunch = Boolean(stepAction?.page);
     const launchTime = getStepLaunchTime(step.id);
+    const requiredAmount = getRequiredUsdAmount(step);
     if (needsMissionLaunch && !launchTime) {
       markStepMessage(step.id, "Start this task from this mission step first.");
       return;
     }
-    if (getStepActivityKind(step) === "swap" && !hasActivity("swap", launchTime)) {
-      markStepMessage(step.id, "Complete a swap from this mission, then verify.");
+    if (getStepActivityKind(step) === "swap" && !hasActivity("swap", launchTime, requiredAmount)) {
+      markStepMessage(step.id, requiredAmount > 0 ? `Complete a swap of at least ${requiredAmount} USD from this mission.` : "Complete a swap from this mission, then verify.");
       return;
     }
-    if (getStepActivityKind(step) === "bridge" && !hasActivity("bridge", launchTime)) {
-      markStepMessage(step.id, "Complete a bridge from this mission, then verify.");
+    if (getStepActivityKind(step) === "bridge" && !hasActivity("bridge", launchTime, requiredAmount)) {
+      markStepMessage(step.id, requiredAmount > 0 ? `Complete a bridge of at least ${requiredAmount} USD from this mission.` : "Complete a bridge from this mission, then verify.");
       return;
     }
-    if (getStepActivityKind(step) === "stake" && !hasActivity("stake", launchTime)) {
-      markStepMessage(step.id, "Complete a stake from this mission, then verify.");
+    if (getStepActivityKind(step) === "stake" && !hasActivity("stake", launchTime, requiredAmount)) {
+      markStepMessage(step.id, requiredAmount > 0 ? `Stake at least ${requiredAmount} USD from this mission.` : "Complete a stake from this mission, then verify.");
       return;
     }
     if (/\busdc\b/i.test(text) && !hasTokenBalance("USDC")) {
@@ -311,9 +346,10 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                 {steps.map((step, index) => {
                   const stepAction = getStepAction(step, displayQuest, index);
                   const activityKind = getStepActivityKind(step);
+                  const requiredAmount = getRequiredUsdAmount(step);
                   const launchTime = getStepLaunchTime(step.id);
-                  const activityDoneFromMission = activityKind ? launchTime > 0 && hasActivity(activityKind, launchTime) : false;
-                  const isVerified = verifiedSet.has(step.id);
+                  const activityDoneFromMission = activityKind ? launchTime > 0 && hasActivity(activityKind, launchTime, requiredAmount) : false;
+                  const isVerified = isStepVerified(step);
                   const isVisitLink = Boolean(stepAction?.link);
                   const showActionButton = Boolean(stepAction && !isVerified && (!activityKind || !activityDoneFromMission));
                   const showVerifyButton = isVerified || (!activityKind && !isVisitLink) || activityDoneFromMission;
@@ -363,7 +399,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                         )}
                         {!showVerifyButton && activityKind && launchTime > 0 && (
                           <div className="basis-full text-right" style={{ color: "#9fb4b8", fontSize: 11 }}>
-                            Complete this {activityKind} task, then the verify button will appear.
+                            {requiredAmount > 0 ? `Complete at least ${requiredAmount} USD ${activityKind}, then verify will appear.` : `Complete this ${activityKind} task, then the verify button will appear.`}
                           </div>
                         )}
                         {stepMessages[step.id] && <div className="basis-full text-right" style={{ color: isVerified ? "#86efac" : "#ffb7eb", fontSize: 11 }}>{stepMessages[step.id]}</div>}
