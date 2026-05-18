@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import type { MissionTask, Page, Quest } from "@/types";
+import type { MissionSocialLink, MissionTask, Page, Quest } from "@/types";
 import { MISSION_STEP_PROOF_KEY, MISSION_TASKS_KEY } from "@/lib/mission-storage";
 import { useProfile } from "@/hooks/useProfile";
 import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
@@ -75,6 +75,22 @@ function missionStepLaunchKey(questId: string, stepId: string) {
   return `${questId}-${stepId}`;
 }
 
+function linkStepId(questId: string, link: MissionSocialLink) {
+  return `${questId}-visit-${link.id}`;
+}
+
+function buildMissionSteps(quest: Quest) {
+  const baseSteps = quest.tasks?.length
+    ? quest.tasks
+    : (QUEST_STEPS[quest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."]).map((title, index) => ({ id: `${quest.id}-step-${index + 1}`, title }));
+  const taskText = baseSteps.map((step) => step.title.toLowerCase()).join(" ");
+  const linkSteps = (quest.socialLinks ?? [])
+    .filter((link) => link.label.trim() && link.url.trim())
+    .filter((link) => !taskText.includes(link.label.toLowerCase()))
+    .map((link) => ({ id: linkStepId(quest.id, link), title: `Visit ${link.label}` }));
+  return [...baseSteps, ...linkSteps];
+}
+
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
   const { isConnected } = useAccount();
   const { profile, markMissionComplete } = useProfile();
@@ -112,9 +128,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
   }
 
   const displayQuest = storedTasks?.length ? { ...quest, tasks: storedTasks, totalSteps: storedTasks.length } : quest;
-  const steps = displayQuest.tasks?.length
-    ? displayQuest.tasks
-    : (QUEST_STEPS[displayQuest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."]).map((title, index) => ({ id: `${displayQuest.id}-step-${index + 1}`, title }));
+  const steps = buildMissionSteps(displayQuest);
   const verifiedSet = new Set(verifiedTaskIds);
   const verifiedCount = steps.filter((step) => verifiedSet.has(step.id)).length;
   const progressPct = steps.length > 0 ? Math.min(100, (verifiedCount / steps.length) * 100) : 0;
@@ -197,7 +211,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
       saveLinkProof(stepAction.link.id);
       window.open(normalizeExternalUrl(stepAction.link.url), "_blank", "noopener,noreferrer");
       saveVerifiedTask(step.id);
-      markStepMessage(step.id, "Link opened from this mission and step proof saved.");
+      markStepMessage(step.id, "Visit saved and step verified.");
     }
   };
 
@@ -300,8 +314,9 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                   const launchTime = getStepLaunchTime(step.id);
                   const activityDoneFromMission = activityKind ? launchTime > 0 && hasActivity(activityKind, launchTime) : false;
                   const isVerified = verifiedSet.has(step.id);
+                  const isVisitLink = Boolean(stepAction?.link);
                   const showActionButton = Boolean(stepAction && !isVerified && (!activityKind || !activityDoneFromMission));
-                  const showVerifyButton = isVerified || !activityKind || activityDoneFromMission;
+                  const showVerifyButton = isVerified || (!activityKind && !isVisitLink) || activityDoneFromMission;
 
                   return (
                     <div

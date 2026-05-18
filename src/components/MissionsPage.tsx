@@ -11,6 +11,7 @@ import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import {
   DEFAULT_MISSION_DAYS,
+  MISSION_STEP_PROOF_KEY,
   addDaysIso,
   ensureMissionSchedule,
   type EditableQuestPatch,
@@ -60,6 +61,20 @@ const formatMissionDate = (value?: string) => {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 };
 
+function getQuestProgressFromSteps(quest: Quest) {
+  if (typeof window === "undefined") return { count: 0, total: Math.max(1, quest.totalSteps || 1), pct: 0 };
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
+    const verified = stored[quest.id] ?? [];
+    const linkCount = (quest.socialLinks ?? []).filter((link) => link.label.trim() && link.url.trim()).length;
+    const total = Math.max(1, (quest.tasks?.length || quest.totalSteps || 1) + linkCount);
+    const count = Math.min(total, verified.length);
+    return { count, total, pct: Math.min(100, (count / total) * 100) };
+  } catch {
+    return { count: 0, total: Math.max(1, quest.totalSteps || 1), pct: 0 };
+  }
+}
+
 async function publishMissions(quests: Quest[], adminAddress?: string) {
   const response = await fetch("/api/missions", {
     method: "POST",
@@ -88,6 +103,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
   const [successReward, setSuccessReward] = useState<{ title: string; amount: string; message: string; txHash?: string } | null>(null);
   const [missionClock, setMissionClock] = useState(() => Date.now());
+  const [progressClock, setProgressClock] = useState(() => Date.now());
   const [publishState, setPublishState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [publishMessage, setPublishMessage] = useState("");
   const isMissionAdmin = isAdminWallet(address);
@@ -118,6 +134,11 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
 
   useEffect(() => {
     const timer = window.setInterval(() => setMissionClock(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setProgressClock(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -277,6 +298,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           onSelectQuest={onSelectQuest}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}
+          progressClock={progressClock}
           isMissionAdmin={isMissionAdmin}
           onEditQuest={openMissionEditor}
         />
@@ -560,6 +582,7 @@ function MissionSection({
   onSelectQuest,
   verifyStates,
   verifyMessages,
+  progressClock,
   isMissionAdmin,
   onEditQuest,
 }: {
@@ -569,6 +592,7 @@ function MissionSection({
   onSelectQuest: (quest: Quest) => void;
   verifyStates: Record<string, VerifyState>;
   verifyMessages: Record<string, string>;
+  progressClock: number;
   isMissionAdmin: boolean;
   onEditQuest: (questId: string) => void;
 }) {
@@ -585,6 +609,7 @@ function MissionSection({
             completed={profile?.completedMissionIds.includes(quest.id)}
             verifyState={verifyStates[quest.id] ?? "idle"}
             verifyMessage={verifyMessages[quest.id]}
+            progressClock={progressClock}
             onSelectQuest={onSelectQuest}
             featured={quest.featured}
             isMissionAdmin={isMissionAdmin}
@@ -601,6 +626,7 @@ function QuestCard({
   completed,
   verifyState,
   verifyMessage,
+  progressClock,
   onSelectQuest,
   featured,
   isMissionAdmin,
@@ -610,14 +636,17 @@ function QuestCard({
   completed?: boolean;
   verifyState: VerifyState;
   verifyMessage?: string;
+  progressClock: number;
   onSelectQuest: (quest: Quest) => void;
   featured?: boolean;
   isMissionAdmin: boolean;
   onEditQuest: (questId: string) => void;
 }) {
-  const progressPct = completed ? 100 : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
+  const stepProgress = getQuestProgressFromSteps(quest);
+  const progressPct = completed ? 100 : stepProgress.count > 0 ? stepProgress.pct : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
   const timeState = getMissionTimeState(quest);
+  void progressClock;
 
   return (
     <article
@@ -656,7 +685,7 @@ function QuestCard({
       <div className="mt-4">
         <div className="flex justify-between mb-1">
           <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: "#849495", textTransform: "uppercase" }}>{completed ? "Signal Confirmed" : isChecking ? "Verification Running" : "Awaiting Verification"}</span>
-          <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: "#38bdf8" }}>+{quest.xp} XP</span>
+          <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: "#38bdf8" }}>{completed ? `+${quest.xp} XP` : `${stepProgress.count}/${stepProgress.total}`}</span>
         </div>
         <div style={{ height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
           <div className="stat-bar" style={{ width: `${progressPct}%`, height: "100%", background: completed ? "#22c55e" : "linear-gradient(90deg,#38bdf8,#ff2db2)", borderRadius: 99 }} />
