@@ -2,15 +2,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import type { MissionTask, Page, Quest } from "@/types";
 import { MISSION_STEP_PROOF_KEY, MISSION_TASKS_KEY } from "@/lib/mission-storage";
-
-const QUEST_ACTIONS: Record<string, { label: string; page: Page; accent: string }> = {
-  q1: { label: "Open Swap", page: "swap", accent: "#00dce5" },
-  q2: { label: "Open Swap", page: "swap", accent: "#ebb2ff" },
-  q3: { label: "Open Swap", page: "swap", accent: "#00dce5" },
-  q4: { label: "Start With Swap", page: "swap", accent: "#00dce5" },
-};
+import { useProfile } from "@/hooks/useProfile";
+import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
 
 const QUEST_STEPS: Record<string, string[]> = {
   q1: [
@@ -42,9 +38,42 @@ interface QuestDetailPageProps {
   onNavigate: (page: Page) => void;
 }
 
+const SOCIAL_PROOF_KEY = "arcquest.social-proof.v1";
+const MISSION_STEP_ACTION_LAUNCH_KEY = "arcquest.mission-step-action-launch.v1";
+
+function normalizeExternalUrl(url: string) {
+  return /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
+}
+
+function missionSocialProofKey(questId: string, linkId: string) {
+  return `${questId}-${linkId}`;
+}
+
+function getStepAction(step: MissionTask, quest: Quest, index: number): { label: string; page?: Page; link?: { id: string; url: string } } | null {
+  const text = step.title.toLowerCase();
+  if (/\bswaps?\b|\bswapping\b/.test(text)) return { label: "Do Swap", page: "swap" };
+  if (/\bbridges?\b|\bbridging\b/.test(text)) return { label: "Do Bridge", page: "bridge" };
+  if (/\bstakes?\b|\bstaking\b|\bstaked\b/.test(text)) return { label: "Do Stake", page: "staking" };
+  const link = quest.socialLinks?.[index] ?? quest.socialLinks?.find((item) => text.includes(item.label.toLowerCase()));
+  if (link?.url) return { label: `Open ${link.label}`, link: { id: link.id, url: link.url } };
+  if (/\blink\b|\bvisit\b|\btwitter\b|\bx\b|\bdiscord\b|\btelegram\b|\bgithub\b|\bfollow\b|\bpost\b/i.test(step.title)) {
+    const fallback = quest.socialLinks?.find((item) => item.url);
+    if (fallback) return { label: `Open ${fallback.label}`, link: { id: fallback.id, url: fallback.url } };
+  }
+  return null;
+}
+
+function missionStepLaunchKey(questId: string, stepId: string) {
+  return `${questId}-${stepId}`;
+}
+
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
+  const { isConnected } = useAccount();
+  const { profile } = useProfile();
+  const { balances } = usePortfolioBalances();
   const [storedTasks, setStoredTasks] = useState<MissionTask[] | null>(null);
   const [verifiedTaskIds, setVerifiedTaskIds] = useState<string[]>([]);
+  const [stepMessages, setStepMessages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!quest) return;
@@ -75,7 +104,6 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
   }
 
   const displayQuest = storedTasks?.length ? { ...quest, tasks: storedTasks, totalSteps: storedTasks.length } : quest;
-  const action = QUEST_ACTIONS[displayQuest.id] ?? { label: "Back to Missions", page: "missions" as Page, accent: "#00dce5" };
   const steps = displayQuest.tasks?.length
     ? displayQuest.tasks
     : (QUEST_STEPS[displayQuest.id] ?? ["Connect wallet.", "Complete the mission action.", "Return to claim rewards."]).map((title, index) => ({ id: `${displayQuest.id}-step-${index + 1}`, title }));
@@ -84,7 +112,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
   const progressPct = steps.length > 0 ? Math.min(100, (verifiedCount / steps.length) * 100) : 0;
   const allStepsVerified = steps.length > 0 && verifiedCount === steps.length;
 
-  const verifyTask = (taskId: string) => {
+  const saveVerifiedTask = (taskId: string) => {
     if (!quest) return;
     const nextIds = Array.from(new Set([...verifiedTaskIds, taskId]));
     setVerifiedTaskIds(nextIds);
@@ -94,6 +122,121 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
     } catch {
       // Local proof is a convenience layer; mission verification still happens on the main Missions page.
     }
+  };
+
+  const markStepMessage = (taskId: string, message: string) => {
+    setStepMessages((prev) => ({ ...prev, [taskId]: message }));
+  };
+
+  const saveLinkProof = (linkId: string) => {
+    if (!quest) return;
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(SOCIAL_PROOF_KEY) || "{}") as Record<string, boolean>;
+      window.localStorage.setItem(SOCIAL_PROOF_KEY, JSON.stringify({ ...stored, [missionSocialProofKey(quest.id, linkId)]: true }));
+    } catch {
+      // Link proof is local progress; ignore storage errors.
+    }
+  };
+
+  const saveStepLaunch = (taskId: string) => {
+    if (!quest) return;
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_ACTION_LAUNCH_KEY) || "{}") as Record<string, number>;
+      window.localStorage.setItem(MISSION_STEP_ACTION_LAUNCH_KEY, JSON.stringify({ ...stored, [missionStepLaunchKey(quest.id, taskId)]: Date.now() }));
+    } catch {
+      // The onchain or link proof is still checked after users return to the mission.
+    }
+  };
+
+  const getStepLaunchTime = (taskId: string) => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_ACTION_LAUNCH_KEY) || "{}") as Record<string, number>;
+      const value = stored[missionStepLaunchKey(displayQuest.id, taskId)];
+      return typeof value === "number" ? value : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const hasActivity = (kind: "swap" | "bridge" | "stake", since = 0) => {
+    const activities = profile?.activities ?? [];
+    return activities.some((activity) => {
+      if (activity.status !== "completed") return false;
+      if (since > 0 && new Date(activity.timestamp).getTime() + 1000 < since) return false;
+      if (kind === "stake") return /\bstak/i.test(`${activity.title} ${activity.description}`);
+      return activity.type === kind;
+    });
+  };
+
+  const hasTokenBalance = (symbol: "USDC" | "EURC") => Number(balances.find((item) => item.token === symbol)?.amount ?? 0) > 0;
+
+  const runStepAction = (step: MissionTask, index: number) => {
+    const stepAction = getStepAction(step, displayQuest, index);
+    if (!stepAction) return;
+    if (stepAction.page) {
+      saveStepLaunch(step.id);
+      markStepMessage(step.id, `Opened ${stepAction.page}. Complete it, then return here to verify.`);
+      onNavigate(stepAction.page);
+      return;
+    }
+    if (stepAction.link) {
+      saveStepLaunch(step.id);
+      saveLinkProof(stepAction.link.id);
+      window.open(normalizeExternalUrl(stepAction.link.url), "_blank", "noopener,noreferrer");
+      saveVerifiedTask(step.id);
+      markStepMessage(step.id, "Link opened from this mission and step proof saved.");
+    }
+  };
+
+  const verifyTask = (step: MissionTask, index: number) => {
+    const text = step.title.toLowerCase();
+    if (/connect.*wallet|wallet/i.test(text) && !isConnected) {
+      markStepMessage(step.id, "Connect wallet first.");
+      return;
+    }
+    const stepAction = getStepAction(step, displayQuest, index);
+    const needsMissionLaunch = Boolean(stepAction?.page);
+    const launchTime = getStepLaunchTime(step.id);
+    if (needsMissionLaunch && !launchTime) {
+      markStepMessage(step.id, "Start this task from this mission step first.");
+      return;
+    }
+    if (/\bswaps?\b|\bswapping\b|swap transaction|token pair/i.test(text) && !hasActivity("swap", launchTime)) {
+      markStepMessage(step.id, "Complete a swap from this mission, then verify.");
+      return;
+    }
+    if (/\bbridges?\b|\bbridging\b/i.test(text) && !hasActivity("bridge", launchTime)) {
+      markStepMessage(step.id, "Complete a bridge from this mission, then verify.");
+      return;
+    }
+    if (/\bstakes?\b|\bstaking\b|\bstaked\b/i.test(text) && !hasActivity("stake", launchTime)) {
+      markStepMessage(step.id, "Complete a stake from this mission, then verify.");
+      return;
+    }
+    if (/\busdc\b/i.test(text) && !hasTokenBalance("USDC")) {
+      markStepMessage(step.id, "Hold USDC on Arc Testnet first.");
+      return;
+    }
+    if (/\beurc\b/i.test(text) && !hasTokenBalance("EURC")) {
+      markStepMessage(step.id, "Hold EURC on Arc Testnet first.");
+      return;
+    }
+
+    if (stepAction?.link) {
+      try {
+        const proof = JSON.parse(window.localStorage.getItem(SOCIAL_PROOF_KEY) || "{}") as Record<string, boolean>;
+        if (!proof[missionSocialProofKey(displayQuest.id, stepAction.link.id)]) {
+          markStepMessage(step.id, "Open the mission link from this step first.");
+          return;
+        }
+      } catch {
+        markStepMessage(step.id, "Open the mission link from this step first.");
+        return;
+      }
+    }
+
+    saveVerifiedTask(step.id);
+    markStepMessage(step.id, "Step verified.");
   };
 
   return (
@@ -146,13 +289,21 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                       </span>
                       <span style={{ color: verifiedSet.has(step.id) ? "#d8ffe6" : "#c8d6d6", fontSize: 13, lineHeight: 1.8 }}>{step.title}</span>
                     </div>
-                    <button
-                      onClick={() => verifyTask(step.id)}
-                      disabled={verifiedSet.has(step.id)}
-                      className="btn-outline-cyan px-4 py-2 rounded-xl text-xs"
-                    >
-                      {verifiedSet.has(step.id) ? "Verified" : "Verify Step"}
-                    </button>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {getStepAction(step, displayQuest, index) && !verifiedSet.has(step.id) && (
+                        <button onClick={() => runStepAction(step, index)} className="btn-primary px-4 py-2 rounded-xl text-xs">
+                          {getStepAction(step, displayQuest, index)?.label}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => verifyTask(step, index)}
+                        disabled={verifiedSet.has(step.id)}
+                        className="btn-outline-cyan px-4 py-2 rounded-xl text-xs"
+                      >
+                        {verifiedSet.has(step.id) ? "Verified" : "Check Step"}
+                      </button>
+                      {stepMessages[step.id] && <div className="basis-full text-right" style={{ color: verifiedSet.has(step.id) ? "#86efac" : "#ffb7eb", fontSize: 11 }}>{stepMessages[step.id]}</div>}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -163,21 +314,9 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
               )}
             </div>
 
-            <button
-              onClick={() => onNavigate(action.page)}
-              className="w-full py-4 rounded-xl transition-all"
-              style={{
-                background: `linear-gradient(135deg, ${action.accent}, #00dce5)`,
-                color: "white",
-                fontFamily: "'Space Grotesk'",
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-              }}
-            >
-              {action.label}
-            </button>
+            <div className="rounded-2xl px-4 py-3" style={{ background: "rgba(0,220,229,0.06)", border: "1px solid rgba(0,220,229,0.14)", color: "#b9d9df", fontSize: 12 }}>
+              Complete each task from its mission step. Tasks cannot be manually marked complete without the matching link, wallet, or onchain proof.
+            </div>
           </section>
 
           <aside className="lg:col-span-2 flex flex-col gap-4">
