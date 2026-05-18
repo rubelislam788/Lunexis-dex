@@ -271,11 +271,11 @@ function PoolCard({
         <span>{pool.poolType}</span>
       </div>
       <div className="lunexis-pool-metrics">
-        <div className="lunexis-apr-metric"><span>Wallet</span><strong>{pool.token.balance ?? "0"}</strong></div>
+        <div className="lunexis-apr-metric"><span>Balance</span><strong>{pool.token.balance ?? "0"}</strong></div>
         <div><span>Lock</span><strong>{formatDuration(pool.lockDuration)}</strong></div>
-        <div><span>Contract balance</span><strong>{pool.rewardVaultBalance ?? "0"}</strong></div>
+        <div><span>Totall stake balance</span><strong>{pool.rewardVaultBalance ?? "0"}</strong></div>
         <div><span>My stake</span><strong>{pool.userStaked}</strong></div>
-        <div><span>Pending</span><strong>{pool.pendingReward} {pool.rewardToken.symbol}</strong></div>
+        <div><span>Pending staking Reward</span><strong>{pool.pendingReward} {pool.rewardToken.symbol}</strong></div>
         <div><span>Network</span><strong>ARC Testnet</strong></div>
       </div>
       <div className="lunexis-utilization">
@@ -358,7 +358,7 @@ function StakingActionModal({
         </div>
 
         <div className="lunexis-pool-metrics">
-          <div><span>Wallet</span><strong>{pool.token.balance ?? "0"}</strong></div>
+          <div><span>Balance</span><strong>{pool.token.balance ?? "0"}</strong></div>
           <div><span>Staked</span><strong>{pool.userStaked}</strong></div>
         </div>
 
@@ -425,11 +425,11 @@ function StakeInfoModal({
         </div>
 
         <div className="lunexis-pool-metrics">
-          <div><span>Wallet</span><strong>{pool.token.balance ?? "0"}</strong></div>
+          <div><span>Balance</span><strong>{pool.token.balance ?? "0"}</strong></div>
           <div><span>My stake</span><strong>{pool.userStaked}</strong></div>
-          <div><span>Pending</span><strong>{pool.pendingReward} {pool.rewardToken.symbol}</strong></div>
+          <div><span>Pending staking Reward</span><strong>{pool.pendingReward} {pool.rewardToken.symbol}</strong></div>
           <div><span>Status</span><strong>{isUnlocked ? "Unlocked" : `Unlocks ${new Date((pool.unlockAt ?? 0) * 1000).toLocaleDateString()}`}</strong></div>
-          <div><span>Contract balance</span><strong>{pool.rewardVaultBalance ?? "0"}</strong></div>
+          <div><span>Totall stake balance</span><strong>{pool.rewardVaultBalance ?? "0"}</strong></div>
           <div><span>Network</span><strong>ARC Testnet</strong></div>
         </div>
 
