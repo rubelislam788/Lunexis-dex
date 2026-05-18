@@ -77,7 +77,7 @@ function missionStepLaunchKey(questId: string, stepId: string) {
 
 export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPageProps) {
   const { isConnected } = useAccount();
-  const { profile } = useProfile();
+  const { profile, markMissionComplete } = useProfile();
   const { balances } = usePortfolioBalances();
   const [storedTasks, setStoredTasks] = useState<MissionTask[] | null>(null);
   const [verifiedTaskIds, setVerifiedTaskIds] = useState<string[]>([]);
@@ -124,11 +124,16 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
     if (!quest) return;
     const nextIds = Array.from(new Set([...verifiedTaskIds, taskId]));
     setVerifiedTaskIds(nextIds);
+    const nextVerified = new Set(nextIds);
+    const missionComplete = steps.length > 0 && steps.every((step) => nextVerified.has(step.id));
+    if (missionComplete && !profile?.completedMissionIds.includes(displayQuest.id)) {
+      markMissionComplete(displayQuest.id, displayQuest.xp);
+    }
     try {
       const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
       window.localStorage.setItem(MISSION_STEP_PROOF_KEY, JSON.stringify({ ...stored, [quest.id]: nextIds }));
     } catch {
-      // Local proof is a convenience layer; mission verification still happens on the main Missions page.
+      // Local proof is a convenience layer; profile completion is handled above.
     }
   };
 
@@ -354,7 +359,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
               </div>
               {allStepsVerified && (
                 <div className="mt-4 rounded-2xl px-4 py-3" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.22)", color: "#86efac", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800 }}>
-                  All mission steps are verified. Return to Missions to confirm the full mission.
+                  All mission steps are verified. Mission completion is saved to your profile.
                 </div>
               )}
             </div>

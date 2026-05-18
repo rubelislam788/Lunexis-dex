@@ -5,24 +5,18 @@ import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import type { MissionSocialLink, MissionTask, Page, Quest } from "@/types";
 import { useProfile } from "@/hooks/useProfile";
-import { usePortfolioBalances } from "@/hooks/usePortfolioBalances";
-import { SOCIAL_LINKS } from "@/lib/constants";
 import { isAdminWallet } from "@/lib/admin";
 import { QUESTS } from "@/lib/missions";
-import { getArcNativeBalance, getTransactionReceiptAnyChain } from "@/lib/onchain";
 import FaucetButton from "@/components/ui/FaucetButton";
 import CongratulationsModal from "@/components/ui/CongratulationsModal";
 import {
   DEFAULT_MISSION_DAYS,
-  MISSION_STEP_PROOF_KEY,
   addDaysIso,
   ensureMissionSchedule,
   type EditableQuestPatch,
 } from "@/lib/mission-storage";
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
-type SocialProof = Record<string, boolean>;
-type OnchainMissionAction = "swap" | "bridge" | "stake";
 
 const DIFF_COLORS: Record<string, string> = {
   Easy: "#22c55e",
@@ -42,8 +36,6 @@ const MISSION_ICONS: Record<string, string> = {
   "social-rubel-post": "rss_feed",
   "social-arc-post": "cell_tower",
 };
-
-const PROOF_KEY = "arcquest.social-proof.v1";
 
 const toDateTimeInputValue = (value?: string) => {
   if (!value) return "";
@@ -68,86 +60,6 @@ const formatMissionDate = (value?: string) => {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 };
 
-const normalizeExternalUrl = (url: string) => /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
-
-const missionSocialProofKey = (questId: string, linkId: string) => `${questId}-${linkId}`;
-
-const getMissionSocialLinks = (quest: Quest) => (quest.socialLinks ?? []).filter((link) => link.label.trim() && link.url.trim());
-
-function missionText(quest: Quest) {
-  return [
-    quest.title,
-    quest.description,
-    quest.category,
-    ...quest.tags,
-    ...(quest.tasks ?? []).map((task) => task.title),
-  ].join(" ").toLowerCase();
-}
-
-function getOnchainMissionActions(quest: Quest): OnchainMissionAction[] {
-  const text = missionText(quest);
-  return ([
-    ["swap", /\bswaps?\b|\bswapping\b/i],
-    ["bridge", /\bbridges?\b|\bbridging\b/i],
-    ["stake", /\bstakes?\b|\bstaking\b|\bstaked\b/i],
-  ] as const).filter(([, pattern]) => pattern.test(text)).map(([action]) => action);
-}
-
-function isSocialOnlyMission(quest: Quest) {
-  return getMissionSocialLinks(quest).length > 0 && getOnchainMissionActions(quest).length === 0;
-}
-
-function getMissionSteps(quest: Quest) {
-  return quest.tasks?.length
-    ? quest.tasks
-    : Array.from({ length: Math.max(1, quest.totalSteps || 1) }, (_, index) => ({
-      id: `${quest.id}-step-${index + 1}`,
-      title: `Step ${index + 1}`,
-    }));
-}
-
-function getVerifiedMissionStepIds(questId: string) {
-  if (typeof window === "undefined") return [];
-  try {
-    const verified = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
-    return verified[questId] ?? [];
-  } catch {
-    return [];
-  }
-}
-
-function getMissingMissionSteps(quest: Quest) {
-  const verified = new Set(getVerifiedMissionStepIds(quest.id));
-  return getMissionSteps(quest).filter((step) => !verified.has(step.id));
-}
-
-function saveMissionStepProof(questId: string, stepIds: string[]) {
-  if (typeof window === "undefined" || stepIds.length === 0) return;
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
-    const nextIds = Array.from(new Set([...(stored[questId] ?? []), ...stepIds]));
-    window.localStorage.setItem(MISSION_STEP_PROOF_KEY, JSON.stringify({ ...stored, [questId]: nextIds }));
-  } catch {
-    // Step proof is client-side progress only; ignore storage failures.
-  }
-}
-
-function socialProofStepIds(quest: Quest, proofKey: string) {
-  const steps = getMissionSteps(quest);
-  if (quest.id === "social-follow") {
-    if (proofKey === "rubelFollow") return steps.filter((step) => /rubel/i.test(step.title)).map((step) => step.id);
-    if (proofKey === "arcFollow") return steps.filter((step) => /arc/i.test(step.title)).map((step) => step.id);
-  }
-  if (quest.id === "social-rubel-post" && proofKey === "rubelPost") return steps.map((step) => step.id);
-  if (quest.id === "social-arc-post" && proofKey === "arcPost") return steps.map((step) => step.id);
-  if (proofKey.startsWith(`${quest.id}-`)) {
-    const links = getMissionSocialLinks(quest);
-    const linkIndex = links.findIndex((link) => missionSocialProofKey(quest.id, link.id) === proofKey);
-    return steps[linkIndex] ? [steps[linkIndex].id] : steps.slice(0, 1).map((step) => step.id);
-  }
-  return [];
-}
-
 async function publishMissions(quests: Quest[], adminAddress?: string) {
   const response = await fetch("/api/missions", {
     method: "POST",
@@ -169,14 +81,11 @@ interface MissionsPageProps {
 export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPageProps) {
   const { profile, isConnected, markMissionComplete } = useProfile();
   const { address } = useAccount();
-  const { balances } = usePortfolioBalances();
-  const [proof, setProof] = useState<SocialProof>({});
   const [quests, setQuests] = useState<Quest[]>(() => ensureMissionSchedule(QUESTS));
   const [showMissionAdmin, setShowMissionAdmin] = useState(false);
   const [missionControlQuestId, setMissionControlQuestId] = useState(QUESTS[0]?.id ?? "");
   const [verifyStates, setVerifyStates] = useState<Record<string, VerifyState>>({});
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
-  const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
   const [successReward, setSuccessReward] = useState<{ title: string; amount: string; message: string; txHash?: string } | null>(null);
   const [missionClock, setMissionClock] = useState(() => Date.now());
   const [publishState, setPublishState] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -184,12 +93,6 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const isMissionAdmin = isAdminWallet(address);
 
   useEffect(() => {
-    try {
-      setProof(JSON.parse(window.localStorage.getItem(PROOF_KEY) || "{}"));
-    } catch {
-      setProof({});
-    }
-
     let cancelled = false;
     const syncMissions = () => {
       fetch("/api/missions", {
@@ -303,13 +206,6 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     return mission;
   };
 
-  const saveProof = (key: string) => {
-    const next = { ...proof, [key]: true };
-    setProof(next);
-    window.localStorage.setItem(PROOF_KEY, JSON.stringify(next));
-    return next;
-  };
-
   const completeVerifiedQuest = (quest: Quest, message = "All mission tasks are verified. You can now claim the token reward.") => {
     markMissionComplete(quest.id, quest.xp);
     setSuccessReward({
@@ -321,159 +217,11 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
     setVerifyMessages((prev) => ({ ...prev, [quest.id]: message }));
   };
 
-  const saveLinkProof = (quest: Quest, key: string) => {
-    const nextProof = saveProof(key);
-    saveMissionStepProof(quest.id, socialProofStepIds(quest, key));
-    const links = getMissionSocialLinks(quest);
-    const allLinksVisited = links.length > 0 && links.every((link) => nextProof[missionSocialProofKey(quest.id, link.id)]);
-    const missingSteps = getMissingMissionSteps(quest);
-
-    if (!isConnected) {
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Link visit saved. Connect wallet to verify this mission." }));
-      return;
-    }
-
-    if (profile?.completedMissionIds.includes(quest.id)) return;
-    if (isSocialOnlyMission(quest) && allLinksVisited) {
-      if (missingSteps.length > 0) {
-        setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Links visited. Verify every mission step first (${missingSteps.length} left).` }));
-        return;
-      }
-      completeVerifiedQuest(quest, "All mission links and steps were verified.");
-    } else if (links.length > 0) {
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: allLinksVisited ? "Links visited. Complete the onchain action, then verify." : "Link visit saved. Open every mission link to finish this step." }));
-    }
-  };
-
   const openMissionEditor = (questId: string) => {
     if (!isMissionAdmin) return;
     setMissionControlQuestId(questId);
     setShowMissionAdmin(true);
     window.setTimeout(() => document.getElementById("mission-control-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-  };
-
-  const syncProfileBeforePayout = async () => {
-    if (!profile) return;
-    await fetch("/api/profiles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile }),
-    }).catch(() => null);
-  };
-
-  const claimQuestReward = async (quest: Quest) => {
-    if (!address || claimingQuestId) return;
-    const missingSteps = getMissingMissionSteps(quest);
-    if (missingSteps.length > 0) {
-      setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Verify every mission step first (${missingSteps.length} left).` }));
-      return;
-    }
-    if (!profile?.completedMissionIds.includes(quest.id)) {
-      setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Verify the full mission before syncing reward eligibility." }));
-      return;
-    }
-    setClaimingQuestId(quest.id);
-    setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Syncing mission ID for Rewards eligibility..." }));
-    try {
-      await syncProfileBeforePayout();
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: `Mission ID ${quest.id} synced. Claim USDC/EURC rewards from Rewards.` }));
-      setSuccessReward({
-        title: "Mission Synced",
-        amount: `+${quest.xp} XP`,
-        message: "This mission ID is ready for Rewards eligibility. Open Rewards to claim USDC or EURC payouts.",
-      });
-    } catch (error: any) {
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: error?.message || "Mission ID sync failed." }));
-    } finally {
-      setClaimingQuestId(null);
-    }
-  };
-
-  const hasConfirmedActivity = async (type: OnchainMissionAction) => {
-    const activities = profile?.activities.filter((item) => {
-      if (item.status !== "completed") return false;
-      if (type === "stake") return /\bstak/i.test(`${item.title} ${item.description}`);
-      return item.type === type;
-    }) ?? [];
-    if (activities.length === 0) return false;
-
-    const withHashes = activities.filter((item) => item.txHash);
-    if (withHashes.length === 0) return true;
-
-    const receipts = await Promise.all(withHashes.map((item) => getTransactionReceiptAnyChain(item.txHash)));
-    return receipts.some((receipt) => receipt?.status === "success");
-  };
-  const hasUsdcBalance = Number(balances.find((item) => item.token === "USDC")?.amount ?? 0) >= 10;
-  const hasStablecoinPair = Number(balances.find((item) => item.token === "USDC")?.amount ?? 0) > 0 && Number(balances.find((item) => item.token === "EURC")?.amount ?? 0) > 0;
-
-  const validateQuest = async (quest: Quest) => {
-    if (!profile) return { ok: false, message: "Connect your wallet before verification." };
-    const missingSteps = getMissingMissionSteps(quest);
-    if (missingSteps.length > 0) {
-      return { ok: false, message: `Verify every mission step first (${missingSteps.length} left).` };
-    }
-    const socialLinks = getMissionSocialLinks(quest);
-    const missingLinks = socialLinks.filter((link) => !proof[missionSocialProofKey(quest.id, link.id)]);
-    const requiredActions = getOnchainMissionActions(quest);
-
-    if (quest.id === "q1") return await hasConfirmedActivity("swap") ? { ok: true, message: "Swap transaction confirmed onchain." } : { ok: false, message: "No confirmed swap transaction found." };
-    if (quest.id === "q2") return hasUsdcBalance ? { ok: true, message: "USDC balance detected on Arc." } : { ok: false, message: "Hold at least 10 USDC before verifying." };
-    if (quest.id === "q3") return hasStablecoinPair ? { ok: true, message: "USDC and EURC balances detected on Arc." } : { ok: false, message: "Hold both USDC and EURC on Arc Testnet first." };
-    if (quest.id === "q4") return await hasConfirmedActivity("swap") && hasUsdcBalance ? { ok: true, message: "Swap activity and USDC balance confirmed." } : { ok: false, message: "Complete a swap and hold at least 10 USDC first." };
-    if (quest.id === "q5") {
-      const gasBalance = await getArcNativeBalance(profile.walletAddress as `0x${string}`).catch(() => BigInt(0));
-      return gasBalance > BigInt(0) ? { ok: true, message: "Native Arc USDC gas balance detected." } : { ok: false, message: "Claim or receive native USDC gas on Arc Testnet first." };
-    }
-    if (quest.id === "q6") return hasUsdcBalance ? { ok: true, message: "USDC balance requirement met." } : { ok: false, message: "Hold at least 10 USDC before verifying." };
-    if (quest.id === "social-follow") return proof.rubelFollow && proof.arcFollow ? { ok: true, message: "Community follows verified." } : { ok: false, message: "Open both X profiles before verification." };
-    if (quest.id === "social-rubel-post") return proof.rubelPost ? { ok: true, message: "Rubel post engagement verified." } : { ok: false, message: "Open and complete the Rubel post action first." };
-    if (quest.id === "social-arc-post") return proof.arcPost ? { ok: true, message: "Arc post engagement verified." } : { ok: false, message: "Open and complete the Arc post action first." };
-
-    if (missingLinks.length > 0) {
-      return { ok: false, message: `Open every mission link first: ${missingLinks.map((link) => link.label).join(", ")}.` };
-    }
-
-    if (requiredActions.length > 0) {
-      const missingActions: OnchainMissionAction[] = [];
-      for (const action of requiredActions) {
-        if (!(await hasConfirmedActivity(action))) missingActions.push(action);
-      }
-      if (missingActions.length > 0) {
-        return { ok: false, message: `Complete a confirmed ${missingActions.join(", ")} transaction before verifying.` };
-      }
-      return { ok: true, message: "Required onchain activity confirmed." };
-    }
-
-    if (socialLinks.length > 0) return { ok: true, message: "All mission links were visited." };
-
-    return { ok: false, message: "Add a social link or include swap, bridge, or staking in this mission so Lunexis knows how to verify it." };
-  };
-
-  const verifyQuest = (quest: Quest) => {
-    if (!isConnected) {
-      setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: "Connect wallet to verify mission activity." }));
-      return;
-    }
-
-    setVerifyStates((prev) => ({ ...prev, [quest.id]: "checking" }));
-    setVerifyMessages((prev) => ({ ...prev, [quest.id]: quest.category === "Social" ? "Checking Activity..." : "Scanning Wallet Activity..." }));
-
-    window.setTimeout(() => {
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: quest.category === "Social" ? "Verifying engagement action..." : "Verifying Onchain Action..." }));
-    }, 850);
-
-    window.setTimeout(async () => {
-      const result = await validateQuest(quest);
-      if (result.ok) {
-        completeVerifiedQuest(quest);
-      } else {
-        setVerifyStates((prev) => ({ ...prev, [quest.id]: "failed" }));
-      }
-      setVerifyMessages((prev) => ({ ...prev, [quest.id]: result.message }));
-    }, 1700);
   };
 
   return (
@@ -516,7 +264,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
             onRemoveMission={removeMission}
             onSaveMission={saveMission}
             onConfirmMission={(quest) => {
-              if (isMissionAdmin) markMissionComplete(quest.id, quest.xp);
+              if (isMissionAdmin) completeVerifiedQuest(quest, "Mission manually confirmed.");
             }}
           />
           </>
@@ -527,9 +275,6 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           quests={quests.filter((quest) => isMissionAdmin || getMissionTimeState(quest, missionClock) !== "Expired")}
           profile={profile}
           onSelectQuest={onSelectQuest}
-          onVerify={verifyQuest}
-          onClaim={claimQuestReward}
-          saveProof={saveLinkProof}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}
           isMissionAdmin={isMissionAdmin}
@@ -813,9 +558,6 @@ function MissionSection({
   quests,
   profile,
   onSelectQuest,
-  onVerify,
-  onClaim,
-  saveProof,
   verifyStates,
   verifyMessages,
   isMissionAdmin,
@@ -825,9 +567,6 @@ function MissionSection({
   quests: Quest[];
   profile: ReturnType<typeof useProfile>["profile"];
   onSelectQuest: (quest: Quest) => void;
-  onVerify: (quest: Quest) => void;
-  onClaim: (quest: Quest) => void;
-  saveProof: (quest: Quest, key: string) => void;
   verifyStates: Record<string, VerifyState>;
   verifyMessages: Record<string, string>;
   isMissionAdmin: boolean;
@@ -847,9 +586,6 @@ function MissionSection({
             verifyState={verifyStates[quest.id] ?? "idle"}
             verifyMessage={verifyMessages[quest.id]}
             onSelectQuest={onSelectQuest}
-            onVerify={() => onVerify(quest)}
-            onClaim={() => onClaim(quest)}
-            saveProof={saveProof}
             featured={quest.featured}
             isMissionAdmin={isMissionAdmin}
             onEditQuest={onEditQuest}
@@ -866,9 +602,6 @@ function QuestCard({
   verifyState,
   verifyMessage,
   onSelectQuest,
-  onVerify,
-  onClaim,
-  saveProof,
   featured,
   isMissionAdmin,
   onEditQuest,
@@ -878,19 +611,13 @@ function QuestCard({
   verifyState: VerifyState;
   verifyMessage?: string;
   onSelectQuest: (quest: Quest) => void;
-  onVerify: () => void;
-  onClaim: () => void;
-  saveProof: (quest: Quest, key: string) => void;
   featured?: boolean;
   isMissionAdmin: boolean;
   onEditQuest: (questId: string) => void;
 }) {
   const progressPct = completed ? 100 : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
-  const socialHref = quest.id === "social-rubel-post" ? SOCIAL_LINKS.rubelPost : quest.id === "social-arc-post" ? SOCIAL_LINKS.arcPost : SOCIAL_LINKS.rubel;
-  const missionSocialLinks = getMissionSocialLinks(quest);
   const timeState = getMissionTimeState(quest);
-  const isTimeLocked = timeState !== "Live";
 
   return (
     <article
@@ -949,50 +676,13 @@ function QuestCard({
         </div>
       )}
 
-      <div className="mission-card-footer flex flex-wrap items-center justify-between gap-3 mt-4" onClick={(event) => event.stopPropagation()}>
-        <div className="mission-tags flex gap-2 flex-wrap">
-          {quest.tags.map((tag) => (
-            <span key={tag} className="px-2 py-1 rounded-md" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, color: "#849495", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              {tag}
-            </span>
-          ))}
-          <span className="px-2 py-1 rounded-md" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, color: "#00dce5", background: "rgba(0,220,229,0.07)", border: "1px solid rgba(0,220,229,0.16)" }}>
-            {quest.reward}
-          </span>
-        </div>
-
-        <div className="mission-card-actions flex gap-2">
-          {isMissionAdmin && (
-            <button onClick={() => onEditQuest(quest.id)} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-              Edit
-            </button>
-          )}
-          {quest.category === "Social" && quest.id === "social-follow" && (
-            <a href={SOCIAL_LINKS.arc} target="_blank" rel="noreferrer" onClick={() => saveProof(quest, "arcFollow")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>Open Arc</a>
-          )}
-          {quest.category === "Social" && (
-            <a href={socialHref} target="_blank" rel="noreferrer" onClick={() => saveProof(quest, quest.id === "social-follow" ? "rubelFollow" : quest.id === "social-rubel-post" ? "rubelPost" : "arcPost")} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-              {quest.id === "social-follow" ? "Open Rubel" : "Open Signal"}
-            </a>
-          )}
-          {missionSocialLinks.map((link) => (
-            <a
-              key={link.id}
-              href={normalizeExternalUrl(link.url)}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => saveProof(quest, missionSocialProofKey(quest.id, link.id))}
-              className="btn-ghost px-3 py-2 rounded-lg"
-              style={{ fontSize: 10 }}
-            >
-              {link.label}
-            </a>
-          ))}
-          <button disabled={completed || isChecking || isTimeLocked} onClick={onVerify} className="btn-outline-cyan px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
-            {isChecking ? "Checking..." : completed ? "Verified" : isTimeLocked ? timeState : "Verify"}
+      {isMissionAdmin && (
+        <div className="mission-card-footer flex justify-end mt-4" onClick={(event) => event.stopPropagation()}>
+          <button onClick={() => onEditQuest(quest.id)} className="btn-ghost px-3 py-2 rounded-lg" style={{ fontSize: 10 }}>
+            Edit
           </button>
         </div>
-      </div>
+      )}
     </article>
   );
 }
