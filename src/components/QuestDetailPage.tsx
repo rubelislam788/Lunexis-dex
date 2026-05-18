@@ -63,6 +63,14 @@ function getStepAction(step: MissionTask, quest: Quest, index: number): { label:
   return null;
 }
 
+function getStepActivityKind(step: MissionTask): "swap" | "bridge" | "stake" | null {
+  const text = step.title.toLowerCase();
+  if (/\bswaps?\b|\bswapping\b|swap transaction|token pair/i.test(text)) return "swap";
+  if (/\bbridges?\b|\bbridging\b/i.test(text)) return "bridge";
+  if (/\bstakes?\b|\bstaking\b|\bstaked\b/i.test(text)) return "stake";
+  return null;
+}
+
 function missionStepLaunchKey(questId: string, stepId: string) {
   return `${questId}-${stepId}`;
 }
@@ -201,15 +209,15 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
       markStepMessage(step.id, "Start this task from this mission step first.");
       return;
     }
-    if (/\bswaps?\b|\bswapping\b|swap transaction|token pair/i.test(text) && !hasActivity("swap", launchTime)) {
+    if (getStepActivityKind(step) === "swap" && !hasActivity("swap", launchTime)) {
       markStepMessage(step.id, "Complete a swap from this mission, then verify.");
       return;
     }
-    if (/\bbridges?\b|\bbridging\b/i.test(text) && !hasActivity("bridge", launchTime)) {
+    if (getStepActivityKind(step) === "bridge" && !hasActivity("bridge", launchTime)) {
       markStepMessage(step.id, "Complete a bridge from this mission, then verify.");
       return;
     }
-    if (/\bstakes?\b|\bstaking\b|\bstaked\b/i.test(text) && !hasActivity("stake", launchTime)) {
+    if (getStepActivityKind(step) === "stake" && !hasActivity("stake", launchTime)) {
       markStepMessage(step.id, "Complete a stake from this mission, then verify.");
       return;
     }
@@ -281,31 +289,68 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
                 Mission Steps
               </div>
               <div className="flex flex-col gap-3">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl p-3" style={{ background: verifiedSet.has(step.id) ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.035)", border: `1px solid ${verifiedSet.has(step.id) ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}` }}>
-                    <div className="flex gap-3 items-center min-w-0">
-                      <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: verifiedSet.has(step.id) ? "rgba(34,197,94,0.12)" : "rgba(0,220,229,0.1)", border: `1px solid ${verifiedSet.has(step.id) ? "rgba(34,197,94,0.34)" : "rgba(0,220,229,0.3)"}`, color: verifiedSet.has(step.id) ? "#22c55e" : "#00dce5", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700 }}>
-                      {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span style={{ color: verifiedSet.has(step.id) ? "#d8ffe6" : "#c8d6d6", fontSize: 13, lineHeight: 1.8 }}>{step.title}</span>
+                {steps.map((step, index) => {
+                  const stepAction = getStepAction(step, displayQuest, index);
+                  const activityKind = getStepActivityKind(step);
+                  const launchTime = getStepLaunchTime(step.id);
+                  const activityDoneFromMission = activityKind ? launchTime > 0 && hasActivity(activityKind, launchTime) : false;
+                  const isVerified = verifiedSet.has(step.id);
+                  const showActionButton = Boolean(stepAction && !isVerified && (!activityKind || !activityDoneFromMission));
+                  const showVerifyButton = isVerified || !activityKind || activityDoneFromMission;
+
+                  return (
+                    <div
+                      key={step.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl p-3"
+                      role={stepAction?.page && !isVerified && !activityDoneFromMission ? "button" : undefined}
+                      tabIndex={stepAction?.page && !isVerified && !activityDoneFromMission ? 0 : undefined}
+                      onClick={(event) => {
+                        if ((event.target as HTMLElement).closest("button")) return;
+                        if (stepAction?.page && !isVerified && !activityDoneFromMission) runStepAction(step, index);
+                      }}
+                      onKeyDown={(event) => {
+                        if ((event.key === "Enter" || event.key === " ") && stepAction?.page && !isVerified && !activityDoneFromMission) {
+                          event.preventDefault();
+                          runStepAction(step, index);
+                        }
+                      }}
+                      style={{
+                        background: isVerified ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.035)",
+                        border: `1px solid ${isVerified ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
+                        cursor: stepAction?.page && !isVerified && !activityDoneFromMission ? "pointer" : "default",
+                      }}
+                    >
+                      <div className="flex gap-3 items-center min-w-0">
+                        <span className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: isVerified ? "rgba(34,197,94,0.12)" : "rgba(0,220,229,0.1)", border: `1px solid ${isVerified ? "rgba(34,197,94,0.34)" : "rgba(0,220,229,0.3)"}`, color: isVerified ? "#22c55e" : "#00dce5", fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700 }}>
+                        {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span style={{ color: isVerified ? "#d8ffe6" : "#c8d6d6", fontSize: 13, lineHeight: 1.8 }}>{step.title}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        {showActionButton && (
+                          <button onClick={() => runStepAction(step, index)} className="btn-primary px-4 py-2 rounded-xl text-xs">
+                            {stepAction?.label}
+                          </button>
+                        )}
+                        {showVerifyButton && (
+                          <button
+                            onClick={() => verifyTask(step, index)}
+                            disabled={isVerified}
+                            className="btn-outline-cyan px-4 py-2 rounded-xl text-xs"
+                          >
+                            {isVerified ? "Verified" : "Check Step"}
+                          </button>
+                        )}
+                        {!showVerifyButton && activityKind && launchTime > 0 && (
+                          <div className="basis-full text-right" style={{ color: "#9fb4b8", fontSize: 11 }}>
+                            Complete this {activityKind} task, then the verify button will appear.
+                          </div>
+                        )}
+                        {stepMessages[step.id] && <div className="basis-full text-right" style={{ color: isVerified ? "#86efac" : "#ffb7eb", fontSize: 11 }}>{stepMessages[step.id]}</div>}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 justify-end">
-                      {getStepAction(step, displayQuest, index) && !verifiedSet.has(step.id) && (
-                        <button onClick={() => runStepAction(step, index)} className="btn-primary px-4 py-2 rounded-xl text-xs">
-                          {getStepAction(step, displayQuest, index)?.label}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => verifyTask(step, index)}
-                        disabled={verifiedSet.has(step.id)}
-                        className="btn-outline-cyan px-4 py-2 rounded-xl text-xs"
-                      >
-                        {verifiedSet.has(step.id) ? "Verified" : "Check Step"}
-                      </button>
-                      {stepMessages[step.id] && <div className="basis-full text-right" style={{ color: verifiedSet.has(step.id) ? "#86efac" : "#ffb7eb", fontSize: 11 }}>{stepMessages[step.id]}</div>}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               {allStepsVerified && (
                 <div className="mt-4 rounded-2xl px-4 py-3" style={{ background: "rgba(34,197,94,0.09)", border: "1px solid rgba(34,197,94,0.22)", color: "#86efac", fontFamily: "'Space Grotesk'", fontSize: 12, fontWeight: 800 }}>
