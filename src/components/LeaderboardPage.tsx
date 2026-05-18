@@ -35,6 +35,7 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const sync = () => {
+      if (document.hidden) return;
       setEntries(buildEntries(loadAllProfiles()));
       void loadRemoteProfiles().then((profiles) => setEntries(buildEntries(profiles)));
     };

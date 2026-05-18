@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useAccount, useSwitchChain } from "wagmi";
 import { useArcSwap } from "@/hooks/useArcSwap";
 import { useProfile } from "@/hooks/useProfile";
@@ -14,7 +15,11 @@ import type { TokenSymbol } from "@/types";
 import TokenIcon from "@/components/ui/TokenIcon";
 import FaucetButton from "@/components/ui/FaucetButton";
 import TransactionSuccessModal from "@/components/ui/TransactionSuccessModal";
-import TokenPriceChart from "@/components/swap/TokenPriceChart";
+
+const TokenPriceChart = dynamic(() => import("@/components/swap/TokenPriceChart"), {
+  ssr: false,
+  loading: () => <div className="lunexis-premium-card lunexis-price-chart min-h-[420px]" />,
+});
 
 type TokenPriceMap = Partial<Record<TokenSymbol, number>>;
 type SmartError = { title: string; message: string; action: string; tone?: "warning" | "error" };

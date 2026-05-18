@@ -40,6 +40,7 @@ interface QuestDetailPageProps {
 
 const SOCIAL_PROOF_KEY = "arcquest.social-proof.v1";
 const MISSION_STEP_ACTION_LAUNCH_KEY = "arcquest.mission-step-action-launch.v1";
+const MISSION_STEP_PROGRESS_EVENT = "arc-mission-step-progress";
 
 function normalizeExternalUrl(url: string) {
   return /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
@@ -166,6 +167,7 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
     try {
       const stored = JSON.parse(window.localStorage.getItem(MISSION_STEP_PROOF_KEY) || "{}") as Record<string, string[]>;
       window.localStorage.setItem(MISSION_STEP_PROOF_KEY, JSON.stringify({ ...stored, [quest.id]: nextIds }));
+      window.dispatchEvent(new CustomEvent(MISSION_STEP_PROGRESS_EVENT, { detail: { questId: quest.id } }));
     } catch {
       // Local proof is a convenience layer; profile completion is handled above.
     }

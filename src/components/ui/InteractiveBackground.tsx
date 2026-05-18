@@ -14,15 +14,27 @@ export default function InteractiveBackground() {
     if (isMobile || reduceMotion) return;
 
     const root = document.documentElement;
+    let frame = 0;
+    let nextX = 50;
+    let nextY = 50;
     const move = (event: PointerEvent) => {
-      root.style.setProperty("--lunexis-pointer-x", `${(event.clientX / window.innerWidth) * 100}%`);
-      root.style.setProperty("--lunexis-pointer-y", `${(event.clientY / window.innerHeight) * 100}%`);
-      root.style.setProperty("--lunexis-pointer-dx", `${(event.clientX / window.innerWidth - 0.5) * 26}px`);
-      root.style.setProperty("--lunexis-pointer-dy", `${(event.clientY / window.innerHeight - 0.5) * 26}px`);
+      nextX = event.clientX / window.innerWidth;
+      nextY = event.clientY / window.innerHeight;
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        root.style.setProperty("--lunexis-pointer-x", `${nextX * 100}%`);
+        root.style.setProperty("--lunexis-pointer-y", `${nextY * 100}%`);
+        root.style.setProperty("--lunexis-pointer-dx", `${(nextX - 0.5) * 26}px`);
+        root.style.setProperty("--lunexis-pointer-dy", `${(nextY - 0.5) * 26}px`);
+        frame = 0;
+      });
     };
 
     window.addEventListener("pointermove", move, { passive: true });
-    return () => window.removeEventListener("pointermove", move);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   if (!mounted) return null;

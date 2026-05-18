@@ -192,7 +192,10 @@ export function usePortfolioBalances(refreshMs = 12000, chainId = ARC_CHAIN_ID) 
   useEffect(() => {
     refresh();
     if (!isConnected) return;
-    const timer = window.setInterval(refresh, refreshMs);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) refresh();
+    };
+    const timer = window.setInterval(refreshWhenVisible, refreshMs);
     const refreshWhenOnline = () => refresh();
     window.addEventListener("online", refreshWhenOnline);
     window.addEventListener("focus", refreshWhenOnline);

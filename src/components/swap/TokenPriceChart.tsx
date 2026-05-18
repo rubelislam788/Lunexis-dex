@@ -54,6 +54,7 @@ export default function TokenPriceChart({ activeToken }: { activeToken: TokenSym
       })
       .catch(() => null);
     const timer = window.setInterval(() => {
+      if (document.hidden) return;
       fetch("/api/token-prices")
         .then((response) => response.ok ? response.json() : null)
         .then((data) => {

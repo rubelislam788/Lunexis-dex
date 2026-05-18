@@ -66,6 +66,7 @@ export function useAppStats(refreshMs = 15000): AppStats & { refresh: () => Prom
 
   useEffect(() => {
     const sync = () => {
+      if (document.hidden) return;
       void refresh();
     };
 

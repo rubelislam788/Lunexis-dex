@@ -254,7 +254,10 @@ export function useStaking() {
 
   useEffect(() => {
     refresh();
-    const timer = window.setInterval(refresh, 8000);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) refresh();
+    };
+    const timer = window.setInterval(refreshWhenVisible, 8000);
     window.addEventListener("online", refresh);
     window.addEventListener("focus", refresh);
     return () => {

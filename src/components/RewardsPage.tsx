@@ -98,6 +98,7 @@ export default function RewardsPage() {
     let cancelled = false;
 
     const syncRewardsAndMissions = () => {
+      if (document.hidden) return;
       const headers = address && isAdminWallet(address) ? { "x-admin-wallet": address } : undefined;
       void Promise.all([
         fetch("/api/rewards", { cache: "no-store", headers }).then((response) => response.ok ? response.json() : null).catch(() => null),

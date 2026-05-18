@@ -18,6 +18,7 @@ import {
 } from "@/lib/mission-storage";
 
 type VerifyState = "idle" | "checking" | "success" | "failed";
+const MISSION_STEP_PROGRESS_EVENT = "arc-mission-step-progress";
 
 const DIFF_COLORS: Record<string, string> = {
   Easy: "#22c55e",
@@ -103,7 +104,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   const [verifyMessages, setVerifyMessages] = useState<Record<string, string>>({});
   const [successReward, setSuccessReward] = useState<{ title: string; amount: string; message: string; txHash?: string } | null>(null);
   const [missionClock, setMissionClock] = useState(() => Date.now());
-  const [progressClock, setProgressClock] = useState(() => Date.now());
+  const [progressVersion, setProgressVersion] = useState(0);
   const [publishState, setPublishState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [publishMessage, setPublishMessage] = useState("");
   const isMissionAdmin = isAdminWallet(address);
@@ -111,6 +112,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   useEffect(() => {
     let cancelled = false;
     const syncMissions = () => {
+      if (document.hidden) return;
       fetch("/api/missions", {
         cache: "no-store",
         headers: address && isAdminWallet(address) ? { "x-admin-wallet": address } : undefined,
@@ -138,8 +140,15 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setProgressClock(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    const refreshProgress = () => setProgressVersion((value) => value + 1);
+    window.addEventListener(MISSION_STEP_PROGRESS_EVENT, refreshProgress);
+    window.addEventListener("storage", refreshProgress);
+    window.addEventListener("focus", refreshProgress);
+    return () => {
+      window.removeEventListener(MISSION_STEP_PROGRESS_EVENT, refreshProgress);
+      window.removeEventListener("storage", refreshProgress);
+      window.removeEventListener("focus", refreshProgress);
+    };
   }, []);
 
   useEffect(() => {
@@ -298,7 +307,7 @@ export default function MissionsPage({ onNavigate, onSelectQuest }: MissionsPage
           onSelectQuest={onSelectQuest}
           verifyStates={verifyStates}
           verifyMessages={verifyMessages}
-          progressClock={progressClock}
+          progressVersion={progressVersion}
           isMissionAdmin={isMissionAdmin}
           onEditQuest={openMissionEditor}
         />
@@ -582,7 +591,7 @@ function MissionSection({
   onSelectQuest,
   verifyStates,
   verifyMessages,
-  progressClock,
+  progressVersion,
   isMissionAdmin,
   onEditQuest,
 }: {
@@ -592,7 +601,7 @@ function MissionSection({
   onSelectQuest: (quest: Quest) => void;
   verifyStates: Record<string, VerifyState>;
   verifyMessages: Record<string, string>;
-  progressClock: number;
+  progressVersion: number;
   isMissionAdmin: boolean;
   onEditQuest: (questId: string) => void;
 }) {
@@ -609,7 +618,7 @@ function MissionSection({
             completed={profile?.completedMissionIds.includes(quest.id)}
             verifyState={verifyStates[quest.id] ?? "idle"}
             verifyMessage={verifyMessages[quest.id]}
-            progressClock={progressClock}
+            progressVersion={progressVersion}
             onSelectQuest={onSelectQuest}
             featured={quest.featured}
             isMissionAdmin={isMissionAdmin}
@@ -626,7 +635,7 @@ function QuestCard({
   completed,
   verifyState,
   verifyMessage,
-  progressClock,
+  progressVersion,
   onSelectQuest,
   featured,
   isMissionAdmin,
@@ -636,7 +645,7 @@ function QuestCard({
   completed?: boolean;
   verifyState: VerifyState;
   verifyMessage?: string;
-  progressClock: number;
+  progressVersion: number;
   onSelectQuest: (quest: Quest) => void;
   featured?: boolean;
   isMissionAdmin: boolean;
@@ -646,7 +655,7 @@ function QuestCard({
   const progressPct = completed ? 100 : stepProgress.count > 0 ? stepProgress.pct : quest.progress > 0 ? (quest.progress / quest.totalSteps) * 100 : verifyState === "checking" ? 58 : 0;
   const isChecking = verifyState === "checking";
   const timeState = getMissionTimeState(quest);
-  void progressClock;
+  void progressVersion;
 
   return (
     <article
