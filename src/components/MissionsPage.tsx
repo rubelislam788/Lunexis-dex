@@ -682,10 +682,10 @@ function QuestCard({
           </div>
         </div>
         <div className="mission-card-badges flex flex-col items-end gap-2">
-          <span className="px-2 py-1 rounded-md h-fit" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: completed ? "#22c55e" : DIFF_COLORS[quest.difficulty], background: completed ? "rgba(34,197,94,0.12)" : `${DIFF_COLORS[quest.difficulty]}18`, border: `1px solid ${completed ? "rgba(34,197,94,0.32)" : `${DIFF_COLORS[quest.difficulty]}44`}` }}>
+          <span className="px-2 py-1 rounded-md h-fit whitespace-nowrap" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.04em", lineHeight: 1.2, minWidth: "fit-content", writingMode: "horizontal-tb", color: completed ? "#22c55e" : DIFF_COLORS[quest.difficulty], background: completed ? "rgba(34,197,94,0.12)" : `${DIFF_COLORS[quest.difficulty]}18`, border: `1px solid ${completed ? "rgba(34,197,94,0.32)" : `${DIFF_COLORS[quest.difficulty]}44`}` }}>
             {completed ? "COMPLETED" : quest.difficulty.toUpperCase()}
           </span>
-          <span className="px-2 py-1 rounded-md h-fit" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: timeState === "Live" ? "#38bdf8" : "#f59e0b", background: timeState === "Live" ? "rgba(56,189,248,0.1)" : "rgba(245,158,11,0.1)", border: `1px solid ${timeState === "Live" ? "rgba(56,189,248,0.28)" : "rgba(245,158,11,0.28)"}` }}>
+          <span className="px-2 py-1 rounded-md h-fit whitespace-nowrap" style={{ fontFamily: "'Space Grotesk'", fontSize: 9, fontWeight: 800, letterSpacing: "0.04em", lineHeight: 1.2, minWidth: "fit-content", writingMode: "horizontal-tb", color: timeState === "Live" ? "#38bdf8" : "#f59e0b", background: timeState === "Live" ? "rgba(56,189,248,0.1)" : "rgba(245,158,11,0.1)", border: `1px solid ${timeState === "Live" ? "rgba(56,189,248,0.28)" : "rgba(245,158,11,0.28)"}` }}>
             {timeState.toUpperCase()}
           </span>
         </div>
