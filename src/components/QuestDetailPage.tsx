@@ -321,8 +321,8 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
           Back to Missions
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <section className="lg:col-span-3 rounded-2xl p-6 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div>
+          <section className="rounded-2xl p-6 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="flex flex-wrap gap-2 mb-5">
               {displayQuest.tags.map((tag) => (
                 <span key={tag} className="px-2 py-1 rounded-md" style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 700, color: "#849495", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -337,6 +337,30 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
             <p style={{ color: "#b9caca", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>
               {displayQuest.description}
             </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(180px,240px)_1fr] gap-3 mb-6">
+              <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ fontFamily: "'Space Grotesk'", fontSize: 10, fontWeight: 800, color: "#849495", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Reward
+                </div>
+                <div style={{ fontFamily: "'Space Grotesk'", fontSize: 26, fontWeight: 900, color: "#00dce5", lineHeight: 1 }}>
+                  {displayQuest.reward}
+                </div>
+                <div style={{ color: "#849495", fontSize: 12, marginTop: 8 }}>
+                  +{displayQuest.xp} XP / {displayQuest.difficulty} / {displayQuest.category}
+                </div>
+              </div>
+
+              <div className="rounded-2xl p-4" style={{ background: "rgba(0,220,229,0.04)", border: "1px solid rgba(0,220,229,0.14)" }}>
+                <div className="flex justify-between mb-2">
+                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 10, color: "#849495", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>Progress</span>
+                  <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5", fontWeight: 800 }}>{verifiedCount}/{steps.length}</span>
+                </div>
+                <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
+                  <div style={{ width: `${progressPct}%`, height: "100%", background: "#00dce5", borderRadius: 99 }} />
+                </div>
+              </div>
+            </div>
 
             <div className="rounded-xl p-4 mb-6" style={{ background: "rgba(0,220,229,0.04)", border: "1px solid rgba(0,220,229,0.16)" }}>
               <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#00dce5", textTransform: "uppercase", marginBottom: 10 }}>
@@ -419,30 +443,6 @@ export default function QuestDetailPage({ quest, onNavigate }: QuestDetailPagePr
               Complete each task from its mission step. Tasks cannot be manually marked complete without the matching link, wallet, or onchain proof.
             </div>
           </section>
-
-          <aside className="lg:col-span-2 flex flex-col gap-4">
-            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ fontFamily: "'Space Grotesk'", fontSize: 11, fontWeight: 700, color: "#849495", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>
-                Reward
-              </div>
-              <div style={{ fontFamily: "'Space Grotesk'", fontSize: 28, fontWeight: 900, color: "#00dce5", marginBottom: 8 }}>
-                {displayQuest.reward}
-              </div>
-              <div style={{ color: "#849495", fontSize: 13 }}>
-                +{displayQuest.xp} XP / {displayQuest.difficulty} / {displayQuest.category}
-              </div>
-            </div>
-
-            <div className="rounded-2xl p-5 arc-card" style={{ background: "#0e0e0f", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="flex justify-between mb-2">
-                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#849495" }}>Progress</span>
-                <span style={{ fontFamily: "'Space Grotesk'", fontSize: 11, color: "#00dce5" }}>{verifiedCount}/{steps.length}</span>
-              </div>
-              <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
-                <div style={{ width: `${progressPct}%`, height: "100%", background: "#00dce5", borderRadius: 99 }} />
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>
